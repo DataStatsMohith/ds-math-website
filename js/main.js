@@ -42,6 +42,7 @@ const App = {
     if (id === 'linear-algebra') { this.loadSection('linear-algebra', 'linear-algebra-content-mount'); }
     if (id === 'calculus') { this.loadSection('calculus', 'calculus-content-mount'); }
     if (id === 'optimization') { this.loadSection('optimization', 'optimization-content-mount'); }
+    if (id === 'info-theory') { this.loadSection('information-theory', 'info-theory-content-mount'); }
     window.scrollTo(0, 0);
   },
 

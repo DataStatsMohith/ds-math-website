@@ -1,0 +1,1152 @@
+<!-- ============================================================
+     INFORMATION THEORY — Full Interactive Section
+     Concepts: Entropy, KL Divergence, Mutual Information,
+               Cross-Entropy Loss
+     Visualizations: Live entropy calculator, KL divergence
+                     animator, Mutual information heatmap
+     Features: 3 levels, proof walker, cheat sheet, notes, quiz
+     ============================================================ -->
+<style>
+.it-page { font-family: var(--font-body); }
+
+.it-hero {
+  position: relative; padding: 56px 60px 40px; overflow: hidden;
+  border-bottom: 1px solid var(--border-dim);
+}
+.it-hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 55% 70% at 80% 30%, rgba(99,179,237,0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 35% 50% at 15% 75%, rgba(104,211,145,0.05) 0%, transparent 55%);
+  pointer-events: none;
+}
+.it-hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(99,179,237,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,179,237,0.05) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: radial-gradient(ellipse 100% 100% at center, black 20%, transparent 75%);
+  pointer-events: none;
+}
+.it-hero-content { position: relative; z-index: 1; }
+.it-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-muted);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px;
+}
+.it-bc { color: var(--accent-cyan); cursor: pointer; }
+.it-bc:hover { text-decoration: underline; }
+.it-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(99,179,237,0.1); border: 1px solid rgba(99,179,237,0.25);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-cyan); margin-bottom: 16px;
+}
+.it-tag::before { content: '05'; font-weight: 800; font-family: var(--font-display); font-size: 9px; }
+.it-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.it-hero-left { flex: 1; min-width: 300px; }
+.it-hero-title {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(28px, 3.5vw, 48px); letter-spacing: -1.5px; line-height: 1.05;
+  color: var(--text-primary); margin-bottom: 14px;
+}
+.it-hero-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, #63b3ed, #68d391);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.it-hero-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.8; max-width: 520px; margin-bottom: 28px; }
+.it-why {
+  background: rgba(99,179,237,0.06); border: 1px solid rgba(99,179,237,0.15);
+  border-radius: var(--radius-md); padding: 16px 20px; max-width: 520px;
+}
+.it-why-label {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-cyan); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.it-why-label::before { content: '🤖'; }
+.it-why-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.it-meta { display: flex; flex-direction: column; gap: 12px; min-width: 180px; align-items: flex-end; }
+.it-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 8px 14px; font-size: 12px; color: var(--text-secondary);
+}
+
+/* Level switcher — cyan */
+.it-level-bar {
+  display: flex; align-items: center;
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 5px;
+  width: fit-content; margin: 32px 60px 0;
+}
+.it-lvl-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 12px; cursor: pointer;
+  border: none; background: transparent;
+  font-family: var(--font-display); font-weight: 600; font-size: 13px;
+  color: var(--text-muted); transition: var(--transition); white-space: nowrap;
+}
+.it-lvl-btn:hover { color: var(--text-secondary); }
+.it-lvl-btn.active { background: var(--bg-raised); color: var(--text-primary); box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+.it-lvl-btn.active.ib { color: var(--accent-emerald); }
+.it-lvl-btn.active.ii { color: var(--accent-cyan); }
+.it-lvl-btn.active.ip { color: var(--accent-violet); }
+.idot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ib .idot { background: var(--accent-emerald); }
+.ii .idot { background: var(--accent-cyan); }
+.ip .idot { background: var(--accent-violet); }
+
+/* Util bar */
+.it-util-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 60px; border-bottom: 1px solid var(--border-dim); flex-wrap: wrap;
+}
+.it-util-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); border-radius: 8px;
+  font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.it-util-btn:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.it-util-btn.active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(99,179,237,0.08); }
+.it-util-sep { width: 1px; height: 24px; background: var(--border-dim); margin: 0 4px; }
+
+/* Content layout */
+.it-content-area { display: grid; grid-template-columns: 1fr 340px; min-height: 60vh; }
+.it-main { padding: 40px 60px; border-right: 1px solid var(--border-dim); }
+.it-side { padding: 28px 24px; background: var(--bg-deep); }
+
+/* Concept blocks */
+.it-concept { margin-bottom: 52px; padding-bottom: 52px; border-bottom: 1px solid var(--border-dim); }
+.it-concept:last-child { border-bottom: none; }
+.it-concept-num { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.it-concept-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 22px;
+  letter-spacing: -0.5px; color: var(--text-primary);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+}
+.it-icon { font-size: 26px; }
+.it-body { font-size: 14px; color: var(--text-secondary); line-height: 1.9; }
+.it-body p { margin-bottom: 14px; }
+.it-body strong { color: var(--text-primary); font-weight: 500; }
+
+.it-intuition {
+  background: rgba(99,179,237,0.06); border-left: 3px solid var(--accent-cyan);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px; margin: 20px 0; font-size: 13px;
+}
+.it-intuition-label { font-family: var(--font-display); font-weight: 700; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-cyan); margin-bottom: 6px; }
+.it-intuition-text { color: var(--text-secondary); line-height: 1.7; }
+
+.it-ds { background: rgba(104,211,145,0.05); border-left: 3px solid var(--accent-emerald); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 16px 20px; margin: 20px 0; font-size: 13px; }
+.it-ds-label { font-family: var(--font-display); font-weight: 700; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-emerald); margin-bottom: 6px; }
+
+.it-math-box { background: rgba(99,179,237,0.05); border: 1px solid rgba(99,179,237,0.15); border-radius: var(--radius-md); padding: 20px 24px; margin: 20px 0; }
+.it-math-label { font-family: var(--font-display); font-weight: 700; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-cyan); margin-bottom: 12px; }
+.it-eq { background: var(--bg-raised); border-radius: var(--radius-md); padding: 14px 20px; text-align: center; margin: 10px 0; font-size: 15px; }
+.it-math-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; background: rgba(99,179,237,0.08);
+  border: 1px solid rgba(99,179,237,0.2); border-radius: 8px;
+  font-size: 12px; color: var(--accent-cyan);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body); margin: 12px 0;
+}
+.it-math-toggle:hover { background: rgba(99,179,237,0.15); }
+.it-math-reveal { display: none; margin-top: 12px; }
+.it-math-reveal.visible { display: block; animation: fadeIn 0.3s ease; }
+
+.it-level { display: none; }
+.it-level.visible { display: block; animation: fadeIn 0.4s ease; }
+
+/* Viz */
+.it-viz { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; overflow: hidden; }
+.it-viz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.it-viz-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.it-viz-badge { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; background: rgba(99,179,237,0.1); border: 1px solid rgba(99,179,237,0.2); border-radius: 10px; color: var(--accent-cyan); }
+.it-canvas { display: block; border-radius: var(--radius-md); background: var(--bg-raised); width: 100%; }
+.it-controls { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.it-slider-row { display: flex; flex-direction: column; gap: 6px; }
+.it-slider-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
+.it-slider-label span { color: var(--text-primary); font-family: var(--font-display); font-weight: 700; }
+.it-slider-row input[type=range] { accent-color: var(--accent-cyan); }
+
+/* Proof walker */
+.it-proof { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; position: relative; }
+.it-proof::before { content: 'PROOF WALKER'; position: absolute; top: 12px; right: 16px; font-size: 9px; letter-spacing: 2px; color: var(--text-muted); }
+.it-proof-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin-bottom: 20px; }
+.it-proof-step { display: none; animation: fadeIn 0.3s ease; }
+.it-proof-step.active { display: block; }
+.it-snum { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.it-stitle { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--accent-cyan); margin-bottom: 10px; }
+.it-sbody { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; }
+.it-seq { background: var(--bg-raised); border-radius: var(--radius-md); padding: 16px 20px; text-align: center; margin: 12px 0; font-size: 15px; }
+.it-proof-nav { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+.it-nav-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--bg-raised); border: 1px solid var(--border-dim); border-radius: 8px; font-size: 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
+.it-nav-btn:hover:not(:disabled) { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.it-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.it-pdots { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.it-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-raised); border: 1px solid var(--border-dim); transition: var(--transition); cursor: pointer; }
+.it-dot.active { background: var(--accent-cyan); border-color: var(--accent-cyan); transform: scale(1.2); }
+.it-dot.done { background: var(--accent-emerald); border-color: var(--accent-emerald); }
+
+/* Sidebar */
+.it-side-title { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--text-primary); margin-bottom: 14px; }
+.it-prog-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.it-prog-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: 8px; font-size: 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
+.it-prog-item:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.it-prog-item.done { border-color: rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.it-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-soft); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+.it-check.done { background: rgba(104,211,145,0.15); border-color: var(--accent-emerald); }
+.it-cheatsheet { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 16px; }
+.it-cheat-item { padding: 10px 0; border-bottom: 1px solid var(--border-dim); }
+.it-cheat-item:last-child { border-bottom: none; }
+.it-cheat-name { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.it-cheat-eq { background: var(--bg-raised); border-radius: 6px; padding: 8px 12px; text-align: center; font-size: 12px; }
+.it-notes-ta { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 12px; color: var(--text-primary); font-family: var(--font-body); font-size: 12px; line-height: 1.7; resize: vertical; min-height: 100px; outline: none; transition: var(--transition); }
+.it-notes-ta:focus { border-color: rgba(99,179,237,0.4); }
+.it-save-btn { margin-top: 8px; padding: 6px 14px; background: rgba(99,179,237,0.1); border: 1px solid rgba(99,179,237,0.2); border-radius: 6px; font-size: 11px; color: var(--accent-cyan); cursor: pointer; font-family: var(--font-body); }
+.it-term { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.it-term-name { font-size: 11px; color: var(--accent-cyan); font-family: var(--font-display); font-weight: 700; margin-bottom: 3px; }
+.it-term-def { font-size: 11px; color: var(--text-muted); }
+
+/* Completion banner */
+.it-completion {
+  background: linear-gradient(135deg, rgba(99,179,237,0.1), rgba(104,211,145,0.1));
+  border: 1px solid rgba(99,179,237,0.2); border-radius: var(--radius-lg);
+  padding: 32px 40px; margin: 32px 60px; text-align: center;
+}
+.it-completion-title { font-family: var(--font-display); font-weight: 800; font-size: 28px; letter-spacing: -1px; color: var(--text-primary); margin-bottom: 10px; }
+.it-completion-sub { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
+.it-completion-stats { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
+.it-stat { text-align: center; }
+.it-stat-num { font-family: var(--font-display); font-weight: 800; font-size: 28px; color: var(--accent-cyan); }
+.it-stat-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+/* Quiz */
+.it-quiz { padding: 48px 60px; border-top: 1px solid var(--border-dim); background: var(--bg-deep); }
+.it-quiz-eyebrow { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.it-quiz-title { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 8px; }
+.it-quiz-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+.it-qcard { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; }
+.it-qnum { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.it-qtext { font-size: 15px; color: var(--text-primary); line-height: 1.6; margin-bottom: 20px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.2px; }
+.it-opts { display: flex; flex-direction: column; gap: 10px; }
+.it-opt { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-raised); border: 1px solid var(--border-dim); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); font-size: 13px; color: var(--text-secondary); }
+.it-opt:hover { border-color: var(--border-soft); color: var(--text-primary); background: var(--bg-hover); }
+.it-opt.selected { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(99,179,237,0.08); }
+.it-opt.correct { border-color: var(--accent-emerald); color: var(--accent-emerald); background: rgba(104,211,145,0.08); }
+.it-opt.wrong { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(252,129,129,0.08); }
+.it-letter { width: 26px; height: 26px; border-radius: 6px; background: var(--bg-surface); border: 1px solid var(--border-dim); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.it-opt.selected .it-letter { background: rgba(99,179,237,0.2); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.it-opt.correct .it-letter { background: rgba(104,211,145,0.2); border-color: var(--accent-emerald); color: var(--accent-emerald); }
+.it-opt.wrong .it-letter { background: rgba(252,129,129,0.2); border-color: var(--accent-rose); }
+.it-qfb { display: none; margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; line-height: 1.6; }
+.it-qfb.show { display: block; animation: fadeIn 0.3s ease; }
+.it-qfb.ok { background: rgba(104,211,145,0.08); border: 1px solid rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.it-qfb.no { background: rgba(252,129,129,0.08); border: 1px solid rgba(252,129,129,0.2); color: var(--accent-rose); }
+.it-quiz-row { display: flex; align-items: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
+.it-quiz-btn { padding: 12px 28px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald)); border: none; border-radius: var(--radius-md); font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--bg-void); cursor: pointer; transition: var(--transition); }
+.it-quiz-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(99,179,237,0.3); }
+.it-quiz-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.it-score { display: none; font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.it-score.show { display: block; animation: fadeIn 0.5s ease; }
+
+@media (max-width: 1100px) { .it-content-area { grid-template-columns: 1fr; } .it-side { border-top: 1px solid var(--border-dim); } .it-main { border-right: none; } }
+@media (max-width: 768px) { .it-hero, .it-main, .it-quiz, .it-completion { padding-left: 24px; padding-right: 24px; } .it-level-bar { margin: 24px; } .it-util-bar { padding: 12px 24px; } }
+</style>
+
+<div class="it-page">
+
+  <!-- Hero -->
+  <div class="it-hero">
+    <div class="it-hero-bg"></div>
+    <div class="it-hero-grid"></div>
+    <div class="it-hero-content">
+      <div class="it-breadcrumb">
+        <span class="it-bc" onclick="App.showSection('home')">Home</span> <span>›</span>
+        <span class="it-bc" onclick="App.showSection('statistics')">Statistics</span> <span>›</span>
+        <span class="it-bc" onclick="App.showSection('linear-algebra')">Linear Algebra</span> <span>›</span>
+        <span class="it-bc" onclick="App.showSection('calculus')">Calculus</span> <span>›</span>
+        <span class="it-bc" onclick="App.showSection('optimization')">Optimization</span> <span>›</span>
+        <span>Information Theory</span>
+      </div>
+      <div class="it-hero-top">
+        <div class="it-hero-left">
+          <div class="it-tag">Topic&nbsp;&nbsp;·&nbsp;&nbsp;Information Theory</div>
+          <h1 class="it-hero-title">The <em>Language</em><br>of Uncertainty</h1>
+          <p class="it-hero-desc">
+            Information theory answers a deceptively simple question: how do you measure
+            information? Its answers — entropy, KL divergence, mutual information — turn out
+            to underpin the loss functions, training objectives, and evaluation metrics of
+            almost every ML model ever built.
+          </p>
+          <div class="it-why">
+            <div class="it-why-label">Why does a data scientist need this?</div>
+            <div class="it-why-text">
+              Cross-entropy loss (used in every classification model) is information theory.
+              KL divergence is what VAEs minimise. Mutual information drives feature selection and
+              representation learning. Decision trees split on information gain. RLHF uses KL
+              penalties. You're already using this every day — now understand why it works.
+            </div>
+          </div>
+        </div>
+        <div class="it-meta">
+          <div class="it-chip">⏱️ ~3.5 hours</div>
+          <div class="it-chip">🎯 3 depth levels</div>
+          <div class="it-chip">📊 3 live visualizers</div>
+          <div class="it-chip">⭐ +180 XP available</div>
+          <div class="it-chip" style="color:var(--accent-emerald);">🏁 Final Section!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Switcher -->
+  <div class="it-level-bar">
+    <button class="it-lvl-btn ib active" onclick="ITSection.setLevel('beginner',this)"><span class="idot"></span>Beginner</button>
+    <button class="it-lvl-btn ii" onclick="ITSection.setLevel('intermediate',this)"><span class="idot"></span>Intermediate</button>
+    <button class="it-lvl-btn ip" onclick="ITSection.setLevel('pro',this)"><span class="idot"></span>Pro</button>
+  </div>
+
+  <!-- Utility Bar -->
+  <div class="it-util-bar">
+    <button class="it-util-btn" id="it-notes-btn" onclick="ITSection.toggleNotes()">✏️ My Notes</button>
+    <button class="it-util-btn" id="it-cheat-btn" onclick="ITSection.toggleCheat()">📋 Cheat Sheet</button>
+    <div class="it-util-sep"></div>
+    <button class="it-util-btn" onclick="document.getElementById('it-quiz-section').scrollIntoView({behavior:'smooth'})">🧪 Jump to Quiz</button>
+    <button class="it-util-btn" onclick="ITSection.markDone()">✅ Mark Complete</button>
+  </div>
+
+  <!-- Content -->
+  <div class="it-content-area">
+    <div class="it-main">
+
+      <!-- ══ CONCEPT 1: Entropy ══════════════════════════════ -->
+      <div class="it-concept" id="it-c1">
+        <div class="it-concept-num">Concept 01 / 04</div>
+        <div class="it-concept-title"><span class="it-icon">🎲</span>Entropy — Measuring Surprise</div>
+
+        <div class="it-level visible" data-ilv="beginner">
+          <div class="it-body">
+            <p><strong>Entropy</strong> measures the average amount of surprise (or uncertainty) in a probability distribution. A fair coin flip has high entropy — you genuinely don't know what's coming. A biased coin that always lands heads has zero entropy — no surprise at all.</p>
+            <p>The key insight: rare events carry more information than common ones. "The sun rose this morning" tells you nothing. "Your model got 100% accuracy" is surprising — and informative. Claude Shannon formalised this in 1948 with $-\log_2 p$ bits of information for an event with probability $p$.</p>
+          </div>
+          <div class="it-intuition">
+            <div class="it-intuition-label">💡 The Coin Flip Intuition</div>
+            <div class="it-intuition-text">A fair coin (p=0.5) gives 1 bit of entropy — you need exactly 1 binary question to determine the outcome. A 4-sided die gives 2 bits. A distribution where one event is certain gives 0 bits — you already know the answer, so no information is gained. Drag the slider below and watch entropy peak at maximum uncertainty.</div>
+          </div>
+
+          <!-- ENTROPY VISUALIZER -->
+          <div class="it-viz">
+            <div class="it-viz-header">
+              <div class="it-viz-title">🎲 Entropy — Live Calculator</div>
+              <div class="it-viz-badge">Interactive</div>
+            </div>
+            <canvas id="entropy-canvas" class="it-canvas" height="240"></canvas>
+            <div class="it-controls">
+              <div class="it-slider-row">
+                <div class="it-slider-label">P(heads) <span id="entropy-p-val">0.50</span></div>
+                <input type="range" id="entropy-p" min="0.01" max="0.99" step="0.01" value="0.5" oninput="EntropyViz.update()">
+              </div>
+              <div id="entropy-info" style="font-size:12px;color:var(--text-muted);line-height:1.9;margin-top:4px;"></div>
+            </div>
+          </div>
+
+          <div class="it-ds">
+            <div class="it-ds-label">🤖 In Data Science</div>
+            <div class="it-body">Decision trees use <strong>information gain</strong> (reduction in entropy) to choose splits. A good split creates child nodes that are more "pure" (lower entropy). The Gini impurity used in sklearn is a close approximation to entropy. High entropy in your model's output distribution means it's uncertain — useful for detecting out-of-distribution samples.</div>
+          </div>
+          <button class="it-math-toggle" onclick="ITSection.toggleMath(this)">∑ Show me the math</button>
+          <div class="it-math-reveal">
+            <div class="it-math-box">
+              <div class="it-math-label">📐 Shannon Entropy</div>
+              <div class="it-eq">$$H(X) = -\sum_{x} p(x)\log_2 p(x) = \mathbb{E}[-\log_2 p(X)]$$</div>
+              <div class="it-eq" style="margin-top:10px;">$$\text{Binary: } H(p) = -p\log_2 p - (1-p)\log_2(1-p)$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="it-level" data-ilv="intermediate">
+          <div class="it-body">
+            <p><strong>Joint entropy</strong> $H(X,Y) = -\sum_{x,y} p(x,y)\log p(x,y)$ and <strong>conditional entropy</strong> $H(Y|X) = H(X,Y) - H(X)$. The chain rule: $H(X,Y) = H(X) + H(Y|X)$. Knowing X can only reduce (or maintain) the entropy of Y — it cannot increase it: $H(Y|X) \leq H(Y)$.</p>
+            <p><strong>Differential entropy</strong> extends to continuous distributions: $h(X) = -\int p(x)\log p(x)\,dx$. Unlike discrete entropy, differential entropy can be negative. Among all distributions with fixed variance, the Gaussian maximises differential entropy — the formal reason why Gaussian noise is the "worst case" in many signal processing settings.</p>
+          </div>
+          <div class="it-math-box">
+            <div class="it-math-label">📐 Max Entropy Principle</div>
+            <div class="it-eq">$$h(\mathcal{N}(\mu,\sigma^2)) = \frac{1}{2}\log(2\pi e\sigma^2) = \max_{p:\,\text{Var}(p)=\sigma^2} h(p)$$</div>
+          </div>
+        </div>
+
+        <div class="it-level" data-ilv="pro">
+          <div class="it-body">
+            <p><strong>Rényi entropy</strong> $H_\alpha(X) = \frac{1}{1-\alpha}\log\sum_x p(x)^\alpha$ generalises Shannon entropy (recovered at $\alpha\to1$). $H_0$ is the log of the support size, $H_\infty = -\log\max_x p(x)$ (min-entropy). Rényi entropies are used in quantum information and differential privacy ($\varepsilon$-differential privacy uses max-divergence, the Rényi divergence of order $\infty$).</p>
+          </div>
+          <div class="it-math-box">
+            <div class="it-math-label">📐 Rényi Entropy & Min-Entropy</div>
+            <div class="it-eq">$$H_\alpha(X) = \frac{1}{1-\alpha}\log\!\sum_x p(x)^\alpha \quad H_\infty = -\log\max_x p(x)$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 2: Cross-Entropy & KL (with proof) ══════ -->
+      <div class="it-concept" id="it-c2">
+        <div class="it-concept-num">Concept 02 / 04</div>
+        <div class="it-concept-title"><span class="it-icon">📉</span>Cross-Entropy & KL Divergence</div>
+
+        <div class="it-level visible" data-ilv="beginner">
+          <div class="it-body">
+            <p><strong>Cross-entropy</strong> $H(p,q)$ measures the average number of bits needed to encode events from distribution $p$ using a code optimised for distribution $q$. If $q = p$ (perfect model), it equals entropy $H(p)$. If $q \neq p$ (imperfect model), it's always larger — the extra bits wasted are the <strong>KL divergence</strong>.</p>
+            <p>This is exactly what happens during training: $p$ is the true label distribution (one-hot), $q$ is your model's softmax output. Cross-entropy loss penalises your model for being "surprised" by the true answer.</p>
+          </div>
+          <div class="it-intuition">
+            <div class="it-intuition-label">💡 Cross-Entropy = Entropy + KL</div>
+            <div class="it-intuition-text">$H(p,q) = H(p) + D_{KL}(p\|q)$. Since the true labels are fixed, $H(p)$ is constant during training. So minimising cross-entropy is identical to minimising KL divergence between the true distribution and your model. Your model is learning to "think like" the true data distribution.</div>
+          </div>
+
+          <!-- KL DIVERGENCE VISUALIZER -->
+          <div class="it-viz">
+            <div class="it-viz-header">
+              <div class="it-viz-title">📉 KL Divergence — Live</div>
+              <div class="it-viz-badge">Interactive</div>
+            </div>
+            <canvas id="kl-canvas" class="it-canvas" height="260"></canvas>
+            <div class="it-controls">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                  <div style="font-size:11px;color:var(--accent-cyan);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">True distribution p</div>
+                  <div class="it-slider-row">
+                    <div class="it-slider-label">Mean μ_p <span id="kl-mu-p">0.0</span></div>
+                    <input type="range" id="kl-mup" min="-2" max="2" step="0.1" value="0" oninput="KLViz.update()">
+                  </div>
+                  <div class="it-slider-row">
+                    <div class="it-slider-label">Std σ_p <span id="kl-sig-p">1.0</span></div>
+                    <input type="range" id="kl-sigp" min="0.3" max="2.5" step="0.1" value="1" oninput="KLViz.update()">
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--accent-amber);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Model distribution q</div>
+                  <div class="it-slider-row">
+                    <div class="it-slider-label">Mean μ_q <span id="kl-mu-q">1.0</span></div>
+                    <input type="range" id="kl-muq" min="-2" max="2" step="0.1" value="1" oninput="KLViz.update()">
+                  </div>
+                  <div class="it-slider-row">
+                    <div class="it-slider-label">Std σ_q <span id="kl-sig-q">1.5</span></div>
+                    <input type="range" id="kl-sigq" min="0.3" max="2.5" step="0.1" value="1.5" oninput="KLViz.update()">
+                  </div>
+                </div>
+              </div>
+              <div id="kl-info" style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.9;"></div>
+            </div>
+          </div>
+
+          <!-- PROOF WALKER: Cross-entropy loss derivation -->
+          <div class="it-proof">
+            <div class="it-proof-title">🧩 Proof Walker: Why Cross-Entropy IS the Right Loss</div>
+            <div>
+              <div class="it-proof-step active" data-ips="0">
+                <div class="it-snum">Step 1 of 4</div>
+                <div class="it-stitle">Maximum Likelihood Estimation</div>
+                <div class="it-sbody">We want model parameters θ that make the observed data most probable. For a dataset of n examples:</div>
+                <div class="it-seq">$$\hat\theta = \arg\max_\theta \prod_{i=1}^n q_\theta(y_i | x_i)$$</div>
+                <div class="it-sbody" style="font-size:12px;color:var(--text-muted);">Maximising the product of probabilities — each label $y_i$ should be highly probable under our model $q_\theta$.</div>
+              </div>
+              <div class="it-proof-step" data-ips="1">
+                <div class="it-snum">Step 2 of 4</div>
+                <div class="it-stitle">Take the log (log-likelihood)</div>
+                <div class="it-sbody">Products become sums under log. Since log is monotone, maximising log-likelihood = maximising likelihood:</div>
+                <div class="it-seq">$$\arg\max_\theta \sum_{i=1}^n \log q_\theta(y_i|x_i) = \arg\min_\theta -\frac{1}{n}\sum_{i=1}^n \log q_\theta(y_i|x_i)$$</div>
+              </div>
+              <div class="it-proof-step" data-ips="2">
+                <div class="it-snum">Step 3 of 4</div>
+                <div class="it-stitle">Recognise the cross-entropy</div>
+                <div class="it-sbody">With one-hot labels, $p(y|x)$ is 1 for the correct class and 0 for others. The negative log-likelihood is exactly the cross-entropy:</div>
+                <div class="it-seq">$$-\frac{1}{n}\sum_{i=1}^n \log q_\theta(y_i|x_i) = \mathbb{E}_{x,y\sim p}[-\log q_\theta(y|x)] = H(p, q_\theta)$$</div>
+              </div>
+              <div class="it-proof-step" data-ips="3">
+                <div class="it-snum">Step 4 of 4 ✓</div>
+                <div class="it-stitle">Cross-entropy minimisation = KL minimisation</div>
+                <div class="it-sbody">Since $H(p,q) = H(p) + D_{KL}(p\|q)$ and $H(p)$ is fixed (true labels don't change), minimising cross-entropy is equivalent to minimising KL divergence — pulling the model distribution towards the true distribution:</div>
+                <div class="it-seq">$$\arg\min_\theta H(p, q_\theta) = \arg\min_\theta D_{KL}(p \| q_\theta)$$</div>
+                <div class="it-sbody" style="font-size:12px;color:var(--text-muted);">Every classification model trained with cross-entropy is implicitly minimising the KL divergence between the true label distribution and its predictions. This is the information-theoretic foundation of neural network training.</div>
+              </div>
+            </div>
+            <div class="it-proof-nav">
+              <button class="it-nav-btn" id="it-pprev" onclick="ITSection.proofStep(-1)" disabled>← Back</button>
+              <button class="it-nav-btn" id="it-pnext" onclick="ITSection.proofStep(1)">Next →</button>
+              <div class="it-pdots">
+                <div class="it-dot active" onclick="ITSection.proofGo(0)"></div>
+                <div class="it-dot" onclick="ITSection.proofGo(1)"></div>
+                <div class="it-dot" onclick="ITSection.proofGo(2)"></div>
+                <div class="it-dot" onclick="ITSection.proofGo(3)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="it-ds">
+            <div class="it-ds-label">🤖 In Data Science</div>
+            <div class="it-body">In PyTorch: <code>nn.CrossEntropyLoss()</code> combines softmax + NLL loss, computing $-\sum_c y_c \log\hat{y}_c$. For binary classification it's <code>nn.BCELoss()</code>: $-[y\log\hat{y} + (1-y)\log(1-\hat{y})]$. KL divergence appears in VAEs as the regularisation term penalising the encoder from deviating from the prior $\mathcal{N}(0,I)$. In RLHF, a KL penalty keeps the fine-tuned model from drifting too far from the reference policy.</div>
+          </div>
+          <button class="it-math-toggle" onclick="ITSection.toggleMath(this)">∑ Show me the math</button>
+          <div class="it-math-reveal">
+            <div class="it-math-box">
+              <div class="it-math-label">📐 KL Divergence (Gaussians)</div>
+              <div class="it-eq">$$D_{KL}(p\|q) = \mathbb{E}_p\!\left[\log\frac{p(x)}{q(x)}\right] \geq 0 \quad \text{(always)}$$</div>
+              <div class="it-eq" style="margin-top:10px;">$$D_{KL}(\mathcal{N}(\mu_1,\sigma_1^2)\|\mathcal{N}(\mu_2,\sigma_2^2)) = \log\frac{\sigma_2}{\sigma_1} + \frac{\sigma_1^2+(\mu_1-\mu_2)^2}{2\sigma_2^2} - \frac{1}{2}$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="it-level" data-ilv="intermediate">
+          <div class="it-body">
+            <p><strong>Forward vs reverse KL:</strong> $D_{KL}(p\|q)$ (forward) is infinite when $q(x)=0$ but $p(x)>0$ — it forces $q$ to cover all of $p$'s support, tending to produce over-dispersed (mean-seeking) approximations. $D_{KL}(q\|p)$ (reverse) is zero-forcing, preferring $q$ to concentrate on one mode of $p$. This asymmetry matters hugely for variational inference.</p>
+            <p>The <strong>ELBO</strong> (Evidence Lower BOund) in VAEs: $\log p(x) \geq \mathbb{E}_{q_\phi}[\log p_\theta(x|z)] - D_{KL}(q_\phi(z|x)\|p(z))$. The reconstruction term maximises likelihood; the KL term keeps the encoder close to the prior.</p>
+          </div>
+          <div class="it-math-box">
+            <div class="it-math-label">📐 VAE ELBO</div>
+            <div class="it-eq">$$\mathcal{L}_\text{VAE} = \underbrace{\mathbb{E}_{q_\phi}[\log p_\theta(x|z)]}_\text{reconstruction} - \underbrace{D_{KL}(q_\phi(z|x)\|p(z))}_\text{regularisation}$$</div>
+          </div>
+        </div>
+
+        <div class="it-level" data-ilv="pro">
+          <div class="it-body">
+            <p><strong>f-divergences</strong> generalise KL: $D_f(p\|q) = \int q(x)f(p(x)/q(x))dx$ for a convex function $f$ with $f(1)=0$. KL uses $f(t)=t\log t$, reverse-KL uses $f(t)=-\log t$, total variation uses $f(t)=\frac{1}{2}|t-1|$. The Jensen-Shannon divergence $\text{JSD}(p\|q) = \frac{1}{2}D_{KL}(p\|m)+\frac{1}{2}D_{KL}(q\|m)$ where $m=\frac{p+q}{2}$ is symmetric and bounded — it's the loss minimised by the original GAN (binary cross-entropy in the discriminator).</p>
+          </div>
+          <div class="it-math-box">
+            <div class="it-math-label">📐 GAN = JSD Minimisation</div>
+            <div class="it-eq">$$\min_G\max_D V(D,G) = \mathbb{E}_p[\log D(x)] + \mathbb{E}_q[\log(1-D(G(z)))]$$</div>
+            <div class="it-eq" style="margin-top:8px;">$$\text{Optimal } D^*(x) = \frac{p(x)}{p(x)+q(x)} \implies V(D^*,G) = 2\,\text{JSD}(p\|q) - \log 4$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 3: Mutual Information ══════════════════ -->
+      <div class="it-concept" id="it-c3">
+        <div class="it-concept-num">Concept 03 / 04</div>
+        <div class="it-concept-title"><span class="it-icon">🔗</span>Mutual Information — Shared Knowledge</div>
+
+        <div class="it-level visible" data-ilv="beginner">
+          <div class="it-body">
+            <p><strong>Mutual Information</strong> $I(X;Y)$ measures how much knowing $X$ tells you about $Y$. It's zero when $X$ and $Y$ are independent — knowing one gives you nothing about the other. It equals $H(Y)$ when $X$ completely determines $Y$ — knowing one tells you everything.</p>
+            <p>Unlike correlation, mutual information captures <em>any</em> statistical dependency — not just linear ones. Two variables can have zero correlation but high mutual information (e.g. $Y = X^2$).</p>
+          </div>
+          <div class="it-intuition">
+            <div class="it-intuition-label">💡 The Venn Diagram</div>
+            <div class="it-intuition-text">$I(X;Y) = H(X) + H(Y) - H(X,Y)$. Think of it as the overlap between two circles — the entropy "used by" both variables. If the circles don't overlap (independent), MI = 0. If one circle is inside the other (one determines the other), MI = H(the smaller).</div>
+          </div>
+
+          <!-- MUTUAL INFORMATION VISUALIZER -->
+          <div class="it-viz">
+            <div class="it-viz-header">
+              <div class="it-viz-title">🔗 Mutual Information — Venn Diagram</div>
+              <div class="it-viz-badge">Interactive</div>
+            </div>
+            <canvas id="mi-canvas" class="it-canvas" height="280"></canvas>
+            <div class="it-controls">
+              <div class="it-slider-row">
+                <div class="it-slider-label">H(X) entropy of X <span id="mi-hx-val">2.0</span></div>
+                <input type="range" id="mi-hx" min="0.5" max="3" step="0.1" value="2" oninput="MIViz.update()">
+              </div>
+              <div class="it-slider-row">
+                <div class="it-slider-label">H(Y) entropy of Y <span id="mi-hy-val">2.0</span></div>
+                <input type="range" id="mi-hy" min="0.5" max="3" step="0.1" value="2" oninput="MIViz.update()">
+              </div>
+              <div class="it-slider-row">
+                <div class="it-slider-label">Shared information (MI) <span id="mi-mi-val">1.0</span></div>
+                <input type="range" id="mi-mi" min="0" max="2" step="0.1" value="1" oninput="MIViz.update()">
+              </div>
+              <div id="mi-info" style="font-size:12px;color:var(--text-muted);margin-top:4px;line-height:1.9;"></div>
+            </div>
+          </div>
+
+          <div class="it-ds">
+            <div class="it-ds-label">🤖 In Data Science</div>
+            <div class="it-body">MI is used for <strong>feature selection</strong> — pick features with high MI with the label. <strong>Information bottleneck</strong> theory explains deep learning: networks compress the input (reduce $I(X;\text{representation})$) while preserving task-relevant information ($I(\text{representation};Y)$). <strong>MINE</strong> (Mutual Information Neural Estimation) estimates MI from samples using neural networks — enabling MI-based representation learning objectives like in CURL and CPC.</div>
+          </div>
+          <button class="it-math-toggle" onclick="ITSection.toggleMath(this)">∑ Show me the math</button>
+          <div class="it-math-reveal">
+            <div class="it-math-box">
+              <div class="it-math-label">📐 Mutual Information</div>
+              <div class="it-eq">$$I(X;Y) = H(X) + H(Y) - H(X,Y) = H(X) - H(X|Y) = D_{KL}(p(x,y)\|p(x)p(y))$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="it-level" data-ilv="intermediate">
+          <div class="it-body">
+            <p>The <strong>data processing inequality</strong>: if $X \to Y \to Z$ is a Markov chain, then $I(X;Z) \leq I(X;Y)$. Processing data can only lose information, never gain it. This formalises the idea that no transformation can extract more about X from Z than was already in Y — a fundamental limit on what deep networks can do.</p>
+            <p><strong>Channel capacity</strong> $C = \max_{p(x)} I(X;Y)$ is the maximum information that can reliably be transmitted through a noisy channel. Shannon's channel coding theorem: reliable communication at rate $R$ is possible iff $R < C$. This is why your WiFi connection has a maximum throughput.</p>
+          </div>
+          <div class="it-math-box">
+            <div class="it-math-label">📐 Data Processing Inequality</div>
+            <div class="it-eq">$$X \to Y \to Z \implies I(X;Z) \leq \min(I(X;Y), I(Y;Z))$$</div>
+          </div>
+        </div>
+
+        <div class="it-level" data-ilv="pro">
+          <div class="it-body">
+            <p>The <strong>Information Bottleneck (IB)</strong> framework formalises the compression-prediction tradeoff: $\min_{p(\tilde{x}|x)} I(X;\tilde{X}) - \beta I(\tilde{X};Y)$. The IB curve traces Pareto-optimal representations — for each level of compression, the representation that retains the most task-relevant information. Tishby et al. (2017) controversially claimed deep networks implicitly implement IB; this remains contested but highly influential.</p>
+          </div>
+          <div class="it-math-box">
+            <div class="it-math-label">📐 Information Bottleneck</div>
+            <div class="it-eq">$$\mathcal{L}_\text{IB} = I(X;\tilde{X}) - \beta I(\tilde{X};Y) \quad \text{(compress input, preserve label info)}$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 4: Information Gain ════════════════════ -->
+      <div class="it-concept" id="it-c4">
+        <div class="it-concept-num">Concept 04 / 04</div>
+        <div class="it-concept-title"><span class="it-icon">🌳</span>Information Gain & Decision Trees</div>
+
+        <div class="it-level visible" data-ilv="beginner">
+          <div class="it-body">
+            <p><strong>Information gain</strong> measures how much a feature reduces entropy in the target variable. It's the mutual information between the feature and the label — and it's exactly what decision trees use to choose which feature to split on at each node.</p>
+            <p>A perfect split creates completely pure child nodes (entropy = 0). A useless split leaves entropy unchanged. The tree greedily picks the feature with the highest information gain at each step.</p>
+          </div>
+          <div class="it-math-box">
+            <div class="it-math-label">📐 Information Gain</div>
+            <div class="it-eq">$$\text{IG}(Y, X) = H(Y) - H(Y|X) = I(X;Y)$$</div>
+            <div class="it-eq" style="margin-top:10px;">$$H(Y|X) = \sum_x p(x)\,H(Y|X=x)$$</div>
+          </div>
+          <div class="it-intuition">
+            <div class="it-intuition-label">💡 Worked Example</div>
+            <div class="it-intuition-text">You have 10 sick/healthy patients and want to split on a test. Before the test, entropy = 1 bit (5/5 split, maximum uncertainty). After a perfect test, each group is entirely sick or healthy — entropy = 0 in both groups. Information gain = 1 bit. The test told you everything.</div>
+          </div>
+          <div class="it-ds">
+            <div class="it-ds-label">🤖 In Data Science</div>
+            <div class="it-body">Random forests and gradient boosted trees (XGBoost, LightGBM) all use information-theoretic splitting criteria. Feature importance in tree models is literally the total information gain attributed to each feature across all splits. This gives you an interpretable, theoretically grounded measure of feature relevance — unlike correlation, it captures non-linear relationships.</div>
+          </div>
+        </div>
+
+        <div class="it-level" data-ilv="intermediate">
+          <div class="it-body">
+            <p><strong>Gini impurity</strong> vs <strong>entropy</strong>: Gini $= 1 - \sum_c p_c^2$ is a second-order Taylor approximation to entropy ($-p\log p \approx p(1-p)$ for small p). They produce nearly identical splits in practice. Entropy is slower to compute (requires log) but slightly favours balanced splits. Most frameworks default to Gini for speed.</p>
+          </div>
+          <div class="it-math-box">
+            <div class="it-math-label">📐 Gini ≈ Entropy (Taylor expansion)</div>
+            <div class="it-eq">$$-p\log p \approx p(1-p) \implies H \approx \text{Gini} \quad \text{for small } p$$</div>
+          </div>
+        </div>
+
+        <div class="it-level" data-ilv="pro">
+          <div class="it-body">
+            <p><strong>MDL (Minimum Description Length)</strong> principle: the best model is the one that most compresses the data. $\text{MDL} = L(\text{model}) + L(\text{data}|\text{model})$ — bits to describe the model plus bits to describe the data given the model. This formalises Occam's razor and connects information theory to Bayesian model selection (the MDL criterion is equivalent to MAP estimation with a prior proportional to $2^{-L(\text{model})}$).</p>
+          </div>
+          <div class="it-math-box">
+            <div class="it-math-label">📐 MDL = Bayesian MAP</div>
+            <div class="it-eq">$$\arg\min_\theta L(\theta) + L(D|\theta) = \arg\max_\theta \log p(\theta) + \log p(D|\theta)$$</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /it-main -->
+
+    <!-- Sidebar -->
+    <div class="it-side">
+      <div class="it-side-title">📍 Section Progress</div>
+      <div class="it-prog-list">
+        <div class="it-prog-item" id="it-p1" onclick="document.getElementById('it-c1').scrollIntoView({behavior:'smooth'})"><div class="it-check" id="it-ck1">1</div>Entropy</div>
+        <div class="it-prog-item" id="it-p2" onclick="document.getElementById('it-c2').scrollIntoView({behavior:'smooth'})"><div class="it-check" id="it-ck2">2</div>Cross-Entropy & KL</div>
+        <div class="it-prog-item" id="it-p3" onclick="document.getElementById('it-c3').scrollIntoView({behavior:'smooth'})"><div class="it-check" id="it-ck3">3</div>Mutual Information</div>
+        <div class="it-prog-item" id="it-p4" onclick="document.getElementById('it-c4').scrollIntoView({behavior:'smooth'})"><div class="it-check" id="it-ck4">4</div>Information Gain</div>
+      </div>
+
+      <div id="it-cheat-panel" style="display:none;margin-bottom:24px;">
+        <div class="it-side-title">📋 Cheat Sheet</div>
+        <div class="it-cheatsheet">
+          <div class="it-cheat-item"><div class="it-cheat-name">Entropy</div><div class="it-cheat-eq">$H(X)=-\sum p(x)\log p(x)$</div></div>
+          <div class="it-cheat-item"><div class="it-cheat-name">Cross-entropy</div><div class="it-cheat-eq">$H(p,q)=-\sum p(x)\log q(x)$</div></div>
+          <div class="it-cheat-item"><div class="it-cheat-name">KL divergence</div><div class="it-cheat-eq">$D_{KL}(p\|q)=\sum p\log(p/q)$</div></div>
+          <div class="it-cheat-item"><div class="it-cheat-name">H(p,q) decomp</div><div class="it-cheat-eq">$H(p,q)=H(p)+D_{KL}(p\|q)$</div></div>
+          <div class="it-cheat-item"><div class="it-cheat-name">Mutual Info</div><div class="it-cheat-eq">$I(X;Y)=H(X)+H(Y)-H(X,Y)$</div></div>
+          <div class="it-cheat-item"><div class="it-cheat-name">Info Gain</div><div class="it-cheat-eq">$\text{IG}(Y,X)=H(Y)-H(Y|X)$</div></div>
+          <div class="it-cheat-item"><div class="it-cheat-name">Binary entropy</div><div class="it-cheat-eq">$H(p)=-p\log p-(1-p)\log(1-p)$</div></div>
+        </div>
+      </div>
+
+      <div id="it-notes-panel" style="display:none;margin-bottom:24px;">
+        <div class="it-side-title">✏️ My Notes</div>
+        <textarea class="it-notes-ta" id="it-notes-ta" placeholder="Your information theory notes..."></textarea>
+        <button class="it-save-btn" onclick="ITSection.saveNote()">💾 Save</button>
+        <div id="it-saved-msg" style="font-size:11px;color:var(--accent-emerald);margin-top:6px;display:none;">✓ Saved!</div>
+      </div>
+
+      <div class="it-side-title">🔑 Key Terms</div>
+      <div class="it-term"><div class="it-term-name">Entropy</div><div class="it-term-def">Average surprise — measures uncertainty in a distribution.</div></div>
+      <div class="it-term"><div class="it-term-name">Cross-Entropy</div><div class="it-term-def">The standard classification loss — negative log-likelihood under your model.</div></div>
+      <div class="it-term"><div class="it-term-name">KL Divergence</div><div class="it-term-def">Extra bits wasted using the wrong model. Always ≥ 0. Not symmetric.</div></div>
+      <div class="it-term"><div class="it-term-name">Mutual Information</div><div class="it-term-def">How much knowing X reduces uncertainty about Y. Captures any dependency.</div></div>
+      <div class="it-term"><div class="it-term-name">ELBO</div><div class="it-term-def">VAE objective: reconstruction likelihood minus KL from prior. Tight lower bound on log evidence.</div></div>
+    </div>
+  </div>
+
+  <!-- Completion Banner -->
+  <div class="it-completion">
+    <div style="font-size:48px;margin-bottom:12px;">🎓</div>
+    <div class="it-completion-title">Course Complete!</div>
+    <div class="it-completion-sub">You've covered the full mathematical foundation of data science —<br>from probability all the way to information theory.</div>
+    <div class="it-completion-stats">
+      <div class="it-stat"><div class="it-stat-num">5</div><div class="it-stat-label">Sections</div></div>
+      <div class="it-stat"><div class="it-stat-num">20</div><div class="it-stat-label">Concepts</div></div>
+      <div class="it-stat"><div class="it-stat-num">15</div><div class="it-stat-label">Visualizers</div></div>
+      <div class="it-stat"><div class="it-stat-num">900</div><div class="it-stat-label">XP Available</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ QUIZ ════════════════════════════════════════════════ -->
+  <div class="it-quiz" id="it-quiz-section">
+    <div class="it-quiz-eyebrow">Final Knowledge Check</div>
+    <div class="it-quiz-title">Information Theory Quiz</div>
+    <div class="it-quiz-sub">5 questions · +180 XP · Completes the full curriculum!</div>
+
+    <div class="it-qcard" id="it-qc1">
+      <div class="it-qnum">Question 1 of 5</div>
+      <div class="it-qtext">A fair coin has higher entropy than a biased coin that lands heads 90% of the time. Why?</div>
+      <div class="it-opts">
+        <div class="it-opt" onclick="ITQuiz.sel(1,this,'A')"><div class="it-letter">A</div>Because the fair coin is harder to flip</div>
+        <div class="it-opt" onclick="ITQuiz.sel(1,this,'B')"><div class="it-letter">B</div>Because the outcome is more uncertain — there is more average "surprise" in the fair coin's distribution</div>
+        <div class="it-opt" onclick="ITQuiz.sel(1,this,'C')"><div class="it-letter">C</div>Because 0.5 is a larger probability than 0.9</div>
+        <div class="it-opt" onclick="ITQuiz.sel(1,this,'D')"><div class="it-letter">D</div>Because the fair coin has more possible outcomes</div>
+      </div>
+      <div class="it-qfb ok" id="it-fb1">✅ Correct! Entropy measures uncertainty/surprise. The fair coin is maximally uncertain — you have no idea what's coming. The biased coin is less surprising because you can guess heads and be right 90% of the time. Entropy peaks at maximum uncertainty.</div>
+      <div class="it-qfb no" id="it-fb1w" style="display:none;">❌ The answer is B. Entropy measures average surprise. A fair coin is maximally unpredictable — its outcome gives you the most information. A heavily biased coin is predictable — guessing the likely outcome is almost always right, so there's little surprise.</div>
+    </div>
+
+    <div class="it-qcard" id="it-qc2">
+      <div class="it-qnum">Question 2 of 5</div>
+      <div class="it-qtext">Training a neural network with cross-entropy loss is mathematically equivalent to which of these?</div>
+      <div class="it-opts">
+        <div class="it-opt" onclick="ITQuiz.sel(2,this,'A')"><div class="it-letter">A</div>Maximising the L2 distance between predictions and labels</div>
+        <div class="it-opt" onclick="ITQuiz.sel(2,this,'B')"><div class="it-letter">B</div>Minimising mean squared error on the softmax outputs</div>
+        <div class="it-opt" onclick="ITQuiz.sel(2,this,'C')"><div class="it-letter">C</div>Maximum likelihood estimation — making the true labels most probable under the model</div>
+        <div class="it-opt" onclick="ITQuiz.sel(2,this,'D')"><div class="it-letter">D</div>Minimising the variance of the model's predictions</div>
+      </div>
+      <div class="it-qfb ok" id="it-fb2">✅ Exactly right! Cross-entropy loss is the negative log-likelihood. Minimising it is the same as maximising the probability assigned to the correct labels — which is exactly MLE. The proof walker above derived this step by step.</div>
+      <div class="it-qfb no" id="it-fb2w" style="display:none;">❌ Cross-entropy is MLE (C). The negative log-likelihood of the true labels under the model's predictions equals the cross-entropy. Minimising it makes the model assign higher probability to the correct answers — which is maximum likelihood estimation.</div>
+    </div>
+
+    <div class="it-qcard" id="it-qc3">
+      <div class="it-qnum">Question 3 of 5</div>
+      <div class="it-qtext">KL divergence D_KL(p‖q) is zero only when p = q, and always ≥ 0. What does D_KL(p‖q) = 0.5 mean?</div>
+      <div class="it-opts">
+        <div class="it-opt" onclick="ITQuiz.sel(3,this,'A')"><div class="it-letter">A</div>The model q is 50% accurate</div>
+        <div class="it-opt" onclick="ITQuiz.sel(3,this,'B')"><div class="it-letter">B</div>Using model q to encode data from p wastes 0.5 extra bits per sample compared to the optimal code</div>
+        <div class="it-opt" onclick="ITQuiz.sel(3,this,'C')"><div class="it-letter">C</div>p and q overlap by 50%</div>
+        <div class="it-opt" onclick="ITQuiz.sel(3,this,'D')"><div class="it-letter">D</div>The correlation between p and q is 0.5</div>
+      </div>
+      <div class="it-qfb ok" id="it-fb3">✅ Correct! KL divergence is measured in bits (when using log base 2). D_KL = 0.5 means your model q is inefficient by 0.5 bits per sample compared to knowing the true distribution p. This is the information-theoretic interpretation of model error.</div>
+      <div class="it-qfb no" id="it-fb3w" style="display:none;">❌ KL divergence (B) measures extra bits wasted by using the wrong distribution. D_KL(p‖q) = 0.5 means your model q requires 0.5 more bits per sample than the optimal code (based on p). It's a measure of coding inefficiency, not overlap or accuracy.</div>
+    </div>
+
+    <div class="it-qcard" id="it-qc4">
+      <div class="it-qnum">Question 4 of 5</div>
+      <div class="it-qtext">Mutual information I(X;Y) = 0 tells you what about X and Y?</div>
+      <div class="it-opts">
+        <div class="it-opt" onclick="ITQuiz.sel(4,this,'A')"><div class="it-letter">A</div>X and Y are negatively correlated</div>
+        <div class="it-opt" onclick="ITQuiz.sel(4,this,'B')"><div class="it-letter">B</div>X and Y are statistically independent — knowing X tells you nothing about Y</div>
+        <div class="it-opt" onclick="ITQuiz.sel(4,this,'C')"><div class="it-letter">C</div>X and Y have the same distribution</div>
+        <div class="it-opt" onclick="ITQuiz.sel(4,this,'D')"><div class="it-letter">D</div>X completely determines Y</div>
+      </div>
+      <div class="it-qfb ok" id="it-fb4">✅ Exactly! I(X;Y) = 0 means the variables are statistically independent. Observing X gives you zero information about Y. In feature selection, a feature with I(feature; label) = 0 is completely useless for prediction — regardless of any linear or nonlinear relationship.</div>
+      <div class="it-qfb no" id="it-fb4w" style="display:none;">❌ MI = 0 means statistical independence (B). Knowing X gives you no information about Y whatsoever. Note this is stronger than zero correlation — MI = 0 means absolutely no dependency of any kind, linear or nonlinear.</div>
+    </div>
+
+    <div class="it-qcard" id="it-qc5">
+      <div class="it-qnum">Question 5 of 5</div>
+      <div class="it-qtext">In a Variational Autoencoder (VAE), the KL divergence term in the ELBO objective penalises what?</div>
+      <div class="it-opts">
+        <div class="it-opt" onclick="ITQuiz.sel(5,this,'A')"><div class="it-letter">A</div>Large reconstruction errors in the decoded output</div>
+        <div class="it-opt" onclick="ITQuiz.sel(5,this,'B')"><div class="it-letter">B</div>The encoder's latent distribution deviating from the prior N(0,I) — keeping the latent space structured</div>
+        <div class="it-opt" onclick="ITQuiz.sel(5,this,'C')"><div class="it-letter">C</div>The decoder outputting blurry images</div>
+        <div class="it-opt" onclick="ITQuiz.sel(5,this,'D')"><div class="it-letter">D</div>Overfitting to the training set</div>
+      </div>
+      <div class="it-qfb ok" id="it-fb5">✅ Correct! The KL term D_KL(q_φ(z|x) ‖ p(z)) penalises the encoder for producing a latent distribution that differs from the standard Gaussian prior. This keeps the latent space smooth and continuous — enabling interpolation and random sampling at inference time.</div>
+      <div class="it-qfb no" id="it-fb5w" style="display:none;">❌ The KL term (B) regularises the encoder's posterior toward the prior N(0,I). Without it, the encoder could map each input to a completely separate region of latent space with no overlap — making interpolation impossible and breaking the "variational" part of VAE. The reconstruction term handles decoding quality.</div>
+    </div>
+
+    <div class="it-quiz-row">
+      <button class="it-quiz-btn" id="it-qbtn" onclick="ITQuiz.submit()" disabled>Check Answers</button>
+      <div class="it-score" id="it-qscore"></div>
+    </div>
+  </div>
+
+</div><!-- /it-page -->
+
+<script>
+// ── Information Theory Section Controller ─────────────────────
+const ITSection = {
+  level: 'beginner', proofStep: 0, proofTotal: 4,
+  notesOpen: false, cheatOpen: false,
+
+  setLevel(lv, btn) {
+    this.level = lv;
+    document.querySelectorAll('.it-lvl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.it-level').forEach(el => {
+      el.classList.remove('visible');
+      if (el.dataset.ilv === lv) el.classList.add('visible');
+    });
+    if (typeof renderMathInElement !== 'undefined') {
+      setTimeout(() => renderMathInElement(document.getElementById('section-info-theory') || document.body, {
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      }), 100);
+    }
+    setTimeout(() => { EntropyViz.update(); KLViz.update(); MIViz.update(); }, 150);
+  },
+
+  toggleMath(btn) {
+    const rev = btn.nextElementSibling;
+    rev.classList.toggle('visible');
+    btn.textContent = rev.classList.contains('visible') ? '∑ Hide math' : '∑ Show me the math';
+    if (rev.classList.contains('visible') && typeof renderMathInElement !== 'undefined') {
+      setTimeout(() => renderMathInElement(rev, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}), 50);
+    }
+  },
+
+  proofStep(dir) { this.proofGo(this.proofStep + dir); },
+  proofGo(idx) {
+    const steps = document.querySelectorAll('.it-proof-step');
+    steps.forEach(s => s.classList.remove('active'));
+    if (steps[idx]) steps[idx].classList.add('active');
+    this.proofStep = idx;
+    document.querySelectorAll('.it-dot').forEach((d,i) => {
+      d.classList.remove('active','done');
+      if (i===idx) d.classList.add('active');
+      else if (i<idx) d.classList.add('done');
+    });
+    const prev=document.getElementById('it-pprev'), next=document.getElementById('it-pnext');
+    if (prev) prev.disabled = idx===0;
+    if (next) { next.disabled = idx>=this.proofTotal-1; next.textContent = idx>=this.proofTotal-1?'✓ Done!':'Next →'; }
+    if (typeof renderMathInElement!=='undefined'&&steps[idx]) {
+      setTimeout(()=>renderMathInElement(steps[idx],{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}),50);
+    }
+  },
+
+  toggleNotes() {
+    this.notesOpen = !this.notesOpen;
+    const p=document.getElementById('it-notes-panel'), b=document.getElementById('it-notes-btn');
+    if(p) p.style.display=this.notesOpen?'block':'none';
+    if(b) b.classList.toggle('active',this.notesOpen);
+    if(this.notesOpen){const s=localStorage.getItem('it-notes');const t=document.getElementById('it-notes-ta');if(s&&t)t.value=s;}
+  },
+  toggleCheat() {
+    this.cheatOpen = !this.cheatOpen;
+    const p=document.getElementById('it-cheat-panel'), b=document.getElementById('it-cheat-btn');
+    if(p) p.style.display=this.cheatOpen?'block':'none';
+    if(b) b.classList.toggle('active',this.cheatOpen);
+    if(this.cheatOpen&&typeof renderMathInElement!=='undefined'){
+      setTimeout(()=>renderMathInElement(p,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}),50);
+    }
+  },
+  saveNote() {
+    const t=document.getElementById('it-notes-ta');
+    if(t){localStorage.setItem('it-notes',t.value);const m=document.getElementById('it-saved-msg');if(m){m.style.display='block';setTimeout(()=>m.style.display='none',2000);}}
+  },
+  markDone() {
+    [1,2,3,4].forEach(i=>{
+      const c=document.getElementById('it-ck'+i),p=document.getElementById('it-p'+i);
+      if(c){c.classList.add('done');c.textContent='✓';}if(p)p.classList.add('done');
+    });
+    if(typeof App!=='undefined') App.showToast('🎓 Information Theory complete! Curriculum finished!');
+  }
+};
+
+// ── Entropy Visualizer ────────────────────────────────────────
+const EntropyViz = {
+  update() {
+    const canvas = document.getElementById('entropy-canvas');
+    if(!canvas) return;
+    const p = parseFloat(document.getElementById('entropy-p')?.value || 0.5);
+    document.getElementById('entropy-p-val').textContent = p.toFixed(2);
+
+    const W = canvas.offsetWidth||600, H=240;
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const mg={t:20,b:40,l:44,r:20};
+    const iW=W-mg.l-mg.r, iH=H-mg.t-mg.b;
+    const toX = x => mg.l+x*iW;
+    const toY = y => mg.t+(1-y/1.1)*iH;
+
+    // Grid
+    [0.25,0.5,0.75,1].forEach(v=>{
+      ctx.beginPath();ctx.moveTo(mg.l,toY(v));ctx.lineTo(mg.l+iW,toY(v));
+      ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.stroke();
+    });
+    ctx.beginPath();ctx.moveTo(mg.l,mg.t+iH);ctx.lineTo(mg.l+iW,mg.t+iH);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.stroke();
+
+    // Entropy curve
+    const pts=[];
+    for(let px=0;px<=iW;px++){
+      const pv=0.01+(px/iW)*0.98;
+      const h=-(pv*Math.log2(pv)+(1-pv)*Math.log2(1-pv));
+      pts.push({x:toX(pv),y:toY(h)});
+    }
+    const grad=ctx.createLinearGradient(0,mg.t,0,mg.t+iH);
+    grad.addColorStop(0,'rgba(99,179,237,0.3)'); grad.addColorStop(1,'rgba(99,179,237,0.02)');
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x,pts[0].y);
+    pts.forEach(pt=>ctx.lineTo(pt.x,pt.y));
+    ctx.lineTo(toX(0.99),mg.t+iH);ctx.lineTo(toX(0.01),mg.t+iH);ctx.closePath();
+    ctx.fillStyle=grad;ctx.fill();
+    ctx.beginPath();
+    pts.forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));
+    ctx.strokeStyle='#63b3ed';ctx.lineWidth=2.5;ctx.stroke();
+
+    // Current point
+    const H_p=p>0&&p<1?-(p*Math.log2(p)+(1-p)*Math.log2(1-p)):0;
+    ctx.beginPath();ctx.arc(toX(p),toY(H_p),7,0,2*Math.PI);
+    ctx.fillStyle='#f6ad55';ctx.fill();
+    ctx.beginPath();ctx.arc(toX(p),toY(H_p),4,0,2*Math.PI);
+    ctx.fillStyle='#080b12';ctx.fill();
+
+    // Vertical line from point to axis
+    ctx.beginPath();ctx.moveTo(toX(p),toY(H_p));ctx.lineTo(toX(p),mg.t+iH);
+    ctx.strokeStyle='rgba(246,173,85,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+
+    // Labels
+    ctx.font='10px IBM Plex Mono,monospace';ctx.fillStyle='rgba(255,255,255,0.3)';
+    ['0','0.25','0.5','0.75','1'].forEach((lbl,i)=>{ctx.fillText(lbl,toX(i*0.25)-6,mg.t+iH+14);});
+    ctx.fillStyle='rgba(255,255,255,0.3)';
+    ctx.save();ctx.translate(10,mg.t+iH/2);ctx.rotate(-Math.PI/2);ctx.fillText('H(p) bits',0,0);ctx.restore();
+
+    // Info
+    const infoEl=document.getElementById('entropy-info');
+    if(infoEl){
+      const surprise_heads = p>0?-Math.log2(p):Infinity;
+      const surprise_tails = (1-p)>0?-Math.log2(1-p):Infinity;
+      infoEl.innerHTML=`
+        <span style="color:#f6ad55">H(p=${p.toFixed(2)}) = ${H_p.toFixed(4)} bits</span>
+        &nbsp;|&nbsp; Surprise(heads) = ${isFinite(surprise_heads)?surprise_heads.toFixed(2):'∞'} bits
+        &nbsp;|&nbsp; Surprise(tails) = ${isFinite(surprise_tails)?surprise_tails.toFixed(2):'∞'} bits<br>
+        ${H_p>0.99?'🔴 Maximum uncertainty — fair coin':''}
+        ${H_p<0.05?'🟢 Almost certain — very low entropy':''}
+      `;
+    }
+  }
+};
+
+// ── KL Divergence Visualizer ──────────────────────────────────
+const KLViz = {
+  update() {
+    const canvas=document.getElementById('kl-canvas');
+    if(!canvas) return;
+    const mup=parseFloat(document.getElementById('kl-mup')?.value||0);
+    const sigp=parseFloat(document.getElementById('kl-sigp')?.value||1);
+    const muq=parseFloat(document.getElementById('kl-muq')?.value||1);
+    const sigq=parseFloat(document.getElementById('kl-sigq')?.value||1.5);
+    document.getElementById('kl-mu-p').textContent=mup.toFixed(1);
+    document.getElementById('kl-sig-p').textContent=sigp.toFixed(1);
+    document.getElementById('kl-mu-q').textContent=muq.toFixed(1);
+    document.getElementById('kl-sig-q').textContent=sigq.toFixed(1);
+
+    const W=canvas.offsetWidth||600, H=260;
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const xMin=-5,xMax=5,N=400;
+    const mg={t:20,b:36,l:44,r:20};
+    const iW=W-mg.l-mg.r,iH=H-mg.t-mg.b;
+    const gauss=(x,mu,sig)=>Math.exp(-0.5*((x-mu)/sig)**2)/(sig*Math.sqrt(2*Math.PI));
+    const toX=x=>mg.l+(x-xMin)/(xMax-xMin)*iW;
+
+    const pPts=[],qPts=[];
+    let maxY=0;
+    for(let i=0;i<=N;i++){
+      const x=xMin+(xMax-xMin)*(i/N);
+      const py=gauss(x,mup,sigp),qy=gauss(x,muq,sigq);
+      pPts.push({x,y:py});qPts.push({x,y:qy});
+      maxY=Math.max(maxY,py,qy);
+    }
+    const toY=y=>mg.t+(1-y/(maxY*1.1))*iH;
+
+    // Axis
+    ctx.beginPath();ctx.moveTo(mg.l,mg.t+iH);ctx.lineTo(mg.l+iW,mg.t+iH);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.stroke();
+
+    // Overlap fill
+    ctx.beginPath();
+    pPts.forEach((pt,i)=>{
+      const minY=Math.min(pt.y,qPts[i].y);
+      i===0?ctx.moveTo(toX(pt.x),toY(minY)):ctx.lineTo(toX(pt.x),toY(minY));
+    });
+    ctx.lineTo(toX(pPts[N].x),mg.t+iH);ctx.lineTo(toX(pPts[0].x),mg.t+iH);ctx.closePath();
+    ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fill();
+
+    // p curve
+    const gradP=ctx.createLinearGradient(0,mg.t,0,mg.t+iH);
+    gradP.addColorStop(0,'rgba(99,179,237,0.3)');gradP.addColorStop(1,'rgba(99,179,237,0.02)');
+    ctx.beginPath();pPts.forEach((pt,i)=>i===0?ctx.moveTo(toX(pt.x),toY(pt.y)):ctx.lineTo(toX(pt.x),toY(pt.y)));
+    ctx.lineTo(toX(pPts[N].x),mg.t+iH);ctx.lineTo(toX(pPts[0].x),mg.t+iH);ctx.closePath();
+    ctx.fillStyle=gradP;ctx.fill();
+    ctx.beginPath();pPts.forEach((pt,i)=>i===0?ctx.moveTo(toX(pt.x),toY(pt.y)):ctx.lineTo(toX(pt.x),toY(pt.y)));
+    ctx.strokeStyle='#63b3ed';ctx.lineWidth=2.5;ctx.stroke();
+
+    // q curve
+    const gradQ=ctx.createLinearGradient(0,mg.t,0,mg.t+iH);
+    gradQ.addColorStop(0,'rgba(246,173,85,0.25)');gradQ.addColorStop(1,'rgba(246,173,85,0.02)');
+    ctx.beginPath();qPts.forEach((pt,i)=>i===0?ctx.moveTo(toX(pt.x),toY(pt.y)):ctx.lineTo(toX(pt.x),toY(pt.y)));
+    ctx.lineTo(toX(qPts[N].x),mg.t+iH);ctx.lineTo(toX(qPts[0].x),mg.t+iH);ctx.closePath();
+    ctx.fillStyle=gradQ;ctx.fill();
+    ctx.beginPath();qPts.forEach((pt,i)=>i===0?ctx.moveTo(toX(pt.x),toY(pt.y)):ctx.lineTo(toX(pt.x),toY(pt.y)));
+    ctx.strokeStyle='#f6ad55';ctx.lineWidth=2.5;ctx.stroke();
+
+    // Labels
+    ctx.font='11px Syne,sans-serif';
+    ctx.fillStyle='#63b3ed';ctx.fillText('p (true)',toX(mup)+8,toY(gauss(mup,mup,sigp))-8);
+    ctx.fillStyle='#f6ad55';ctx.fillText('q (model)',toX(muq)+8,toY(gauss(muq,muq,sigq))-8);
+
+    // KL divergence (Gaussian closed form)
+    const kl=Math.log(sigq/sigp)+(sigp**2+(mup-muq)**2)/(2*sigq**2)-0.5;
+    const hp=0.5*Math.log(2*Math.PI*Math.E*sigp**2);
+    const hpq=hp+kl;
+    const infoEl=document.getElementById('kl-info');
+    if(infoEl){
+      const klColor=kl<0.1?'#68d391':kl<1?'#f6ad55':'#fc8181';
+      infoEl.innerHTML=`
+        H(p) = ${hp.toFixed(3)} nats &nbsp;|&nbsp;
+        <span style="color:${klColor}">D_KL(p‖q) = ${kl.toFixed(3)} nats</span> &nbsp;|&nbsp;
+        H(p,q) = ${hpq.toFixed(3)} nats<br>
+        ${kl<0.05?'✅ Distributions nearly identical':''}${kl>2?'⚠️ Large divergence — model is a poor fit':''}
+      `;
+    }
+  }
+};
+
+// ── Mutual Information Venn Visualizer ────────────────────────
+const MIViz = {
+  update() {
+    const canvas=document.getElementById('mi-canvas');
+    if(!canvas) return;
+    const hx=parseFloat(document.getElementById('mi-hx')?.value||2);
+    const hy=parseFloat(document.getElementById('mi-hy')?.value||2);
+    let mi=parseFloat(document.getElementById('mi-mi')?.value||1);
+    mi=Math.min(mi,hx,hy); // MI can't exceed either entropy
+    document.getElementById('mi-hx-val').textContent=hx.toFixed(1);
+    document.getElementById('mi-hy-val').textContent=hy.toFixed(1);
+    document.getElementById('mi-mi-val').textContent=mi.toFixed(1);
+
+    const W=canvas.offsetWidth||600, H=280;
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const cx=W/2, cy=H/2+10;
+    const S=55; // scale factor
+    const rx=hx*S*0.5, ry=hy*S*0.5;
+    const overlap=mi*S*0.5;
+    // Position circles so overlap region matches MI
+    const dist=Math.max(rx+ry-overlap*2, 5);
+    const cx1=cx-dist/2, cx2=cx+dist/2;
+
+    // Draw X circle
+    ctx.beginPath();ctx.arc(cx1,cy,rx,0,2*Math.PI);
+    ctx.fillStyle='rgba(99,179,237,0.12)';ctx.fill();
+    ctx.strokeStyle='rgba(99,179,237,0.5)';ctx.lineWidth=2;ctx.stroke();
+
+    // Draw Y circle
+    ctx.beginPath();ctx.arc(cx2,cy,ry,0,2*Math.PI);
+    ctx.fillStyle='rgba(104,211,145,0.12)';ctx.fill();
+    ctx.strokeStyle='rgba(104,211,145,0.5)';ctx.lineWidth=2;ctx.stroke();
+
+    // Overlap highlight
+    if(mi>0.05){
+      ctx.save();ctx.globalAlpha=0.4;
+      ctx.beginPath();ctx.arc(cx1,cy,rx,0,2*Math.PI);ctx.clip();
+      ctx.beginPath();ctx.arc(cx2,cy,ry,0,2*Math.PI);
+      ctx.fillStyle='#f6ad55';ctx.fill();
+      ctx.restore();
+      // Label MI
+      ctx.font='bold 12px Syne,sans-serif';ctx.fillStyle='#f6ad55';ctx.textAlign='center';
+      ctx.fillText(`I(X;Y)`,cx,cy-6);ctx.fillText(`${mi.toFixed(1)} bits`,cx,cy+10);ctx.textAlign='left';
+    }
+
+    // Labels
+    ctx.font='bold 13px Syne,sans-serif';
+    ctx.fillStyle='rgba(99,179,237,0.9)';ctx.textAlign='center';
+    ctx.fillText(`H(X)=${hx.toFixed(1)}`,cx1,cy-rx-12);
+    ctx.fillStyle='rgba(104,211,145,0.9)';
+    ctx.fillText(`H(Y)=${hy.toFixed(1)}`,cx2,cy-ry-12);
+    ctx.textAlign='left';
+
+    // H(X|Y) and H(Y|X) labels
+    const hxgy=hx-mi, hygx=hy-mi, hxy=hx+hy-mi;
+    ctx.font='11px IBM Plex Mono,monospace';ctx.fillStyle='rgba(99,179,237,0.6)';ctx.textAlign='center';
+    ctx.fillText(`H(X|Y)=${hxgy.toFixed(1)}`,cx1-rx*0.4,cy+6);
+    ctx.fillStyle='rgba(104,211,145,0.6)';
+    ctx.fillText(`H(Y|X)=${hygx.toFixed(1)}`,cx2+rx*0.4,cy+6);
+    ctx.textAlign='left';
+
+    const infoEl=document.getElementById('mi-info');
+    if(infoEl){
+      infoEl.innerHTML=`
+        H(X,Y) = H(X)+H(Y)−I(X;Y) = ${hx.toFixed(1)}+${hy.toFixed(1)}−${mi.toFixed(1)} = <strong style="color:var(--accent-cyan)">${hxy.toFixed(1)} bits</strong><br>
+        ${mi<0.05?'🔵 X and Y are independent — knowing X tells you nothing about Y':''}
+        ${mi>=Math.min(hx,hy)-0.05?'🟡 Near-complete dependency — X almost determines Y (or vice versa)':''}
+      `;
+    }
+  }
+};
+
+// ── Quiz ──────────────────────────────────────────────────────
+const ITQuiz = {
+  answers:{1:'B',2:'C',3:'B',4:'B',5:'B'}, selected:{},
+  sel(q,el,letter){
+    document.getElementById('it-qc'+q).querySelectorAll('.it-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');this.selected[q]=letter;
+    const btn=document.getElementById('it-qbtn');
+    if(btn&&Object.keys(this.selected).length===5)btn.disabled=false;
+  },
+  submit(){
+    let score=0;
+    for(let q=1;q<=5;q++){
+      const ua=this.selected[q],ca=this.answers[q];
+      const card=document.getElementById('it-qc'+q);
+      const letters=['A','B','C','D'];
+      card.querySelectorAll('.it-opt').forEach((o,i)=>{
+        if(letters[i]===ca)o.classList.add('correct');
+        else if(letters[i]===ua&&ua!==ca)o.classList.add('wrong');
+      });
+      const fb=document.getElementById('it-fb'+q),fbw=document.getElementById('it-fb'+q+'w');
+      if(ua===ca){score++;if(fb)fb.classList.add('show');}
+      else{if(fbw){fbw.style.display='block';fbw.classList.add('show');}}
+    }
+    const xp=score*36;
+    const sc=document.getElementById('it-qscore');
+    const emoji=score===5?'🏆':score>=3?'⭐':'📚';
+    if(sc){sc.classList.add('show');sc.innerHTML=`${emoji} ${score}/5 correct — +${xp} XP earned`;}
+    const btn=document.getElementById('it-qbtn');if(btn)btn.disabled=true;
+    if(typeof App!=='undefined'){
+      App.addXP(xp);
+      if(score>=3){
+        setTimeout(()=>{
+          App.showToast('🎓 Curriculum complete! You did it, Mohit!');
+          App.progress=100;App.initProgress();
+        },1000);
+      }
+    }
+  }
+};
+
+// ── Init ──────────────────────────────────────────────────────
+(function initIT(){
+  setTimeout(()=>{
+    EntropyViz.update();
+    KLViz.update();
+    MIViz.update();
+    if(typeof renderMathInElement!=='undefined'){
+      renderMathInElement(document.getElementById('section-info-theory')||document.body,{
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      });
+    }
+    const saved=localStorage.getItem('it-notes');
+    const ta=document.getElementById('it-notes-ta');
+    if(saved&&ta)ta.value=saved;
+  },300);
+})();
+</script>
