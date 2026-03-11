@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DS Math — Mohit's Learning Universe</title>
+  <link rel="stylesheet" href="css/main.css">
+
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+
+  <!-- D3 -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    /* Roadmap node spin animations */
+    @keyframes spin-cw  { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
+    @keyframes spin-ccw { from { transform: rotate(0deg); }   to { transform: rotate(-360deg); } }
+    @keyframes dash { to { stroke-dashoffset: 0; } }
+
+    /* Feature cards */
+    .feature-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      padding: 0 60px 60px;
+    }
+    .feature-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      transition: var(--transition);
+    }
+    .feature-card:hover {
+      border-color: var(--border-soft);
+      transform: translateY(-2px);
+    }
+    .feature-icon { font-size: 24px; margin-bottom: 12px; display: block; }
+    .feature-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 6px; color: var(--text-primary); }
+    .feature-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* Topic cards */
+    .topics-section { padding: 0 60px 60px; }
+    .topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+    .topic-card { --card-color: var(--accent-cyan); }
+    .topic-card-1 { --card-color: #63b3ed; }
+    .topic-card-2 { --card-color: #9f7aea; }
+    .topic-card-3 { --card-color: #68d391; }
+    .topic-card-4 { --card-color: #f6ad55; }
+    .topic-card-5 { --card-color: #fc8181; }
+
+    .topic-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .topic-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--card-color), transparent 60%);
+      opacity: 0.05; transition: var(--transition);
+    }
+    .topic-card:hover { border-color: var(--card-color); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .topic-card:hover::before { opacity: 0.1; }
+    .topic-card.is-locked { opacity: 0.5; cursor: not-allowed; }
+    .topic-card.is-locked:hover { transform: none; box-shadow: none; }
+
+    .topic-icon { font-size: 34px; margin-bottom: 16px; display: block; }
+    .topic-num { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+    .topic-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; color: var(--text-primary); margin-bottom: 10px; }
+    .topic-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
+    .topic-footer { display: flex; align-items: center; justify-content: space-between; }
+    .topic-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--bg-raised); color: var(--text-muted); }
+    .topic-status { font-size: 11px; font-family: 'Syne', sans-serif; font-weight: 600; }
+    .status-open { color: var(--accent-cyan); }
+    .status-locked { color: var(--text-muted); }
+
+    /* What you'll learn */
+    .learn-section { padding: 0 60px 60px; }
+    .learn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .learn-col-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .learn-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .learn-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--text-secondary); }
+    .learn-list li::before { content: '→'; color: var(--accent-cyan); flex-shrink: 0; font-family: 'Syne', sans-serif; }
+
+    /* Viz preview cards */
+    .viz-section { padding: 0 60px 60px; }
+    .viz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 16px; }
+    .viz-preview {
+      background: var(--bg-surface); border: 1px solid var(--border-dim);
+      border-radius: var(--radius-md); padding: 20px; text-align: center;
+      cursor: pointer; transition: var(--transition);
+    }
+    .viz-preview:hover { border-color: var(--border-soft); transform: translateY(-2px); }
+    .viz-thumb { font-size: 36px; margin-bottom: 10px; display: block; }
+    .viz-name { font-size: 12px; font-family: 'Syne', sans-serif; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .viz-topic { font-size: 10px; color: var(--text-muted); }
+
+    /* Section dividers */
+    .section-sep { padding: 0 60px; margin-bottom: 36px; }
+    .section-sep-inner { display: flex; align-items: center; gap: 16px; }
+    .sep-line { flex: 1; height: 1px; background: var(--border-dim); }
+    .sep-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+
+    /* Placeholder sections */
+    .placeholder-section { display: flex; align-items: center; justify-content: center; min-height: 60vh; flex-direction: column; gap: 20px; text-align: center; padding: 40px; }
+    .placeholder-icon { font-size: 64px; margin-bottom: 8px; }
+    .placeholder-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 28px; letter-spacing: -0.5px; color: var(--text-primary); }
+    .placeholder-sub { color: var(--text-muted); font-size: 14px; max-width: 400px; line-height: 1.7; }
+    .coming-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(246,173,85,0.1); border: 1px solid rgba(246,173,85,0.3); border-radius: 20px; padding: 6px 16px; font-size: 11px; color: var(--accent-amber); letter-spacing: 1px; }
+
+    @media (max-width: 900px) {
+      .feature-strip, .topics-section, .learn-section, .viz-section, .section-sep { padding-left: 24px; padding-right: 24px; }
+      .learn-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ═══ HEADER ═══════════════════════════════ -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="brand-icon">∑</div>
+      <div class="brand-text">
+        <span class="brand-name">DS Math</span>
+        <span class="brand-sub">Learning Universe</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <span class="progress-label">Progress</span>
+      <div class="progress-bar-mini">
+        <div class="progress-bar-fill"></div>
+      </div>
+      <span class="progress-pct">0%</span>
+    </div>
+
+    <div class="header-right">
+      <span class="header-greeting">Welcome back, <span>Mohit</span> 👋</span>
+      <div class="header-avatar" title="Mohit">M</div>
+    </div>
+  </header>
+
+  <!-- ═══ SIDEBAR ══════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-section-label">Navigation</div>
+
+    <a class="nav-item active" data-nav="home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home & Roadmap</span>
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Topics</div>
+
+    <a class="nav-item" data-nav="statistics">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Statistics & Probability</span>
+      <span class="nav-badge now">START</span>
+    </a>
+
+    <a class="nav-item locked" data-nav="linear-algebra">
+      <span class="nav-icon">🔢</span>
+      <span class="nav-label">Linear Algebra</span>
+      <span class="nav-badge">🔒</span>
+    </a>
+
+    <a class="nav-item locked" data-nav="calculus">
+      <span class="nav-icon">∂</span>
+      <span class="nav-label">Calculus</span>
+      <span class="nav-badge">🔒</span>
+    </a>
+
+    <a class="nav-item locked" data-nav="optimization">
+      <span class="nav-icon">⚡</span>
+      <span class="nav-label">Optimization</span>
+      <span class="nav-badge">🔒</span>
+    </a>
+
+    <a class="nav-item locked" data-nav="info-theory">
+      <span class="nav-icon">🌀</span>
+      <span class="nav-label">Information Theory</span>
+      <span class="nav-badge">🔒</span>
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Quick Links</div>
+
+    <a class="nav-item" data-nav="home" onclick="document.getElementById('viz-section').scrollIntoView({behavior:'smooth'}); return false;">
+      <span class="nav-icon">🎨</span>
+      <span class="nav-label">Visualizations</span>
+    </a>
+
+    <div class="sidebar-footer">
+      <div class="xp-label">Experience Points</div>
+      <div class="xp-row">
+        <span class="xp-value">0 XP</span>
+        <span style="font-size:11px;color:var(--text-muted)">Lvl 1</span>
+      </div>
+      <div class="xp-bar"><div class="xp-bar-fill"></div></div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN CONTENT ══════════════════════════ -->
+  <main class="main-content">
+
+    <!-- ─── HOME SECTION ─────────────────────── -->
+    <section id="section-home" class="page-section active">
+
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-grid-overlay"></div>
+
+        <div class="hero-eyebrow">Your Personal DS Math Journey</div>
+
+        <h1 class="hero-title">
+          Master the <span class="highlight">Mathematics</span><br>
+          behind <span class="serif">Data Science</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          A structured, visual, interactive path from absolute beginner to professional-level
+          mathematical fluency. Built for you, Mohit — not for a generic audience.
+        </p>
+
+        <div class="hero-cta-row">
+          <button class="btn-primary" onclick="App.showSection('statistics')">
+            ▶&nbsp; Begin Learning
+          </button>
+          <button class="btn-ghost" onclick="document.getElementById('roadmap-area').scrollIntoView({behavior:'smooth'})">
+            View Roadmap ↓
+          </button>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-number" data-target="6" data-suffix="">0</span>
+            <span class="stat-label">Core Topics</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-number" data-target="9" data-suffix="">0</span>
+            <span class="stat-label">Interactive Visualizations</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-number" data-target="3" data-suffix=" levels">0</span>
+            <span class="stat-label">Depth Per Topic</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-number" data-target="100" data-suffix="%">0</span>
+            <span class="stat-label">Free & Interactive</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature strip -->
+      <div class="feature-strip">
+        <div class="feature-card">
+          <span class="feature-icon">🎯</span>
+          <div class="feature-title">Three Depth Levels</div>
+          <div class="feature-desc">Every topic unfolds from beginner intuition through intermediate theory to professional-level rigor.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🎛️</span>
+          <div class="feature-title">Interactive Sliders</div>
+          <div class="feature-desc">Drag parameters and watch mathematics come alive. Learning rate, variance, learning dimensions — all adjustable.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🧮</span>
+          <div class="feature-title">Show the Math</div>
+          <div class="feature-desc">Toggle detailed equations rendered in KaTeX. See the symbols, not just the intuition.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🎓</span>
+          <div class="feature-title">DS Context</div>
+          <div class="feature-desc">"Why does a data scientist need this?" — answered for every single concept, with real-world ML examples.</div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">⚡</span>
+          <div class="feature-title">Mini Quizzes</div>
+          <div class="feature-desc">Test your understanding at the end of each section. Earn XP and unlock the next topic.</div>
+        </div>
+      </div>
+
+      <!-- Roadmap -->
+      <div id="roadmap-area" class="roadmap-section">
+        <div class="section-sep" style="padding:0;margin-bottom:32px;">
+          <div class="section-sep-inner">
+            <div class="sep-line"></div>
+            <div class="sep-label">Learning Roadmap</div>
+            <div class="sep-line"></div>
+          </div>
+        </div>
+
+        <div class="section-header" style="padding:0;margin-bottom:24px;">
+          <div class="section-title">Your Path to DS Math Mastery</div>
+          <div class="section-subtitle">Click any unlocked node to jump directly into that topic</div>
+        </div>
+
+        <div class="roadmap-viz-container">
+          <svg id="roadmap-svg" width="100%" height="380"></svg>
+        </div>
+      </div>
+
+      <!-- Topic Cards -->
+      <div class="topics-section">
+        <div class="section-sep" style="padding:0;margin-bottom:32px;">
+          <div class="section-sep-inner">
+            <div class="sep-line"></div>
+            <div class="sep-label">All Topics</div>
+            <div class="sep-line"></div>
+          </div>
+        </div>
+        <div class="topics-grid">
+
+          <div class="topic-card topic-card-1" onclick="App.showSection('statistics')">
+            <span class="topic-icon">📊</span>
+            <div class="topic-num">Topic 01</div>
+            <div class="topic-title">Statistics & Probability</div>
+            <div class="topic-desc">The language of uncertainty. Normal distributions, Bayes' theorem, hypothesis testing, and the statistical backbone of every ML model.</div>
+            <div class="topic-footer">
+              <div class="topic-pills">
+                <span class="pill">Distributions</span>
+                <span class="pill">Bayes</span>
+                <span class="pill">CLT</span>
+              </div>
+              <span class="topic-status status-open">▶ Open</span>
+            </div>
+          </div>
+
+          <div class="topic-card topic-card-2 is-locked">
+            <span class="topic-icon">🔢</span>
+            <div class="topic-num">Topic 02</div>
+            <div class="topic-title">Linear Algebra</div>
+            <div class="topic-desc">The geometry of data. Vectors, matrices, eigenvalues, PCA, and the mathematical engine behind neural networks and transformers.</div>
+            <div class="topic-footer">
+              <div class="topic-pills">
+                <span class="pill">Matrices</span>
+                <span class="pill">PCA</span>
+                <span class="pill">SVD</span>
+              </div>
+              <span class="topic-status status-locked">🔒 Locked</span>
+            </div>
+          </div>
+
+          <div class="topic-card topic-card-3 is-locked">
+            <span class="topic-icon">∂</span>
+            <div class="topic-num">Topic 03</div>
+            <div class="topic-title">Calculus & Derivatives</div>
+            <div class="topic-desc">The mathematics of change. Derivatives, gradients, chain rule, and the calculus that makes backpropagation possible.</div>
+            <div class="topic-footer">
+              <div class="topic-pills">
+                <span class="pill">Gradients</span>
+                <span class="pill">Chain Rule</span>
+                <span class="pill">Integrals</span>
+              </div>
+              <span class="topic-status status-locked">🔒 Locked</span>
+            </div>
+          </div>
+
+          <div class="topic-card topic-card-4 is-locked">
+            <span class="topic-icon">⚡</span>
+            <div class="topic-num">Topic 04</div>
+            <div class="topic-title">Optimization</div>
+            <div class="topic-desc">Finding the minimum. Gradient descent, learning rates, convexity, saddle points, and how models actually learn.</div>
+            <div class="topic-footer">
+              <div class="topic-pills">
+                <span class="pill">Gradient Descent</span>
+                <span class="pill">Adam</span>
+                <span class="pill">Convex</span>
+              </div>
+              <span class="topic-status status-locked">🔒 Locked</span>
+            </div>
+          </div>
+
+          <div class="topic-card topic-card-5 is-locked">
+            <span class="topic-icon">🌀</span>
+            <div class="topic-num">Topic 05</div>
+            <div class="topic-title">Information Theory</div>
+            <div class="topic-desc">The mathematics of surprise. Entropy, KL divergence, cross-entropy loss, and the information-theoretic foundation of ML.</div>
+            <div class="topic-footer">
+              <div class="topic-pills">
+                <span class="pill">Entropy</span>
+                <span class="pill">KL Div</span>
+                <span class="pill">Mutual Info</span>
+              </div>
+              <span class="topic-status status-locked">🔒 Locked</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- What you'll learn -->
+      <div class="learn-section">
+        <div class="section-sep" style="padding:0;margin-bottom:32px;">
+          <div class="section-sep-inner">
+            <div class="sep-line"></div>
+            <div class="sep-label">Curriculum Highlights</div>
+            <div class="sep-line"></div>
+          </div>
+        </div>
+        <div class="learn-grid">
+          <div>
+            <div class="learn-col-title">📐 Mathematical Concepts</div>
+            <ul class="learn-list">
+              <li>Normal, Binomial & Poisson distributions with interactive visualizers</li>
+              <li>Bayes' Theorem and posterior probability with visual demos</li>
+              <li>Matrix multiplication as geometric transformation</li>
+              <li>Eigenvalues and eigenvectors — what they actually mean</li>
+              <li>Partial derivatives and the gradient vector field</li>
+              <li>Gradient descent on a 3D loss surface with live animation</li>
+              <li>Shannon entropy and information gain for decision trees</li>
+              <li>KL divergence and why it powers VAEs and GANs</li>
+            </ul>
+          </div>
+          <div>
+            <div class="learn-col-title">🤖 Data Science Applications</div>
+            <ul class="learn-list">
+              <li>Why Gaussian distributions underpin so many ML assumptions</li>
+              <li>How Naive Bayes classifiers work from first principles</li>
+              <li>PCA as variance-maximising projection (linear algebra)</li>
+              <li>Why backpropagation is just the chain rule, repeatedly</li>
+              <li>How Adam optimizer adapts learning rates automatically</li>
+              <li>Cross-entropy loss as negative log-likelihood explained</li>
+              <li>Attention mechanisms and the dot-product similarity</li>
+              <li>Regularisation as an optimisation constraint</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visualizations preview -->
+      <div class="viz-section" id="viz-section">
+        <div class="section-sep" style="padding:0;margin-bottom:32px;">
+          <div class="section-sep-inner">
+            <div class="sep-line"></div>
+            <div class="sep-label">Interactive Visualizations</div>
+            <div class="sep-line"></div>
+          </div>
+        </div>
+        <div class="section-header" style="padding:0;margin-bottom:24px;">
+          <div class="section-title">9 Live Visualizations Await</div>
+          <div class="section-subtitle">Every viz has adjustable parameters — drag sliders and watch math in motion</div>
+        </div>
+        <div class="viz-grid">
+          <div class="viz-preview" onclick="App.showSection('statistics')">
+            <span class="viz-thumb">📈</span>
+            <div class="viz-name">Normal Distribution</div>
+            <div class="viz-topic">Statistics → Topic 01</div>
+          </div>
+          <div class="viz-preview" onclick="App.showSection('statistics')">
+            <span class="viz-thumb">🎲</span>
+            <div class="viz-name">Bayes' Theorem</div>
+            <div class="viz-topic">Statistics → Topic 01</div>
+          </div>
+          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Linear Algebra first!')">
+            <span class="viz-thumb">🔄</span>
+            <div class="viz-name">Matrix Multiplication</div>
+            <div class="viz-topic">Linear Algebra → Topic 02</div>
+          </div>
+          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Linear Algebra first!')">
+            <span class="viz-thumb">🌐</span>
+            <div class="viz-name">PCA Visualizer (2D→1D)</div>
+            <div class="viz-topic">Linear Algebra → Topic 02</div>
+          </div>
+          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Linear Algebra first!')">
+            <span class="viz-thumb">↗️</span>
+            <div class="viz-name">Eigenvector Transform</div>
+            <div class="viz-topic">Linear Algebra → Topic 02</div>
+          </div>
+          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Optimization first!')">
+            <span class="viz-thumb">⛰️</span>
+            <div class="viz-name">Gradient Descent (3D)</div>
+            <div class="viz-topic">Optimization → Topic 04</div>
+          </div>
+          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Optimization first!')">
+            <span class="viz-thumb">🎯</span>
+            <div class="viz-name">3D Loss Surface</div>
+            <div class="viz-topic">Optimization → Topic 04</div>
+          </div>
+          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Information Theory first!')">
+            <span class="viz-thumb">🌡️</span>
+            <div class="viz-name">Entropy Demo</div>
+            <div class="viz-topic">Information Theory → Topic 05</div>
+          </div>
+          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Information Theory first!')">
+            <span class="viz-thumb">🔥</span>
+            <div class="viz-name">Correlation Heatmap</div>
+            <div class="viz-topic">Information Theory → Topic 05</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer space -->
+      <div style="height: 80px;"></div>
+
+    </section><!-- /home -->
+
+    <!-- ─── STATISTICS & PROBABILITY ────────────── -->
+    <section id="section-statistics" class="page-section">
+      <div id="statistics-content-mount"></div>
+    </section>
+
+    <!-- ─── LINEAR ALGEBRA PLACEHOLDER ─────────── -->
+    <section id="section-linear-algebra" class="page-section">
+      <div class="placeholder-section">
+        <div class="placeholder-icon">🔢</div>
+        <div class="placeholder-title">Linear Algebra</div>
+        <div class="placeholder-sub">Complete Statistics first to unlock this topic.</div>
+        <div class="coming-badge">🔒 Locked</div>
+        <button class="btn-ghost" onclick="App.showSection('home')" style="margin-top:16px;">← Back to Roadmap</button>
+      </div>
+    </section>
+
+    <!-- ─── CALCULUS PLACEHOLDER ────────────────── -->
+    <section id="section-calculus" class="page-section">
+      <div class="placeholder-section">
+        <div class="placeholder-icon">∂</div>
+        <div class="placeholder-title">Calculus & Derivatives</div>
+        <div class="placeholder-sub">Complete Linear Algebra to unlock this topic.</div>
+        <div class="coming-badge">🔒 Locked</div>
+        <button class="btn-ghost" onclick="App.showSection('home')" style="margin-top:16px;">← Back to Roadmap</button>
+      </div>
+    </section>
+
+    <!-- ─── OPTIMIZATION PLACEHOLDER ───────────── -->
+    <section id="section-optimization" class="page-section">
+      <div class="placeholder-section">
+        <div class="placeholder-icon">⚡</div>
+        <div class="placeholder-title">Optimization</div>
+        <div class="placeholder-sub">Complete Calculus and Linear Algebra to unlock this topic.</div>
+        <div class="coming-badge">🔒 Locked</div>
+        <button class="btn-ghost" onclick="App.showSection('home')" style="margin-top:16px;">← Back to Roadmap</button>
+      </div>
+    </section>
+
+    <!-- ─── INFO THEORY PLACEHOLDER ─────────────── -->
+    <section id="section-info-theory" class="page-section">
+      <div class="placeholder-section">
+        <div class="placeholder-icon">🌀</div>
+        <div class="placeholder-title">Information Theory</div>
+        <div class="placeholder-sub">Complete Optimization to unlock this topic.</div>
+        <div class="coming-badge">🔒 Locked</div>
+        <button class="btn-ghost" onclick="App.showSection('home')" style="margin-top:16px;">← Back to Roadmap</button>
+      </div>
+    </section>
+
+  </main><!-- /main-content -->
+</div><!-- /app-shell -->
+
+<!-- Toast notification -->
+<div id="toast" class="toast">
+  <span class="toast-msg"></span>
+</div>
+
+<script src="js/main.js"></script>
+
+</body>
+</html>
