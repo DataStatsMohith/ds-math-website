@@ -39,6 +39,9 @@ const App = {
     this.currentSection = id;
     if (id === 'home') { setTimeout(() => RoadmapViz.init(), 100); }
     if (id === 'statistics') { this.loadSection('statistics', 'statistics-content-mount'); }
+    if (id === 'linear-algebra') { this.loadSection('linear-algebra', 'linear-algebra-content-mount'); }
+    if (id === 'calculus') { this.loadSection('calculus', 'calculus-content-mount'); }
+    if (id === 'optimization') { this.loadSection('optimization', 'optimization-content-mount'); }
     window.scrollTo(0, 0);
   },
 

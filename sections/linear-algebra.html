@@ -1,0 +1,1330 @@
+<!-- ============================================================
+     LINEAR ALGEBRA — Full Interactive Section
+     Concepts: Vectors, Matrices, Eigenvalues, PCA
+     Visualizations: Matrix transform, Eigenvector, PCA 2D→1D
+     Features: 3 levels, proof walker, cheat sheet, notes, quiz
+     ============================================================ -->
+<style>
+/* ── Linear Algebra Section Styles ─────────────────────────── */
+.la-page { font-family: var(--font-body); }
+
+.la-hero {
+  position: relative; padding: 56px 60px 40px; overflow: hidden;
+  border-bottom: 1px solid var(--border-dim);
+}
+.la-hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 50% 70% at 85% 40%, rgba(159,122,234,0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 35% 50% at 15% 70%, rgba(99,179,237,0.05) 0%, transparent 55%);
+  pointer-events: none;
+}
+.la-hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(159,122,234,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(159,122,234,0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 100% 100% at center, black 20%, transparent 75%);
+  pointer-events: none;
+}
+.la-hero-content { position: relative; z-index: 1; }
+.la-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-muted);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px;
+}
+.la-breadcrumb .la-bc-link { color: var(--accent-cyan); cursor: pointer; }
+.la-breadcrumb .la-bc-link:hover { text-decoration: underline; }
+.la-section-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(159,122,234,0.1); border: 1px solid rgba(159,122,234,0.25);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-violet); margin-bottom: 16px;
+}
+.la-section-tag::before { content: '02'; font-weight: 800; font-family: var(--font-display); font-size: 9px; }
+.la-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.la-hero-left { flex: 1; min-width: 300px; }
+.la-hero-title {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(28px, 3.5vw, 48px); letter-spacing: -1.5px; line-height: 1.05;
+  color: var(--text-primary); margin-bottom: 14px;
+}
+.la-hero-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, #9f7aea, #63b3ed);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.la-hero-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.8; max-width: 520px; margin-bottom: 28px; }
+.la-why-ds {
+  background: rgba(159,122,234,0.06); border: 1px solid rgba(159,122,234,0.15);
+  border-radius: var(--radius-md); padding: 16px 20px; max-width: 520px;
+}
+.la-why-label {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-violet); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.la-why-label::before { content: '🤖'; }
+.la-why-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.la-hero-meta { display: flex; flex-direction: column; gap: 12px; min-width: 180px; align-items: flex-end; }
+.la-meta-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 8px 14px;
+  font-size: 12px; color: var(--text-secondary);
+}
+
+/* ── Level switcher (violet theme) ─────────────────────────── */
+.la-level-bar {
+  display: flex; align-items: center; gap: 0;
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 5px;
+  width: fit-content; margin: 32px 60px 0;
+}
+.la-level-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 12px; cursor: pointer;
+  border: none; background: transparent;
+  font-family: var(--font-display); font-weight: 600; font-size: 13px;
+  color: var(--text-muted); transition: var(--transition); white-space: nowrap;
+}
+.la-level-btn:hover { color: var(--text-secondary); }
+.la-level-btn.active { background: var(--bg-raised); color: var(--text-primary); box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+.la-level-btn.active.lv-beg { color: var(--accent-emerald); }
+.la-level-btn.active.lv-int { color: var(--accent-violet); }
+.la-level-btn.active.lv-pro { color: var(--accent-rose); }
+.la-ldot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.lv-beg .la-ldot { background: var(--accent-emerald); }
+.lv-int .la-ldot { background: var(--accent-violet); }
+.lv-pro .la-ldot { background: var(--accent-rose); }
+
+/* ── Utility bar ────────────────────────────────────────────── */
+.la-util-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 60px; border-bottom: 1px solid var(--border-dim); flex-wrap: wrap;
+}
+.la-util-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); border-radius: 8px;
+  font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.la-util-btn:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.la-util-btn.active { border-color: var(--accent-violet); color: var(--accent-violet); background: rgba(159,122,234,0.08); }
+.la-util-sep { width: 1px; height: 24px; background: var(--border-dim); margin: 0 4px; }
+
+/* ── Content layout ─────────────────────────────────────────── */
+.la-content-area {
+  display: grid; grid-template-columns: 1fr 340px; gap: 0; min-height: 60vh;
+}
+.la-main-col { padding: 40px 60px; border-right: 1px solid var(--border-dim); }
+.la-side-col { padding: 28px 24px; background: var(--bg-deep); }
+
+/* ── Concept blocks ─────────────────────────────────────────── */
+.la-concept {
+  margin-bottom: 52px; padding-bottom: 52px;
+  border-bottom: 1px solid var(--border-dim); animation: fadeIn 0.4s ease;
+}
+.la-concept:last-child { border-bottom: none; }
+.la-concept-num { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.la-concept-title {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 22px; letter-spacing: -0.5px; color: var(--text-primary);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+}
+.la-concept-icon { font-size: 26px; }
+.la-concept-body { font-size: 14px; color: var(--text-secondary); line-height: 1.9; }
+.la-concept-body p { margin-bottom: 14px; }
+.la-concept-body strong { color: var(--text-primary); font-weight: 500; }
+
+.la-intuition {
+  background: rgba(159,122,234,0.06); border-left: 3px solid var(--accent-violet);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px; margin: 20px 0; font-size: 13px;
+}
+.la-intuition-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-violet); margin-bottom: 6px;
+}
+.la-intuition-text { color: var(--text-secondary); line-height: 1.7; }
+
+.la-ds-box {
+  background: rgba(104,211,145,0.05); border-left: 3px solid var(--accent-emerald);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px; margin: 20px 0; font-size: 13px;
+}
+.la-ds-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-emerald); margin-bottom: 6px;
+}
+
+.la-math-box {
+  background: rgba(159,122,234,0.05); border: 1px solid rgba(159,122,234,0.15);
+  border-radius: var(--radius-md); padding: 20px 24px; margin: 20px 0;
+}
+.la-math-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-violet); margin-bottom: 12px;
+}
+.la-eq {
+  background: var(--bg-raised); border-radius: var(--radius-md);
+  padding: 14px 20px; text-align: center; margin: 10px 0; font-size: 15px;
+}
+
+.la-math-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; background: rgba(159,122,234,0.08);
+  border: 1px solid rgba(159,122,234,0.2); border-radius: 8px;
+  font-size: 12px; color: var(--accent-violet);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body); margin: 12px 0;
+}
+.la-math-toggle:hover { background: rgba(159,122,234,0.15); }
+.la-math-reveal { display: none; margin-top: 12px; }
+.la-math-reveal.visible { display: block; animation: fadeIn 0.3s ease; }
+
+/* ── Level content ──────────────────────────────────────────── */
+.la-level { display: none; }
+.la-level.visible { display: block; animation: fadeIn 0.4s ease; }
+
+/* ── Viz containers ─────────────────────────────────────────── */
+.la-viz {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; overflow: hidden;
+}
+.la-viz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.la-viz-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.la-viz-badge {
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 10px; background: rgba(159,122,234,0.1);
+  border: 1px solid rgba(159,122,234,0.2); border-radius: 10px; color: var(--accent-violet);
+}
+.la-canvas { display: block; border-radius: var(--radius-md); background: var(--bg-raised); }
+.la-viz-controls { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.la-slider-row { display: flex; flex-direction: column; gap: 6px; }
+.la-slider-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
+.la-slider-label span { color: var(--text-primary); font-family: var(--font-display); font-weight: 700; }
+.la-slider-row input[type=range] { accent-color: var(--accent-violet); }
+
+/* ── Proof walker ───────────────────────────────────────────── */
+.la-proof {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; position: relative;
+}
+.la-proof::before {
+  content: 'PROOF WALKER';
+  position: absolute; top: 12px; right: 16px;
+  font-size: 9px; letter-spacing: 2px; color: var(--text-muted);
+}
+.la-proof-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin-bottom: 20px; }
+.la-proof-step { display: none; animation: fadeIn 0.3s ease; }
+.la-proof-step.active { display: block; }
+.la-step-num { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.la-step-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--accent-violet); margin-bottom: 10px; }
+.la-step-body { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; }
+.la-step-eq { background: var(--bg-raised); border-radius: var(--radius-md); padding: 16px 20px; text-align: center; margin: 12px 0; font-size: 15px; }
+.la-proof-nav { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+.la-pnav-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: var(--bg-raised); border: 1px solid var(--border-dim);
+  border-radius: 8px; font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.la-pnav-btn:hover:not(:disabled) { border-color: var(--accent-violet); color: var(--accent-violet); }
+.la-pnav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.la-proof-dots { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.la-pdot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-raised); border: 1px solid var(--border-dim); transition: var(--transition); cursor: pointer; }
+.la-pdot.active { background: var(--accent-violet); border-color: var(--accent-violet); transform: scale(1.2); }
+.la-pdot.done { background: var(--accent-emerald); border-color: var(--accent-emerald); }
+
+/* ── Side panels ────────────────────────────────────────────── */
+.la-side-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 12px;
+  color: var(--text-primary); margin-bottom: 14px;
+}
+.la-progress-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.la-prog-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); border-radius: 8px;
+  font-size: 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition);
+}
+.la-prog-item:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.la-prog-item.done { border-color: rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.la-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-soft); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; transition: var(--transition); }
+.la-check.done { background: rgba(104,211,145,0.15); border-color: var(--accent-emerald); }
+.la-cheatsheet {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 16px;
+}
+.la-cheat-item { padding: 10px 0; border-bottom: 1px solid var(--border-dim); }
+.la-cheat-item:last-child { border-bottom: none; }
+.la-cheat-name { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.la-cheat-eq { background: var(--bg-raised); border-radius: 6px; padding: 8px 12px; text-align: center; font-size: 13px; }
+.la-notes-ta {
+  width: 100%; background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 12px; color: var(--text-primary);
+  font-family: var(--font-body); font-size: 12px; line-height: 1.7;
+  resize: vertical; min-height: 100px; outline: none; transition: var(--transition);
+}
+.la-notes-ta:focus { border-color: rgba(159,122,234,0.4); }
+.la-save-btn {
+  margin-top: 8px; padding: 6px 14px; background: rgba(159,122,234,0.1);
+  border: 1px solid rgba(159,122,234,0.2); border-radius: 6px;
+  font-size: 11px; color: var(--accent-violet); cursor: pointer;
+  transition: var(--transition); font-family: var(--font-body);
+}
+.la-save-btn:hover { background: rgba(159,122,234,0.2); }
+.la-term {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+}
+.la-term-name { font-size: 11px; color: var(--accent-violet); font-family: var(--font-display); font-weight: 700; margin-bottom: 3px; }
+.la-term-def { font-size: 11px; color: var(--text-muted); }
+
+/* ── Quiz ───────────────────────────────────────────────────── */
+.la-quiz-section {
+  padding: 48px 60px; border-top: 1px solid var(--border-dim); background: var(--bg-deep);
+}
+.la-quiz-eyebrow { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.la-quiz-title { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 8px; }
+.la-quiz-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+.la-qcard {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; transition: var(--transition);
+}
+.la-qnum { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.la-qtext { font-size: 15px; color: var(--text-primary); line-height: 1.6; margin-bottom: 20px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.2px; }
+.la-opts { display: flex; flex-direction: column; gap: 10px; }
+.la-opt {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: var(--bg-raised);
+  border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  cursor: pointer; transition: var(--transition); font-size: 13px; color: var(--text-secondary);
+}
+.la-opt:hover { border-color: var(--border-soft); color: var(--text-primary); background: var(--bg-hover); }
+.la-opt.selected { border-color: var(--accent-violet); color: var(--accent-violet); background: rgba(159,122,234,0.08); }
+.la-opt.correct { border-color: var(--accent-emerald); color: var(--accent-emerald); background: rgba(104,211,145,0.08); }
+.la-opt.wrong { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(252,129,129,0.08); }
+.la-letter {
+  width: 26px; height: 26px; border-radius: 6px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 12px; flex-shrink: 0; transition: var(--transition);
+}
+.la-opt.selected .la-letter { background: rgba(159,122,234,0.2); border-color: var(--accent-violet); color: var(--accent-violet); }
+.la-opt.correct .la-letter { background: rgba(104,211,145,0.2); border-color: var(--accent-emerald); }
+.la-opt.wrong .la-letter { background: rgba(252,129,129,0.2); border-color: var(--accent-rose); }
+.la-qfb { display: none; margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; line-height: 1.6; }
+.la-qfb.show { display: block; animation: fadeIn 0.3s ease; }
+.la-qfb.ok { background: rgba(104,211,145,0.08); border: 1px solid rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.la-qfb.no { background: rgba(252,129,129,0.08); border: 1px solid rgba(252,129,129,0.2); color: var(--accent-rose); }
+.la-quiz-row { display: flex; align-items: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
+.la-quiz-btn {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-display); font-weight: 700; font-size: 14px;
+  color: var(--bg-void); cursor: pointer; transition: var(--transition);
+}
+.la-quiz-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(159,122,234,0.3); }
+.la-quiz-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.la-score { display: none; font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.la-score.show { display: block; animation: fadeIn 0.5s ease; }
+
+@media (max-width: 1100px) {
+  .la-content-area { grid-template-columns: 1fr; }
+  .la-side-col { border-top: 1px solid var(--border-dim); }
+  .la-main-col { border-right: none; }
+}
+@media (max-width: 768px) {
+  .la-hero, .la-main-col, .la-quiz-section { padding-left: 24px; padding-right: 24px; }
+  .la-level-bar { margin: 24px; }
+  .la-util-bar { padding: 12px 24px; }
+}
+</style>
+
+<!-- ═══ LINEAR ALGEBRA PAGE ════════════════════════════════════ -->
+<div class="la-page">
+
+  <!-- Hero -->
+  <div class="la-hero">
+    <div class="la-hero-bg"></div>
+    <div class="la-hero-grid"></div>
+    <div class="la-hero-content">
+      <div class="la-breadcrumb">
+        <span class="la-bc-link" onclick="App.showSection('home')">Home</span>
+        <span>›</span><span class="la-bc-link" onclick="App.showSection('statistics')">Statistics</span>
+        <span>›</span><span>Linear Algebra</span>
+      </div>
+      <div class="la-hero-top">
+        <div class="la-hero-left">
+          <div class="la-section-tag">Topic&nbsp;&nbsp;·&nbsp;&nbsp;Linear Algebra</div>
+          <h1 class="la-hero-title">The <em>Geometry</em><br>of Data</h1>
+          <p class="la-hero-desc">
+            Data science is fundamentally about transforming high-dimensional data. Linear algebra
+            is the language of those transformations — the mathematical toolkit that makes neural
+            networks, PCA, and attention mechanisms possible.
+          </p>
+          <div class="la-why-ds">
+            <div class="la-why-label">Why does a data scientist need this?</div>
+            <div class="la-why-text">
+              A neural network is a sequence of matrix multiplications. PCA is eigendecomposition. Attention is dot products. SVD powers recommender systems. Every single core ML operation is linear algebra under the hood — without it, you can't read a paper, debug a model, or understand what your code is actually doing.
+            </div>
+          </div>
+        </div>
+        <div class="la-hero-meta">
+          <div class="la-meta-chip">⏱️ ~4 hours</div>
+          <div class="la-meta-chip">🎯 3 depth levels</div>
+          <div class="la-meta-chip">📊 3 live visualizers</div>
+          <div class="la-meta-chip">⭐ +180 XP available</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Switcher -->
+  <div class="la-level-bar">
+    <button class="la-level-btn lv-beg active" onclick="LASection.setLevel('beginner',this)"><span class="la-ldot"></span>Beginner</button>
+    <button class="la-level-btn lv-int" onclick="LASection.setLevel('intermediate',this)"><span class="la-ldot"></span>Intermediate</button>
+    <button class="la-level-btn lv-pro" onclick="LASection.setLevel('pro',this)"><span class="la-ldot"></span>Pro</button>
+  </div>
+
+  <!-- Utility Bar -->
+  <div class="la-util-bar">
+    <button class="la-util-btn" id="la-notes-btn" onclick="LASection.toggleNotes()">✏️ My Notes</button>
+    <button class="la-util-btn" id="la-cheat-btn" onclick="LASection.toggleCheat()">📋 Cheat Sheet</button>
+    <div class="la-util-sep"></div>
+    <button class="la-util-btn" onclick="document.getElementById('la-quiz').scrollIntoView({behavior:'smooth'})">🧪 Jump to Quiz</button>
+    <button class="la-util-btn" onclick="LASection.markDone()">✅ Mark Complete</button>
+  </div>
+
+  <!-- Content Area -->
+  <div class="la-content-area">
+    <div class="la-main-col">
+
+      <!-- ══ CONCEPT 1: Vectors ══════════════════════════════ -->
+      <div class="la-concept" id="la-c1">
+        <div class="la-concept-num">Concept 01 / 04</div>
+        <div class="la-concept-title"><span class="la-concept-icon">↗️</span>Vectors — Data as Arrows</div>
+
+        <div class="la-level visible" data-lv="beginner">
+          <div class="la-concept-body">
+            <p>A <strong>vector</strong> is an ordered list of numbers. That's it. But there's a powerful geometric interpretation: you can think of a vector as an arrow in space, pointing in a specific direction with a specific length.</p>
+            <p>In data science, a single data point — say, a person with height=175, weight=70, age=28 — is a vector in 3-dimensional space: <strong>[175, 70, 28]</strong>. Every row in your dataset is a point (vector) in high-dimensional space.</p>
+          </div>
+          <div class="la-intuition">
+            <div class="la-intuition-label">💡 Geometric Intuition</div>
+            <div class="la-intuition-text">Two vectors are similar if they point in roughly the same direction. This is the geometric heart of cosine similarity, attention mechanisms, and embedding spaces — things you use every day in NLP models.</div>
+          </div>
+          <div class="la-ds-box">
+            <div class="la-ds-label">🤖 In Data Science</div>
+            <div class="la-concept-body">Word embeddings (Word2Vec, BERT) represent words as vectors. Recommendation systems represent users and items as vectors. The "closer" two vectors are in space, the more similar the concepts they represent. This is why vector databases power modern RAG systems.</div>
+          </div>
+          <button class="la-math-toggle" onclick="LASection.toggleMath(this)">∑ Show me the math</button>
+          <div class="la-math-reveal">
+            <div class="la-math-box">
+              <div class="la-math-label">📐 Vector Operations</div>
+              <div class="la-eq">$$\mathbf{v} = \begin{bmatrix}v_1 \\ v_2 \\ \vdots \\ v_n\end{bmatrix} \quad \|\mathbf{v}\| = \sqrt{v_1^2 + v_2^2 + \cdots + v_n^2}$$</div>
+              <div class="la-eq" style="margin-top:10px;">$$\mathbf{u} \cdot \mathbf{v} = \sum_{i=1}^n u_i v_i = \|\mathbf{u}\|\|\mathbf{v}\|\cos\theta$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="la-level" data-lv="intermediate">
+          <div class="la-concept-body">
+            <p>A <strong>vector space</strong> $V$ over field $\mathbb{F}$ is a set closed under addition and scalar multiplication, satisfying 8 axioms. The key structures: <strong>subspaces</strong> (subsets that are themselves vector spaces), <strong>spans</strong> (all linear combinations of a set of vectors), and <strong>linear independence</strong> (no vector is a linear combination of the others).</p>
+            <p>A <strong>basis</strong> is a minimal spanning set — it's both spanning and linearly independent. The number of basis vectors is the <strong>dimension</strong> of the space.</p>
+          </div>
+          <div class="la-math-box">
+            <div class="la-math-label">📐 Dot Product & Cosine Similarity</div>
+            <div class="la-eq">$$\cos\theta = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\|\|\mathbf{v}\|} \in [-1, 1]$$</div>
+          </div>
+          <div class="la-ds-box">
+            <div class="la-ds-label">🤖 In Data Science</div>
+            <div class="la-concept-body">The attention score $\text{softmax}(QK^T/\sqrt{d_k})V$ is literally dot products between query and key vectors, scaled and normalised. Understanding vector spaces makes transformer architectures immediately readable.</div>
+          </div>
+        </div>
+
+        <div class="la-level" data-lv="pro">
+          <div class="la-concept-body">
+            <p>In the pro view, we consider <strong>dual spaces</strong> $V^*$ (the space of linear functionals on $V$), <strong>tensor products</strong> $V \otimes W$, and <strong>norms</strong> that define the geometry of the space. Different norms ($L_1$, $L_2$, $L_\infty$) induce different notions of distance and have different regularisation properties.</p>
+            <p>The $L_1$ norm (LASSO regularisation) promotes sparsity because its unit ball has corners on the axes. The $L_2$ norm (Ridge) spreads the penalty evenly. Understanding why requires knowing the geometry of these normed vector spaces.</p>
+          </div>
+          <div class="la-math-box">
+            <div class="la-math-label">📐 Norms & Regularisation</div>
+            <div class="la-eq">$$\|\mathbf{w}\|_1 = \sum|w_i|,\quad \|\mathbf{w}\|_2 = \sqrt{\sum w_i^2},\quad \|\mathbf{w}\|_\infty = \max|w_i|$$</div>
+            <div class="la-eq" style="margin-top:10px;">$$\mathcal{L}_\text{LASSO} = \text{MSE} + \lambda\|\mathbf{w}\|_1 \qquad \mathcal{L}_\text{Ridge} = \text{MSE} + \lambda\|\mathbf{w}\|_2^2$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 2: Matrix Multiplication (with viz) ═════ -->
+      <div class="la-concept" id="la-c2">
+        <div class="la-concept-num">Concept 02 / 04</div>
+        <div class="la-concept-title"><span class="la-concept-icon">🔄</span>Matrices as Transformations</div>
+
+        <div class="la-level visible" data-lv="beginner">
+          <div class="la-concept-body">
+            <p>A <strong>matrix</strong> is a rectangular grid of numbers — but the real insight is what it <em>does</em>: a matrix is a <strong>linear transformation</strong>. It takes vectors as input and outputs transformed vectors.</p>
+            <p>Multiplying a vector by a 2×2 matrix rotates, scales, shears, or reflects it. This is literally what happens inside every layer of a neural network: your input vector gets multiplied by a weight matrix, producing a new vector.</p>
+          </div>
+          <div class="la-intuition">
+            <div class="la-intuition-label">💡 Watch It Transform</div>
+            <div class="la-intuition-text">The visualizer below shows a grid of points being transformed by a 2×2 matrix. Drag the matrix sliders and watch how the entire space stretches, rotates, and shears. This is what happens to your data at every layer of a neural network.</div>
+          </div>
+
+          <!-- MATRIX TRANSFORM VISUALIZER -->
+          <div class="la-viz">
+            <div class="la-viz-header">
+              <div class="la-viz-title">🔄 Matrix Transformation — Live</div>
+              <div class="la-viz-badge">Interactive</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Matrix A</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--bg-raised);border-radius:10px;padding:16px;border:1px solid var(--border-dim);">
+                  <div style="text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">a</div>
+                    <input type="range" id="la-ma" min="-2" max="2" step="0.1" value="1" oninput="MatViz.update()" style="width:100%;accent-color:var(--accent-violet)">
+                    <div style="font-size:13px;color:var(--accent-violet);font-family:var(--font-display);font-weight:700;" id="la-ma-v">1.0</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">b</div>
+                    <input type="range" id="la-mb" min="-2" max="2" step="0.1" value="0" oninput="MatViz.update()" style="width:100%;accent-color:var(--accent-violet)">
+                    <div style="font-size:13px;color:var(--accent-violet);font-family:var(--font-display);font-weight:700;" id="la-mb-v">0.0</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">c</div>
+                    <input type="range" id="la-mc" min="-2" max="2" step="0.1" value="0" oninput="MatViz.update()" style="width:100%;accent-color:var(--accent-violet)">
+                    <div style="font-size:13px;color:var(--accent-violet);font-family:var(--font-display);font-weight:700;" id="la-mc-v">0.0</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">d</div>
+                    <input type="range" id="la-md" min="-2" max="2" step="0.1" value="1" oninput="MatViz.update()" style="width:100%;accent-color:var(--accent-violet)">
+                    <div style="font-size:13px;color:var(--accent-violet);font-family:var(--font-display);font-weight:700;" id="la-md-v">1.0</div>
+                  </div>
+                </div>
+                <div id="la-mat-info" style="margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.8;"></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                  <button onclick="MatViz.preset(1,0,0,1)" style="padding:5px 10px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;">Identity</button>
+                  <button onclick="MatViz.preset(0,-1,1,0)" style="padding:5px 10px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;">Rotate 90°</button>
+                  <button onclick="MatViz.preset(2,0,0,0.5)" style="padding:5px 10px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;">Scale</button>
+                  <button onclick="MatViz.preset(1,1,0,1)" style="padding:5px 10px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;">Shear</button>
+                </div>
+              </div>
+              <canvas id="la-mat-canvas" class="la-canvas" width="280" height="280"></canvas>
+            </div>
+          </div>
+
+          <div class="la-ds-box">
+            <div class="la-ds-label">🤖 In Data Science</div>
+            <div class="la-concept-body">In a neural network layer: output = activation(W·x + b). W is a matrix. Multiplying by W transforms the input vector into a new representation space. Deep networks chain these transformations, each one learning to detect increasingly abstract features.</div>
+          </div>
+          <button class="la-math-toggle" onclick="LASection.toggleMath(this)">∑ Show me the math</button>
+          <div class="la-math-reveal">
+            <div class="la-math-box">
+              <div class="la-math-label">📐 Matrix Multiplication</div>
+              <div class="la-eq">$$(AB)_{ij} = \sum_{k=1}^n A_{ik} B_{kj}$$</div>
+              <div class="la-eq" style="margin-top:10px;">$$\begin{bmatrix}a & b \\ c & d\end{bmatrix}\begin{bmatrix}x \\ y\end{bmatrix} = \begin{bmatrix}ax+by \\ cx+dy\end{bmatrix}$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="la-level" data-lv="intermediate">
+          <div class="la-concept-body">
+            <p>Key matrix properties for ML: The <strong>rank</strong> of a matrix is the dimension of its column space — a rank-deficient matrix means some features are redundant. The <strong>determinant</strong> measures how much the transformation scales area/volume ($\det = 0$ means the matrix collapses space into lower dimensions).</p>
+            <p><strong>Matrix inverses</strong> $A^{-1}$ exist only for square, full-rank matrices. <strong>Pseudoinverses</strong> $A^+$ generalise this for overdetermined or underdetermined systems — they give the least-squares solution, underpinning linear regression.</p>
+          </div>
+          <div class="la-math-box">
+            <div class="la-math-label">📐 Linear Regression via Pseudoinverse</div>
+            <div class="la-eq">$$\hat{\boldsymbol\beta} = (X^TX)^{-1}X^T\mathbf{y} = X^+\mathbf{y}$$</div>
+          </div>
+          <div class="la-viz">
+            <div class="la-viz-header"><div class="la-viz-title">🔄 Matrix Transformation — Live</div><div class="la-viz-badge">Interactive</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+              <div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--bg-raised);border-radius:10px;padding:16px;border:1px solid var(--border-dim);">
+                  <div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">a</div><input type="range" id="la-ma2" min="-2" max="2" step="0.1" value="1" oninput="MatViz.update2()" style="width:100%;accent-color:var(--accent-violet)"><div style="font-size:13px;color:var(--accent-violet);font-family:var(--font-display);font-weight:700;" id="la-ma2-v">1.0</div></div>
+                  <div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">b</div><input type="range" id="la-mb2" min="-2" max="2" step="0.1" value="0" oninput="MatViz.update2()" style="width:100%;accent-color:var(--accent-violet)"><div style="font-size:13px;color:var(--accent-violet);font-family:var(--font-display);font-weight:700;" id="la-mb2-v">0.0</div></div>
+                  <div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">c</div><input type="range" id="la-mc2" min="-2" max="2" step="0.1" value="0" oninput="MatViz.update2()" style="width:100%;accent-color:var(--accent-violet)"><div style="font-size:13px;color:var(--accent-violet);font-family:var(--font-display);font-weight:700;" id="la-mc2-v">0.0</div></div>
+                  <div style="text-align:center;"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">d</div><input type="range" id="la-md2" min="-2" max="2" step="0.1" value="1" oninput="MatViz.update2()" style="width:100%;accent-color:var(--accent-violet)"><div style="font-size:13px;color:var(--accent-violet);font-family:var(--font-display);font-weight:700;" id="la-md2-v">1.0</div></div>
+                </div>
+                <div id="la-mat-info2" style="margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.8;"></div>
+              </div>
+              <canvas id="la-mat-canvas2" class="la-canvas" width="280" height="280"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="la-level" data-lv="pro">
+          <div class="la-concept-body">
+            <p><strong>Singular Value Decomposition (SVD)</strong>: Any $m \times n$ matrix $A$ decomposes as $A = U\Sigma V^T$, where $U$ and $V$ are orthogonal matrices (rotations) and $\Sigma$ is diagonal (scalings). This reveals the fundamental geometry of any linear map.</p>
+            <p>Truncated SVD (keeping only the top $k$ singular values) gives the best rank-$k$ approximation in the Frobenius norm sense — this is the <strong>Eckart-Young theorem</strong> and is the theoretical foundation of both PCA and low-rank matrix factorisation for recommenders.</p>
+          </div>
+          <div class="la-math-box">
+            <div class="la-math-label">📐 SVD & Low-Rank Approximation</div>
+            <div class="la-eq">$$A = U\Sigma V^T = \sum_{i=1}^r \sigma_i \mathbf{u}_i\mathbf{v}_i^T$$</div>
+            <div class="la-eq" style="margin-top:10px;">$$A_k = \sum_{i=1}^k \sigma_i \mathbf{u}_i\mathbf{v}_i^T = \underset{\text{rank}(B)\leq k}{\arg\min}\|A-B\|_F$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 3: Eigenvalues (with proof walker + viz) ═ -->
+      <div class="la-concept" id="la-c3">
+        <div class="la-concept-num">Concept 03 / 04</div>
+        <div class="la-concept-title"><span class="la-concept-icon">↗️</span>Eigenvalues & Eigenvectors</div>
+
+        <div class="la-level visible" data-lv="beginner">
+          <div class="la-concept-body">
+            <p>Most vectors get knocked off their original direction when you multiply them by a matrix. But some special vectors — called <strong>eigenvectors</strong> — only get scaled, not rotated. The amount they scale by is the <strong>eigenvalue</strong>.</p>
+            <p>Think of it this way: if you stretch a rubber sheet and watch which directions of marks stay pointing in the same direction (just longer or shorter), those are the eigenvectors. The stretch factor is the eigenvalue.</p>
+          </div>
+          <div class="la-intuition">
+            <div class="la-intuition-label">💡 The Key Equation</div>
+            <div class="la-intuition-text">$A\mathbf{v} = \lambda\mathbf{v}$ — applying the matrix A to eigenvector v just scales it by λ. The direction doesn't change. This is extraordinary: it means we've found the "natural axes" of the transformation.</div>
+          </div>
+
+          <!-- EIGENVECTOR VISUALIZER -->
+          <div class="la-viz">
+            <div class="la-viz-header">
+              <div class="la-viz-title">↗️ Eigenvector Transformation — Live</div>
+              <div class="la-viz-badge">Interactive</div>
+            </div>
+            <canvas id="la-eigen-canvas" class="la-canvas" width="100%" height="300" style="width:100%;"></canvas>
+            <div class="la-viz-controls">
+              <div class="la-slider-row">
+                <div class="la-slider-label">Matrix entry a (top-left) <span id="la-ea-v">2.0</span></div>
+                <input type="range" id="la-ea" min="-3" max="3" step="0.1" value="2" oninput="EigenViz.update()">
+              </div>
+              <div class="la-slider-row">
+                <div class="la-slider-label">Matrix entry d (bottom-right) <span id="la-ed-v">1.0</span></div>
+                <input type="range" id="la-ed" min="-3" max="3" step="0.1" value="1" oninput="EigenViz.update()">
+              </div>
+              <div id="la-eigen-info" style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.8;"></div>
+            </div>
+          </div>
+
+          <!-- PROOF WALKER: Finding Eigenvalues -->
+          <div class="la-proof">
+            <div class="la-proof-title">🧩 Proof Walker: How to Find Eigenvalues</div>
+            <div>
+              <div class="la-proof-step active" data-ps="0">
+                <div class="la-step-num">Step 1 of 4</div>
+                <div class="la-step-title">Start with the eigenvector definition</div>
+                <div class="la-step-body">We want to find non-zero vectors v and scalars λ such that:</div>
+                <div class="la-step-eq">$$A\mathbf{v} = \lambda\mathbf{v}$$</div>
+                <div class="la-step-body" style="font-size:12px;color:var(--text-muted);">This says: multiplying v by A gives the same result as scaling v by λ. The direction of v doesn't change.</div>
+              </div>
+              <div class="la-proof-step" data-ps="1">
+                <div class="la-step-num">Step 2 of 4</div>
+                <div class="la-step-title">Rearrange into a homogeneous system</div>
+                <div class="la-step-body">Move everything to one side:</div>
+                <div class="la-step-eq">$$A\mathbf{v} - \lambda\mathbf{v} = \mathbf{0} \implies (A - \lambda I)\mathbf{v} = \mathbf{0}$$</div>
+                <div class="la-step-body" style="font-size:12px;color:var(--text-muted);">For this to have a non-zero solution v, the matrix $(A - \lambda I)$ must be singular — it must collapse space into lower dimensions.</div>
+              </div>
+              <div class="la-proof-step" data-ps="2">
+                <div class="la-step-num">Step 3 of 4</div>
+                <div class="la-step-title">Use the determinant condition</div>
+                <div class="la-step-body">A matrix is singular if and only if its determinant is zero:</div>
+                <div class="la-step-eq">$$\det(A - \lambda I) = 0$$</div>
+                <div class="la-step-body" style="font-size:12px;color:var(--text-muted);">This is the <strong>characteristic equation</strong>. Expanding the determinant gives a polynomial in λ. The roots of this polynomial are the eigenvalues.</div>
+              </div>
+              <div class="la-proof-step" data-ps="3">
+                <div class="la-step-num">Step 4 of 4 ✓</div>
+                <div class="la-step-title">Solve for eigenvalues, then eigenvectors</div>
+                <div class="la-step-body">For a 2×2 matrix $\begin{bmatrix}a&b\\c&d\end{bmatrix}$:</div>
+                <div class="la-step-eq">$$\det\begin{bmatrix}a-\lambda & b \\ c & d-\lambda\end{bmatrix} = (a-\lambda)(d-\lambda)-bc = 0$$</div>
+                <div class="la-step-body" style="font-size:12px;color:var(--text-muted);">Solve this quadratic for λ₁, λ₂. Then plug each back into $(A-\lambda I)\mathbf{v}=\mathbf{0}$ to find the eigenvectors.</div>
+              </div>
+            </div>
+            <div class="la-proof-nav">
+              <button class="la-pnav-btn" id="la-pprev" onclick="LASection.proofStep(-1)" disabled>← Back</button>
+              <button class="la-pnav-btn" id="la-pnext" onclick="LASection.proofStep(1)">Next →</button>
+              <div class="la-proof-dots" id="la-pdots">
+                <div class="la-pdot active" onclick="LASection.proofGo(0)"></div>
+                <div class="la-pdot" onclick="LASection.proofGo(1)"></div>
+                <div class="la-pdot" onclick="LASection.proofGo(2)"></div>
+                <div class="la-pdot" onclick="LASection.proofGo(3)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="la-ds-box">
+            <div class="la-ds-label">🤖 In Data Science</div>
+            <div class="la-concept-body">PCA finds the eigenvectors of the data's covariance matrix. The eigenvector with the largest eigenvalue is the direction of maximum variance — the first principal component. Google's PageRank is the leading eigenvector of the web's link matrix. Markov chains converge to their eigenvector (stationary distribution).</div>
+          </div>
+        </div>
+
+        <div class="la-level" data-lv="intermediate">
+          <div class="la-concept-body">
+            <p><strong>Spectral decomposition</strong>: A symmetric matrix $A$ can be decomposed as $A = Q\Lambda Q^T$, where $Q$ is orthogonal (columns are eigenvectors) and $\Lambda$ is diagonal (eigenvalues). This is the eigendecomposition, which PCA relies on entirely.</p>
+            <p>The <strong>trace</strong> equals the sum of eigenvalues ($\text{tr}(A) = \sum\lambda_i$) and the <strong>determinant</strong> equals their product ($\det(A) = \prod\lambda_i$). This gives geometric meaning: det=0 means some eigenvalue is zero, meaning the transformation collapses space to lower dimensions.</p>
+          </div>
+          <div class="la-math-box">
+            <div class="la-math-label">📐 Spectral Decomposition</div>
+            <div class="la-eq">$$A = Q\Lambda Q^T = \sum_{i=1}^n \lambda_i \mathbf{q}_i\mathbf{q}_i^T$$</div>
+          </div>
+        </div>
+
+        <div class="la-level" data-lv="pro">
+          <div class="la-concept-body">
+            <p>The <strong>Perron-Frobenius theorem</strong> guarantees that for a non-negative irreducible matrix, there is a unique largest real eigenvalue (the Perron root) with a corresponding strictly positive eigenvector. This underpins PageRank, Markov chain stationary distributions, and spectral clustering.</p>
+            <p><strong>Power iteration</strong> computes the leading eigenvector in $O(n^2)$ per iteration — vastly more efficient than full eigendecomposition for large sparse matrices, which is why it scales to web-scale graphs.</p>
+          </div>
+          <div class="la-math-box">
+            <div class="la-math-label">📐 Power Iteration</div>
+            <div class="la-eq">$$\mathbf{v}^{(t+1)} = \frac{A\mathbf{v}^{(t)}}{\|A\mathbf{v}^{(t)}\|} \xrightarrow{t\to\infty} \mathbf{q}_1 \text{ (leading eigenvector)}$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 4: PCA (with visualizer) ═══════════════ -->
+      <div class="la-concept" id="la-c4">
+        <div class="la-concept-num">Concept 04 / 04</div>
+        <div class="la-concept-title"><span class="la-concept-icon">🌐</span>PCA — Dimensionality Reduction</div>
+
+        <div class="la-level visible" data-lv="beginner">
+          <div class="la-concept-body">
+            <p>Your dataset has 100 features. Most of them are correlated. <strong>PCA</strong> (Principal Component Analysis) finds new axes — called principal components — along which the data varies the most. It then projects your data onto the top few components, reducing dimensions while preserving most of the information.</p>
+            <p>It's like finding the best angle to photograph a 3D object so the 2D photo captures as much detail as possible.</p>
+          </div>
+          <div class="la-intuition">
+            <div class="la-intuition-label">💡 PCA = Eigenvectors of Covariance</div>
+            <div class="la-intuition-text">The principal components are the eigenvectors of the data's covariance matrix. The first PC is the eigenvector with the largest eigenvalue — the direction of maximum spread. Drag the data cloud below and watch how the PC axis follows the direction of maximum variance.</div>
+          </div>
+
+          <!-- PCA VISUALIZER -->
+          <div class="la-viz">
+            <div class="la-viz-header">
+              <div class="la-viz-title">🌐 PCA — 2D → 1D Projection</div>
+              <div class="la-viz-badge">Interactive</div>
+            </div>
+            <canvas id="la-pca-canvas" class="la-canvas" width="100%" height="340" style="width:100%;"></canvas>
+            <div class="la-viz-controls">
+              <div class="la-slider-row">
+                <div class="la-slider-label">Data spread (variance) <span id="la-pca-spread-v">1.5</span></div>
+                <input type="range" id="la-pca-spread" min="0.5" max="3" step="0.1" value="1.5" oninput="PCAViz.update()">
+              </div>
+              <div class="la-slider-row">
+                <div class="la-slider-label">Correlation strength <span id="la-pca-corr-v">0.8</span></div>
+                <input type="range" id="la-pca-corr" min="0" max="0.99" step="0.01" value="0.8" oninput="PCAViz.update()">
+              </div>
+              <div id="la-pca-info" style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.8;"></div>
+            </div>
+          </div>
+
+          <div class="la-ds-box">
+            <div class="la-ds-label">🤖 In Data Science</div>
+            <div class="la-concept-body">PCA is used for: visualising high-dimensional data (project to 2D for plotting), reducing input dimensions before training (speeds up models, reduces overfitting), removing multicollinearity in regression, and compressing images. The "explained variance ratio" tells you how much information each component retains.</div>
+          </div>
+          <button class="la-math-toggle" onclick="LASection.toggleMath(this)">∑ Show me the math</button>
+          <div class="la-math-reveal">
+            <div class="la-math-box">
+              <div class="la-math-label">📐 PCA Algorithm</div>
+              <div class="la-eq">$$\Sigma = \frac{1}{n-1}X^TX \quad\text{(covariance matrix)}$$</div>
+              <div class="la-eq" style="margin-top:10px;">$$\Sigma = Q\Lambda Q^T \quad\text{(eigendecompose)}$$</div>
+              <div class="la-eq" style="margin-top:10px;">$$Z = XQ_k \quad\text{(project to top-}k\text{ components)}$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="la-level" data-lv="intermediate">
+          <div class="la-concept-body">
+            <p>PCA maximises variance: the first PC is $\mathbf{w}_1 = \arg\max_{\|\mathbf{w}\|=1} \mathbf{w}^T\Sigma\mathbf{w}$. By the Lagrangian, this gives $\Sigma\mathbf{w}_1 = \lambda_1\mathbf{w}_1$ — confirming PC₁ is the leading eigenvector of the covariance matrix.</p>
+            <p>The fraction of variance explained by component $k$ is $\lambda_k / \sum_i \lambda_i$. The "elbow" in a scree plot shows where adding more components gives diminishing returns.</p>
+          </div>
+          <div class="la-math-box">
+            <div class="la-math-label">📐 Variance Explained</div>
+            <div class="la-eq">$$\text{Explained Variance Ratio}_k = \frac{\lambda_k}{\sum_{i=1}^d \lambda_i}$$</div>
+          </div>
+        </div>
+
+        <div class="la-level" data-lv="pro">
+          <div class="la-concept-body">
+            <p>PCA is equivalent to SVD of the centred data matrix: $X = U\Sigma V^T \Rightarrow$ PCs are columns of $V$, scores are columns of $U\Sigma$. This is computationally preferable for tall/skinny matrices.</p>
+            <p><strong>Kernel PCA</strong> extends PCA to nonlinear manifolds by implicitly mapping to a reproducing kernel Hilbert space (RKHS) via the kernel trick $k(\mathbf{x},\mathbf{x}') = \phi(\mathbf{x})^T\phi(\mathbf{x}')$, then performing PCA in that space without ever computing $\phi$ explicitly.</p>
+          </div>
+          <div class="la-math-box">
+            <div class="la-math-label">📐 Kernel PCA</div>
+            <div class="la-eq">$$K_{ij} = k(\mathbf{x}_i, \mathbf{x}_j) \quad \tilde{K} = K - \mathbf{1}_n K - K\mathbf{1}_n + \mathbf{1}_n K \mathbf{1}_n$$</div>
+            <div class="la-eq" style="margin-top:10px;">$$\text{Eigendecompose } \tilde{K} \text{ to get nonlinear principal components}$$</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /la-main-col -->
+
+    <!-- Sidebar -->
+    <div class="la-side-col">
+      <div class="la-side-title">📍 Section Progress</div>
+      <div class="la-progress-list">
+        <div class="la-prog-item" id="la-p1" onclick="document.getElementById('la-c1').scrollIntoView({behavior:'smooth'})">
+          <div class="la-check" id="la-ck1">1</div>Vectors
+        </div>
+        <div class="la-prog-item" id="la-p2" onclick="document.getElementById('la-c2').scrollIntoView({behavior:'smooth'})">
+          <div class="la-check" id="la-ck2">2</div>Matrices as Transformations
+        </div>
+        <div class="la-prog-item" id="la-p3" onclick="document.getElementById('la-c3').scrollIntoView({behavior:'smooth'})">
+          <div class="la-check" id="la-ck3">3</div>Eigenvalues & Eigenvectors
+        </div>
+        <div class="la-prog-item" id="la-p4" onclick="document.getElementById('la-c4').scrollIntoView({behavior:'smooth'})">
+          <div class="la-check" id="la-ck4">4</div>PCA
+        </div>
+      </div>
+
+      <div id="la-cheat-panel" style="display:none;margin-bottom:24px;">
+        <div class="la-side-title">📋 Cheat Sheet</div>
+        <div class="la-cheatsheet">
+          <div class="la-cheat-item"><div class="la-cheat-name">Dot product</div><div class="la-cheat-eq">$\mathbf{u}\cdot\mathbf{v}=\sum u_iv_i$</div></div>
+          <div class="la-cheat-item"><div class="la-cheat-name">Matrix multiply</div><div class="la-cheat-eq">$(AB)_{ij}=\sum_k A_{ik}B_{kj}$</div></div>
+          <div class="la-cheat-item"><div class="la-cheat-name">Eigenvector eq</div><div class="la-cheat-eq">$A\mathbf{v}=\lambda\mathbf{v}$</div></div>
+          <div class="la-cheat-item"><div class="la-cheat-name">Char. equation</div><div class="la-cheat-eq">$\det(A-\lambda I)=0$</div></div>
+          <div class="la-cheat-item"><div class="la-cheat-name">Spectral decomp</div><div class="la-cheat-eq">$A=Q\Lambda Q^T$</div></div>
+          <div class="la-cheat-item"><div class="la-cheat-name">SVD</div><div class="la-cheat-eq">$A=U\Sigma V^T$</div></div>
+          <div class="la-cheat-item"><div class="la-cheat-name">PCA covariance</div><div class="la-cheat-eq">$\Sigma=\frac{1}{n-1}X^TX$</div></div>
+          <div class="la-cheat-item"><div class="la-cheat-name">Cosine sim</div><div class="la-cheat-eq">$\cos\theta=\frac{\mathbf{u}\cdot\mathbf{v}}{\|\mathbf{u}\|\|\mathbf{v}\|}$</div></div>
+        </div>
+      </div>
+
+      <div id="la-notes-panel" style="display:none;margin-bottom:24px;">
+        <div class="la-side-title">✏️ My Notes</div>
+        <textarea class="la-notes-ta" id="la-notes-ta" placeholder="Your linear algebra notes..."></textarea>
+        <button class="la-save-btn" onclick="LASection.saveNote()">💾 Save</button>
+        <div id="la-saved-msg" style="font-size:11px;color:var(--accent-emerald);margin-top:6px;display:none;">✓ Saved!</div>
+      </div>
+
+      <div class="la-side-title">🔑 Key Terms</div>
+      <div class="la-term"><div class="la-term-name">Span</div><div class="la-term-def">All possible linear combinations of a set of vectors.</div></div>
+      <div class="la-term"><div class="la-term-name">Rank</div><div class="la-term-def">Dimension of the column space — number of linearly independent columns.</div></div>
+      <div class="la-term"><div class="la-term-name">Orthogonal</div><div class="la-term-def">Vectors at 90° (dot product = 0). Orthogonal matrices preserve lengths.</div></div>
+      <div class="la-term"><div class="la-term-name">Positive Definite</div><div class="la-term-def">All eigenvalues > 0. Covariance matrices are always PSD (≥ 0).</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ QUIZ ════════════════════════════════════════════════ -->
+  <div class="la-quiz-section" id="la-quiz">
+    <div class="la-quiz-eyebrow">Knowledge Check</div>
+    <div class="la-quiz-title">Linear Algebra Quiz</div>
+    <div class="la-quiz-sub">5 questions · +180 XP · Unlocks Calculus on pass</div>
+
+    <div class="la-qcard" id="la-qc1">
+      <div class="la-qnum">Question 1 of 5</div>
+      <div class="la-qtext">In a neural network, each layer computes output = activation(Wx + b). What is W geometrically?</div>
+      <div class="la-opts">
+        <div class="la-opt" onclick="LAQuiz.sel(1,this,'A')"><div class="la-letter">A</div>A scalar that scales the input</div>
+        <div class="la-opt" onclick="LAQuiz.sel(1,this,'B')"><div class="la-letter">B</div>A linear transformation that maps input vectors to a new space</div>
+        <div class="la-opt" onclick="LAQuiz.sel(1,this,'C')"><div class="la-letter">C</div>A probability distribution over outputs</div>
+        <div class="la-opt" onclick="LAQuiz.sel(1,this,'D')"><div class="la-letter">D</div>The gradient of the loss with respect to the input</div>
+      </div>
+      <div class="la-qfb ok" id="la-fb1">✅ Correct! W is a matrix that linearly transforms the input vector — rotating, scaling, and shearing it to extract new feature representations.</div>
+      <div class="la-qfb no" id="la-fb1w" style="display:none;">❌ The weight matrix W (B) is a linear transformation — it maps the input vector into a new representation space. This is the geometric view of every layer in a neural network.</div>
+    </div>
+
+    <div class="la-qcard" id="la-qc2">
+      <div class="la-qnum">Question 2 of 5</div>
+      <div class="la-qtext">If Av = λv for a non-zero vector v, what are v and λ called?</div>
+      <div class="la-opts">
+        <div class="la-opt" onclick="LAQuiz.sel(2,this,'A')"><div class="la-letter">A</div>Gradient vector and learning rate</div>
+        <div class="la-opt" onclick="LAQuiz.sel(2,this,'B')"><div class="la-letter">B</div>Principal component and explained variance</div>
+        <div class="la-opt" onclick="LAQuiz.sel(2,this,'C')"><div class="la-letter">C</div>Eigenvector and eigenvalue</div>
+        <div class="la-opt" onclick="LAQuiz.sel(2,this,'D')"><div class="la-letter">D</div>Singular vector and singular value</div>
+      </div>
+      <div class="la-qfb ok" id="la-fb2">✅ Exactly! v is the eigenvector and λ is the eigenvalue. The equation says: applying A to v only scales it — the direction is preserved.</div>
+      <div class="la-qfb no" id="la-fb2w" style="display:none;">❌ Av = λv defines the eigenvector (v) and eigenvalue (λ) — C. Singular vectors are related but arise from SVD, not eigendecomposition directly.</div>
+    </div>
+
+    <div class="la-qcard" id="la-qc3">
+      <div class="la-qnum">Question 3 of 5</div>
+      <div class="la-qtext">PCA selects the principal components by finding the eigenvectors of which matrix?</div>
+      <div class="la-opts">
+        <div class="la-opt" onclick="LAQuiz.sel(3,this,'A')"><div class="la-letter">A</div>The weight matrix W of a neural network</div>
+        <div class="la-opt" onclick="LAQuiz.sel(3,this,'B')"><div class="la-letter">B</div>The data matrix X directly</div>
+        <div class="la-opt" onclick="LAQuiz.sel(3,this,'C')"><div class="la-letter">C</div>The covariance matrix Σ = XᵀX / (n−1)</div>
+        <div class="la-opt" onclick="LAQuiz.sel(3,this,'D')"><div class="la-letter">D</div>The identity matrix</div>
+      </div>
+      <div class="la-qfb ok" id="la-fb3">✅ Correct! PCA eigendecomposes the covariance matrix Σ. The eigenvectors are the principal components, and the eigenvalues tell you how much variance each component captures.</div>
+      <div class="la-qfb no" id="la-fb3w" style="display:none;">❌ PCA finds eigenvectors of the covariance matrix Σ = XᵀX/(n−1) — answer C. The eigenvector with the largest eigenvalue is the direction of maximum variance in the data.</div>
+    </div>
+
+    <div class="la-qcard" id="la-qc4">
+      <div class="la-qnum">Question 4 of 5</div>
+      <div class="la-qtext">What does a determinant of zero mean geometrically for a matrix transformation?</div>
+      <div class="la-opts">
+        <div class="la-opt" onclick="LAQuiz.sel(4,this,'A')"><div class="la-letter">A</div>The transformation is a pure rotation</div>
+        <div class="la-opt" onclick="LAQuiz.sel(4,this,'B')"><div class="la-letter">B</div>The transformation squashes space to a lower dimension (not invertible)</div>
+        <div class="la-opt" onclick="LAQuiz.sel(4,this,'C')"><div class="la-letter">C</div>The transformation doubles all areas</div>
+        <div class="la-opt" onclick="LAQuiz.sel(4,this,'D')"><div class="la-letter">D</div>All eigenvalues are equal to 1</div>
+      </div>
+      <div class="la-qfb ok" id="la-fb4">✅ Right! Det = 0 means the transformation collapses space to a lower dimension — like squishing a 2D plane onto a line. The matrix is singular and has no inverse.</div>
+      <div class="la-qfb no" id="la-fb4w" style="display:none;">❌ A determinant of zero (B) means the transformation collapses space — it's singular, not invertible. At least one eigenvalue must be zero. This is why covariance matrices must be full-rank for PCA to work properly.</div>
+    </div>
+
+    <div class="la-qcard" id="la-qc5">
+      <div class="la-qnum">Question 5 of 5</div>
+      <div class="la-qtext">Cosine similarity between two word embedding vectors is used to measure what?</div>
+      <div class="la-opts">
+        <div class="la-opt" onclick="LAQuiz.sel(5,this,'A')"><div class="la-letter">A</div>The Euclidean distance between the words in the vocabulary</div>
+        <div class="la-opt" onclick="LAQuiz.sel(5,this,'B')"><div class="la-letter">B</div>The angle between the vectors — how similar the words are in meaning</div>
+        <div class="la-opt" onclick="LAQuiz.sel(5,this,'C')"><div class="la-letter">C</div>The number of shared characters between the words</div>
+        <div class="la-opt" onclick="LAQuiz.sel(5,this,'D')"><div class="la-letter">D</div>The magnitude of the word frequency in the corpus</div>
+      </div>
+      <div class="la-qfb ok" id="la-fb5">✅ Exactly! Cosine similarity measures the angle between vectors, not their magnitude. Two semantically similar words (like "king" and "queen") will have vectors pointing in similar directions, giving cosine similarity close to 1.</div>
+      <div class="la-qfb no" id="la-fb5w" style="display:none;">❌ Cosine similarity (B) measures the angle between two vectors — how aligned their directions are. In word embeddings, similar words point in similar directions, so cos θ ≈ 1 for synonyms regardless of how long the vectors are.</div>
+    </div>
+
+    <div class="la-quiz-row">
+      <button class="la-quiz-btn" id="la-qbtn" onclick="LAQuiz.submit()" disabled>Check Answers</button>
+      <div class="la-score" id="la-qscore"></div>
+    </div>
+  </div>
+
+</div><!-- /la-page -->
+
+<script>
+// ── Linear Algebra Section Controller ────────────────────────
+const LASection = {
+  level: 'beginner',
+  proofStep: 0,
+  proofTotal: 4,
+  notesOpen: false,
+  cheatOpen: false,
+
+  setLevel(lv, btn) {
+    this.level = lv;
+    document.querySelectorAll('.la-level-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.la-level').forEach(el => {
+      el.classList.remove('visible');
+      if (el.dataset.lv === lv) el.classList.add('visible');
+    });
+    if (typeof renderMathInElement !== 'undefined') {
+      setTimeout(() => renderMathInElement(document.getElementById('section-linear-algebra') || document.body, {
+        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      }), 100);
+    }
+    setTimeout(() => { MatViz.init(); EigenViz.update(); PCAViz.update(); }, 150);
+  },
+
+  toggleMath(btn) {
+    const rev = btn.nextElementSibling;
+    rev.classList.toggle('visible');
+    btn.textContent = rev.classList.contains('visible') ? '∑ Hide math' : '∑ Show me the math';
+    if (rev.classList.contains('visible') && typeof renderMathInElement !== 'undefined') {
+      setTimeout(() => renderMathInElement(rev, {
+        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      }), 50);
+    }
+  },
+
+  proofStep(dir) { this.proofGo(this.proofStep + dir); },
+
+  proofGo(idx) {
+    const steps = document.querySelectorAll('.la-proof-step');
+    steps.forEach(s => s.classList.remove('active'));
+    if (steps[idx]) steps[idx].classList.add('active');
+    this.proofStep = idx;
+    document.querySelectorAll('.la-pdot').forEach((d, i) => {
+      d.classList.remove('active','done');
+      if (i === idx) d.classList.add('active');
+      else if (i < idx) d.classList.add('done');
+    });
+    const prev = document.getElementById('la-pprev');
+    const next = document.getElementById('la-pnext');
+    if (prev) prev.disabled = idx === 0;
+    if (next) { next.disabled = idx >= this.proofTotal-1; next.textContent = idx >= this.proofTotal-1 ? '✓ Done!' : 'Next →'; }
+    if (typeof renderMathInElement !== 'undefined' && steps[idx]) {
+      setTimeout(() => renderMathInElement(steps[idx], {
+        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      }), 50);
+    }
+  },
+
+  toggleNotes() {
+    this.notesOpen = !this.notesOpen;
+    const p = document.getElementById('la-notes-panel');
+    const b = document.getElementById('la-notes-btn');
+    if (p) p.style.display = this.notesOpen ? 'block' : 'none';
+    if (b) b.classList.toggle('active', this.notesOpen);
+    if (this.notesOpen) { const s = localStorage.getItem('la-notes'); const t = document.getElementById('la-notes-ta'); if (s && t) t.value = s; }
+  },
+
+  toggleCheat() {
+    this.cheatOpen = !this.cheatOpen;
+    const p = document.getElementById('la-cheat-panel');
+    const b = document.getElementById('la-cheat-btn');
+    if (p) p.style.display = this.cheatOpen ? 'block' : 'none';
+    if (b) b.classList.toggle('active', this.cheatOpen);
+    if (this.cheatOpen && typeof renderMathInElement !== 'undefined') {
+      setTimeout(() => renderMathInElement(p, {
+        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      }), 50);
+    }
+  },
+
+  saveNote() {
+    const t = document.getElementById('la-notes-ta');
+    if (t) { localStorage.setItem('la-notes', t.value); const m = document.getElementById('la-saved-msg'); if (m) { m.style.display='block'; setTimeout(()=>m.style.display='none',2000); } }
+  },
+
+  markDone() {
+    [1,2,3,4].forEach(i => {
+      const c = document.getElementById('la-ck'+i); const p = document.getElementById('la-p'+i);
+      if (c) { c.classList.add('done'); c.textContent='✓'; } if (p) p.classList.add('done');
+    });
+    if (typeof App !== 'undefined') App.showToast('✅ All concepts marked complete!');
+  }
+};
+
+// ── Matrix Transformation Visualizer ─────────────────────────
+const MatViz = {
+  init() { this.draw('la-mat-canvas','la-ma','la-mb','la-mc','la-md','la-ma-v','la-mb-v','la-mc-v','la-md-v','la-mat-info'); this.draw('la-mat-canvas2','la-ma2','la-mb2','la-mc2','la-md2','la-ma2-v','la-mb2-v','la-mc2-v','la-md2-v','la-mat-info2'); },
+
+  preset(a,b,c,d) {
+    const set = (id,v) => { const el=document.getElementById(id); if(el){el.value=v;} };
+    set('la-ma',a); set('la-mb',b); set('la-mc',c); set('la-md',d);
+    this.update();
+  },
+
+  update() { this.draw('la-mat-canvas','la-ma','la-mb','la-mc','la-md','la-ma-v','la-mb-v','la-mc-v','la-md-v','la-mat-info'); },
+  update2() { this.draw('la-mat-canvas2','la-ma2','la-mb2','la-mc2','la-md2','la-ma2-v','la-mb2-v','la-mc2-v','la-md2-v','la-mat-info2'); },
+
+  draw(canvasId, aid, bid, cid, did, avId, bvId, cvId, dvId, infoId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const a = parseFloat(document.getElementById(aid)?.value||1);
+    const b = parseFloat(document.getElementById(bid)?.value||0);
+    const c = parseFloat(document.getElementById(cid)?.value||0);
+    const d = parseFloat(document.getElementById(did)?.value||1);
+    if (document.getElementById(avId)) document.getElementById(avId).textContent = a.toFixed(1);
+    if (document.getElementById(bvId)) document.getElementById(bvId).textContent = b.toFixed(1);
+    if (document.getElementById(cvId)) document.getElementById(cvId).textContent = c.toFixed(1);
+    if (document.getElementById(dvId)) document.getElementById(dvId).textContent = d.toFixed(1);
+
+    const W = canvas.offsetWidth || 280; const H = 280;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const cx = W/2, cy = H/2, scale = 50;
+
+    // Grid lines (original space) — dim
+    const gridLines = 5;
+    for (let i = -gridLines; i <= gridLines; i++) {
+      // Horizontal lines y=i
+      const p1 = this.tx(-gridLines,i,a,b,c,d,cx,cy,scale);
+      const p2 = this.tx(gridLines,i,a,b,c,d,cx,cy,scale);
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
+      ctx.strokeStyle = 'rgba(99,179,237,0.15)'; ctx.lineWidth=1; ctx.stroke();
+      // Vertical lines x=i
+      const p3 = this.tx(i,-gridLines,a,b,c,d,cx,cy,scale);
+      const p4 = this.tx(i,gridLines,a,b,c,d,cx,cy,scale);
+      ctx.beginPath(); ctx.moveTo(p3.x,p3.y); ctx.lineTo(p4.x,p4.y);
+      ctx.strokeStyle = 'rgba(159,122,234,0.15)'; ctx.lineWidth=1; ctx.stroke();
+    }
+
+    // Original grid (ghost)
+    for (let i = -gridLines; i <= gridLines; i++) {
+      ctx.beginPath(); ctx.moveTo(cx+(-gridLines)*scale, cy-i*scale); ctx.lineTo(cx+(gridLines)*scale, cy-i*scale);
+      ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+i*scale,cy-gridLines*scale); ctx.lineTo(cx+i*scale,cy+gridLines*scale);
+      ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1; ctx.stroke();
+    }
+
+    // Axes after transform
+    const ax1 = this.tx(-5,0,a,b,c,d,cx,cy,scale), ax2 = this.tx(5,0,a,b,c,d,cx,cy,scale);
+    const ay1 = this.tx(0,-5,a,b,c,d,cx,cy,scale), ay2 = this.tx(0,5,a,b,c,d,cx,cy,scale);
+    ctx.beginPath(); ctx.moveTo(ax1.x,ax1.y); ctx.lineTo(ax2.x,ax2.y);
+    ctx.strokeStyle='rgba(99,179,237,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ay1.x,ay1.y); ctx.lineTo(ay2.x,ay2.y);
+    ctx.strokeStyle='rgba(159,122,234,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+
+    // Basis vectors
+    const e1 = this.tx(1,0,a,b,c,d,cx,cy,scale);
+    const e2 = this.tx(0,1,a,b,c,d,cx,cy,scale);
+    this.arrow(ctx, cx,cy, e1.x,e1.y, '#63b3ed', 2.5);
+    this.arrow(ctx, cx,cy, e2.x,e2.y, '#9f7aea', 2.5);
+
+    // Labels
+    ctx.font = '11px Syne, sans-serif'; ctx.fillStyle='#63b3ed';
+    ctx.fillText('ê₁', e1.x+6, e1.y-4);
+    ctx.fillStyle='#9f7aea'; ctx.fillText('ê₂', e2.x+6, e2.y-4);
+
+    // Determinant + info
+    const det = a*d - b*c;
+    const infoEl = document.getElementById(infoId);
+    if (infoEl) {
+      const detColor = Math.abs(det) < 0.01 ? '#fc8181' : det < 0 ? '#f6ad55' : '#68d391';
+      infoEl.innerHTML = `
+        Matrix: [[${a.toFixed(1)}, ${b.toFixed(1)}], [${c.toFixed(1)}, ${d.toFixed(1)}]]<br>
+        <span style="color:${detColor}">det = ${det.toFixed(2)}</span> ${Math.abs(det)<0.01?'⚠️ Singular — not invertible!':det<0?'(flips orientation)':'(preserves orientation)'}
+      `;
+    }
+  },
+
+  tx(x, y, a, b, c, d, cx, cy, s) { return { x: cx + (a*x + b*y)*s, y: cy - (c*x + d*y)*s }; },
+
+  arrow(ctx, x1, y1, x2, y2, color, w) {
+    const angle = Math.atan2(y2-y1, x2-x1);
+    const len = 8;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle=color; ctx.lineWidth=w; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-len*Math.cos(angle-0.4), y2-len*Math.sin(angle-0.4));
+    ctx.lineTo(x2-len*Math.cos(angle+0.4), y2-len*Math.sin(angle+0.4));
+    ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+  }
+};
+
+// ── Eigenvector Visualizer ────────────────────────────────────
+const EigenViz = {
+  update() {
+    const canvas = document.getElementById('la-eigen-canvas');
+    if (!canvas) return;
+    const a = parseFloat(document.getElementById('la-ea')?.value||2);
+    const d = parseFloat(document.getElementById('la-ed')?.value||1);
+    document.getElementById('la-ea-v').textContent = a.toFixed(1);
+    document.getElementById('la-ed-v').textContent = d.toFixed(1);
+
+    const W = canvas.offsetWidth || 500; const H = 300;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const cx = W/2, cy = H/2, S = 55;
+
+    // Grid
+    for (let i=-4;i<=4;i++) {
+      ctx.beginPath(); ctx.moveTo(cx+i*S,cy-4*S); ctx.lineTo(cx+i*S,cy+4*S);
+      ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx-4*S,cy+i*S); ctx.lineTo(cx+4*S,cy+i*S);
+      ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1; ctx.stroke();
+    }
+
+    // Axes
+    ctx.beginPath(); ctx.moveTo(cx-4*S,cy); ctx.lineTo(cx+4*S,cy); ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx,cy-4*S); ctx.lineTo(cx,cy+4*S); ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1; ctx.stroke();
+
+    // For diagonal matrix [a,0; 0,d], eigenvectors are [1,0] and [0,1]
+    const ev1 = [1, 0], lam1 = a;
+    const ev2 = [0, 1], lam2 = d;
+
+    // Draw original vectors (before transform)
+    const nVecs = 12;
+    for (let i=0; i<nVecs; i++) {
+      const angle = (i/nVecs)*2*Math.PI;
+      const vx = Math.cos(angle), vy = Math.sin(angle);
+      const ex = cx+vx*S*1.5, ey = cy-vy*S*1.5;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(ex,ey);
+      ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1.5; ctx.stroke();
+    }
+
+    // Transformed vectors
+    for (let i=0; i<nVecs; i++) {
+      const angle = (i/nVecs)*2*Math.PI;
+      const vx = Math.cos(angle), vy = Math.sin(angle);
+      const tx = a*vx, ty = d*vy;
+      const ex = cx+tx*S*1.5, ey = cy-ty*S*1.5;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(ex,ey);
+      ctx.strokeStyle='rgba(99,179,237,0.45)'; ctx.lineWidth=2; ctx.stroke();
+    }
+
+    // Eigenvector 1 (x-axis scaled by a)
+    const e1x = cx + a*S*2, e1y = cy;
+    MatViz.arrow(ctx, cx, cy, e1x, e1y, '#f6ad55', 3);
+    ctx.font='bold 12px Syne,sans-serif'; ctx.fillStyle='#f6ad55';
+    ctx.fillText(`λ₁=${lam1.toFixed(1)}`, e1x+8, e1y+4);
+
+    // Eigenvector 2 (y-axis scaled by d)
+    const e2x = cx, e2y = cy - d*S*2;
+    MatViz.arrow(ctx, cx, cy, e2x, e2y, '#fc8181', 3);
+    ctx.fillStyle='#fc8181';
+    ctx.fillText(`λ₂=${lam2.toFixed(1)}`, e2x+8, e2y-4);
+
+    // Info
+    const infoEl = document.getElementById('la-eigen-info');
+    if (infoEl) {
+      infoEl.innerHTML = `
+        Matrix: diag(${a.toFixed(1)}, ${d.toFixed(1)})<br>
+        <span style="color:#f6ad55">Eigenvector [1,0] → eigenvalue λ₁ = ${a.toFixed(1)}</span><br>
+        <span style="color:#fc8181">Eigenvector [0,1] → eigenvalue λ₂ = ${d.toFixed(1)}</span><br>
+        <span style="color:var(--text-muted)">det = ${(a*d).toFixed(2)} · tr = ${(a+d).toFixed(2)}</span>
+      `;
+    }
+  }
+};
+
+// ── PCA Visualizer ────────────────────────────────────────────
+const PCAViz = {
+  rng: null,
+
+  seededRand(seed) {
+    let s = seed;
+    return () => { s = (s*1664525+1013904223)&0xFFFFFFFF; return ((s>>>0)/0xFFFFFFFF)*2-1; };
+  },
+
+  update() {
+    const canvas = document.getElementById('la-pca-canvas');
+    if (!canvas) return;
+    const spread = parseFloat(document.getElementById('la-pca-spread')?.value||1.5);
+    const corr   = parseFloat(document.getElementById('la-pca-corr')?.value||0.8);
+    document.getElementById('la-pca-spread-v').textContent = spread.toFixed(1);
+    document.getElementById('la-pca-corr-v').textContent   = corr.toFixed(2);
+
+    const W = canvas.offsetWidth||500, H=340;
+    canvas.width=W; canvas.height=H;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const cx=W/2, cy=H/2, S=50;
+    const rand = this.seededRand(42);
+    const N=80;
+    const pts=[];
+    for(let i=0;i<N;i++){
+      const u=rand()*spread, v=rand()*0.3;
+      const x=u+v, y=corr*u+Math.sqrt(1-corr*corr)*v*0.5+rand()*0.2;
+      pts.push([x,y]);
+    }
+
+    // Center
+    const mx=pts.reduce((s,p)=>s+p[0],0)/N, my=pts.reduce((s,p)=>s+p[1],0)/N;
+    const cpts=pts.map(p=>[p[0]-mx,p[1]-my]);
+
+    // Covariance
+    const sxx=cpts.reduce((s,p)=>s+p[0]*p[0],0)/(N-1);
+    const syy=cpts.reduce((s,p)=>s+p[1]*p[1],0)/(N-1);
+    const sxy=cpts.reduce((s,p)=>s+p[0]*p[1],0)/(N-1);
+
+    // Eigenvalues of 2x2 covariance
+    const tr=sxx+syy, det2=sxx*syy-sxy*sxy;
+    const disc=Math.sqrt(Math.max(0,(tr/2)**2-det2));
+    const lam1=tr/2+disc, lam2=tr/2-disc;
+    const pc1_angle=Math.atan2(lam1-sxx, sxy);
+    const pc1=[Math.cos(pc1_angle),Math.sin(pc1_angle)];
+
+    // Grid
+    for(let i=-5;i<=5;i++){
+      ctx.beginPath();ctx.moveTo(cx+i*S,cy-5*S);ctx.lineTo(cx+i*S,cy+5*S);
+      ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx-5*S,cy+i*S);ctx.lineTo(cx+5*S,cy+i*S);
+      ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;ctx.stroke();
+    }
+    // Axes
+    ctx.beginPath();ctx.moveTo(cx-5*S,cy);ctx.lineTo(cx+5*S,cy);ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,cy-5*S);ctx.lineTo(cx,cy+5*S);ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;ctx.stroke();
+
+    // Data points
+    cpts.forEach(p=>{
+      ctx.beginPath();ctx.arc(cx+p[0]*S,cy-p[1]*S,3.5,0,2*Math.PI);
+      ctx.fillStyle='rgba(99,179,237,0.6)';ctx.fill();
+    });
+
+    // Projections onto PC1
+    cpts.forEach(p=>{
+      const proj=p[0]*pc1[0]+p[1]*pc1[1];
+      const px=cx+proj*pc1[0]*S, py=cy-proj*pc1[1]*S;
+      ctx.beginPath();ctx.moveTo(cx+p[0]*S,cy-p[1]*S);ctx.lineTo(px,py);
+      ctx.strokeStyle='rgba(246,173,85,0.2)';ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.arc(px,py,3,0,2*Math.PI);
+      ctx.fillStyle='rgba(246,173,85,0.7)';ctx.fill();
+    });
+
+    // PC1 arrow
+    const pc1len=Math.sqrt(lam1)*S*1.5;
+    MatViz.arrow(ctx, cx-pc1[0]*pc1len, cy+pc1[1]*pc1len, cx+pc1[0]*pc1len, cy-pc1[1]*pc1len, '#f6ad55', 3);
+
+    // PC2
+    const pc2=[-pc1[1], pc1[0]];
+    const pc2len=Math.sqrt(Math.max(0.01,lam2))*S;
+    MatViz.arrow(ctx, cx, cy, cx+pc2[0]*pc2len, cy-pc2[1]*pc2len, 'rgba(159,122,234,0.6)', 2);
+
+    // Labels
+    ctx.font='bold 12px Syne,sans-serif';
+    ctx.fillStyle='#f6ad55';
+    ctx.fillText('PC1 (max variance)', cx+pc1[0]*pc1len+6, cy-pc1[1]*pc1len);
+    ctx.fillStyle='rgba(159,122,234,0.8)';
+    ctx.fillText('PC2', cx+pc2[0]*pc2len+6, cy-pc2[1]*pc2len);
+
+    // Info
+    const varExpl = lam1/(lam1+Math.max(0.001,lam2));
+    const infoEl=document.getElementById('la-pca-info');
+    if(infoEl){
+      infoEl.innerHTML=`
+        <span style="color:#f6ad55">PC1 explains ${(varExpl*100).toFixed(1)}% of variance</span> · 
+        <span style="color:rgba(159,122,234,0.8)">PC2 explains ${((1-varExpl)*100).toFixed(1)}%</span><br>
+        λ₁ = ${lam1.toFixed(3)} · λ₂ = ${Math.max(0,lam2).toFixed(3)}<br>
+        <span style="color:var(--text-muted)">Yellow dots = projections onto PC1 (1D representation)</span>
+      `;
+    }
+  }
+};
+
+// ── Quiz ──────────────────────────────────────────────────────
+const LAQuiz = {
+  answers: {1:'B',2:'C',3:'C',4:'B',5:'B'},
+  selected: {},
+
+  sel(q, el, letter) {
+    document.getElementById('la-qc'+q).querySelectorAll('.la-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+    this.selected[q]=letter;
+    const btn=document.getElementById('la-qbtn');
+    if(btn && Object.keys(this.selected).length===5) btn.disabled=false;
+  },
+
+  submit() {
+    let score=0;
+    for(let q=1;q<=5;q++){
+      const ua=this.selected[q], ca=this.answers[q];
+      const card=document.getElementById('la-qc'+q);
+      const letters=['A','B','C','D'];
+      card.querySelectorAll('.la-opt').forEach((o,i)=>{
+        if(letters[i]===ca) o.classList.add('correct');
+        else if(letters[i]===ua&&ua!==ca) o.classList.add('wrong');
+      });
+      const fb=document.getElementById('la-fb'+q);
+      const fbw=document.getElementById('la-fb'+q+'w');
+      if(ua===ca){ score++; if(fb){fb.classList.add('show');} }
+      else { if(fbw){fbw.style.display='block';fbw.classList.add('show');} }
+    }
+    const xp=score*36;
+    const sc=document.getElementById('la-qscore');
+    const emoji=score===5?'🏆':score>=3?'⭐':'📚';
+    if(sc){sc.classList.add('show');sc.innerHTML=`${emoji} ${score}/5 correct — +${xp} XP earned`;}
+    const btn=document.getElementById('la-qbtn'); if(btn) btn.disabled=true;
+    if(typeof App!=='undefined'){
+      App.addXP(xp);
+      if(score>=3){
+        setTimeout(()=>{
+          App.showToast('🎉 Linear Algebra complete! Calculus unlocked!');
+          const calcNav=document.querySelector('[data-nav="calculus"]');
+          if(calcNav){calcNav.classList.remove('locked');const b=calcNav.querySelector('.nav-badge');if(b){b.textContent='NEW';b.classList.add('now');}}
+          App.progress=40; App.initProgress();
+        },1000);
+      }
+    }
+  }
+};
+
+// ── Init ──────────────────────────────────────────────────────
+(function initLA(){
+  const tryInit=()=>{
+    if(typeof d3==='undefined'){setTimeout(tryInit,200);return;}
+    MatViz.init();
+    EigenViz.update();
+    PCAViz.update();
+    if(typeof renderMathInElement!=='undefined'){
+      renderMathInElement(document.getElementById('section-linear-algebra')||document.body,{
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      });
+    }
+    const saved=localStorage.getItem('la-notes');
+    const ta=document.getElementById('la-notes-ta');
+    if(saved&&ta) ta.value=saved;
+  };
+  setTimeout(tryInit,300);
+})();
+</script>

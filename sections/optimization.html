@@ -1,0 +1,1298 @@
+<!-- ============================================================
+     OPTIMIZATION — Full Interactive Section
+     Concepts: Convexity, Gradient Descent variants, Constrained
+               Optimization, Adaptive Optimizers
+     Visualizations: Convex vs non-convex, 2D loss contour +
+                     GD path comparison, Adam vs SGD animated
+     Features: 3 levels, proof walker, cheat sheet, notes, quiz
+     ============================================================ -->
+<style>
+.opt-page { font-family: var(--font-body); }
+
+.opt-hero {
+  position: relative; padding: 56px 60px 40px; overflow: hidden;
+  border-bottom: 1px solid var(--border-dim);
+}
+.opt-hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 55% 70% at 75% 35%, rgba(252,129,129,0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 35% 50% at 20% 75%, rgba(246,173,85,0.05) 0%, transparent 55%);
+  pointer-events: none;
+}
+.opt-hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(252,129,129,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(252,129,129,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 100% 100% at center, black 20%, transparent 75%);
+  pointer-events: none;
+}
+.opt-hero-content { position: relative; z-index: 1; }
+.opt-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-muted);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px;
+}
+.opt-bc { color: var(--accent-cyan); cursor: pointer; }
+.opt-bc:hover { text-decoration: underline; }
+.opt-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(252,129,129,0.1); border: 1px solid rgba(252,129,129,0.25);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-rose); margin-bottom: 16px;
+}
+.opt-tag::before { content: '04'; font-weight: 800; font-family: var(--font-display); font-size: 9px; }
+.opt-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.opt-hero-left { flex: 1; min-width: 300px; }
+.opt-hero-title {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(28px, 3.5vw, 48px); letter-spacing: -1.5px; line-height: 1.05;
+  color: var(--text-primary); margin-bottom: 14px;
+}
+.opt-hero-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, #fc8181, #f6ad55);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.opt-hero-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.8; max-width: 520px; margin-bottom: 28px; }
+.opt-why {
+  background: rgba(252,129,129,0.06); border: 1px solid rgba(252,129,129,0.15);
+  border-radius: var(--radius-md); padding: 16px 20px; max-width: 520px;
+}
+.opt-why-label {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-rose); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.opt-why-label::before { content: '🤖'; }
+.opt-why-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.opt-meta { display: flex; flex-direction: column; gap: 12px; min-width: 180px; align-items: flex-end; }
+.opt-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 8px 14px;
+  font-size: 12px; color: var(--text-secondary);
+}
+
+/* Level switcher — rose */
+.opt-level-bar {
+  display: flex; align-items: center;
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 5px;
+  width: fit-content; margin: 32px 60px 0;
+}
+.opt-lvl-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 12px; cursor: pointer;
+  border: none; background: transparent;
+  font-family: var(--font-display); font-weight: 600; font-size: 13px;
+  color: var(--text-muted); transition: var(--transition); white-space: nowrap;
+}
+.opt-lvl-btn:hover { color: var(--text-secondary); }
+.opt-lvl-btn.active { background: var(--bg-raised); color: var(--text-primary); box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+.opt-lvl-btn.active.ob { color: var(--accent-emerald); }
+.opt-lvl-btn.active.oi { color: var(--accent-rose); }
+.opt-lvl-btn.active.op { color: var(--accent-violet); }
+.odot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ob .odot { background: var(--accent-emerald); }
+.oi .odot { background: var(--accent-rose); }
+.op .odot { background: var(--accent-violet); }
+
+/* Util bar */
+.opt-util-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 60px; border-bottom: 1px solid var(--border-dim); flex-wrap: wrap;
+}
+.opt-util-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); border-radius: 8px;
+  font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.opt-util-btn:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.opt-util-btn.active { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(252,129,129,0.08); }
+.opt-util-sep { width: 1px; height: 24px; background: var(--border-dim); margin: 0 4px; }
+
+/* Content layout */
+.opt-content-area { display: grid; grid-template-columns: 1fr 340px; min-height: 60vh; }
+.opt-main { padding: 40px 60px; border-right: 1px solid var(--border-dim); }
+.opt-side { padding: 28px 24px; background: var(--bg-deep); }
+
+/* Concept blocks */
+.opt-concept { margin-bottom: 52px; padding-bottom: 52px; border-bottom: 1px solid var(--border-dim); }
+.opt-concept:last-child { border-bottom: none; }
+.opt-concept-num { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.opt-concept-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 22px;
+  letter-spacing: -0.5px; color: var(--text-primary);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+}
+.opt-icon { font-size: 26px; }
+.opt-body { font-size: 14px; color: var(--text-secondary); line-height: 1.9; }
+.opt-body p { margin-bottom: 14px; }
+.opt-body strong { color: var(--text-primary); font-weight: 500; }
+
+.opt-intuition {
+  background: rgba(252,129,129,0.06); border-left: 3px solid var(--accent-rose);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px; margin: 20px 0; font-size: 13px;
+}
+.opt-intuition-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-rose); margin-bottom: 6px;
+}
+.opt-intuition-text { color: var(--text-secondary); line-height: 1.7; }
+
+.opt-ds {
+  background: rgba(104,211,145,0.05); border-left: 3px solid var(--accent-emerald);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px; margin: 20px 0; font-size: 13px;
+}
+.opt-ds-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-emerald); margin-bottom: 6px;
+}
+
+.opt-math-box {
+  background: rgba(252,129,129,0.05); border: 1px solid rgba(252,129,129,0.15);
+  border-radius: var(--radius-md); padding: 20px 24px; margin: 20px 0;
+}
+.opt-math-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-rose); margin-bottom: 12px;
+}
+.opt-eq {
+  background: var(--bg-raised); border-radius: var(--radius-md);
+  padding: 14px 20px; text-align: center; margin: 10px 0; font-size: 15px;
+}
+.opt-math-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; background: rgba(252,129,129,0.08);
+  border: 1px solid rgba(252,129,129,0.2); border-radius: 8px;
+  font-size: 12px; color: var(--accent-rose);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body); margin: 12px 0;
+}
+.opt-math-toggle:hover { background: rgba(252,129,129,0.15); }
+.opt-math-reveal { display: none; margin-top: 12px; }
+.opt-math-reveal.visible { display: block; animation: fadeIn 0.3s ease; }
+
+/* Level */
+.opt-level { display: none; }
+.opt-level.visible { display: block; animation: fadeIn 0.4s ease; }
+
+/* Viz */
+.opt-viz {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; overflow: hidden;
+}
+.opt-viz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.opt-viz-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.opt-viz-badge {
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 10px; background: rgba(252,129,129,0.1);
+  border: 1px solid rgba(252,129,129,0.2); border-radius: 10px; color: var(--accent-rose);
+}
+.opt-canvas { display: block; border-radius: var(--radius-md); background: var(--bg-raised); width: 100%; }
+.opt-controls { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.opt-slider-row { display: flex; flex-direction: column; gap: 6px; }
+.opt-slider-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
+.opt-slider-label span { color: var(--text-primary); font-family: var(--font-display); font-weight: 700; }
+.opt-slider-row input[type=range] { accent-color: var(--accent-rose); }
+
+/* Proof walker */
+.opt-proof {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; position: relative;
+}
+.opt-proof::before {
+  content: 'PROOF WALKER'; position: absolute; top: 12px; right: 16px;
+  font-size: 9px; letter-spacing: 2px; color: var(--text-muted);
+}
+.opt-proof-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin-bottom: 20px; }
+.opt-proof-step { display: none; animation: fadeIn 0.3s ease; }
+.opt-proof-step.active { display: block; }
+.op-snum { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.op-stitle { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--accent-rose); margin-bottom: 10px; }
+.op-sbody { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; }
+.op-seq { background: var(--bg-raised); border-radius: var(--radius-md); padding: 16px 20px; text-align: center; margin: 12px 0; font-size: 15px; }
+.opt-proof-nav { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+.op-nav-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: var(--bg-raised); border: 1px solid var(--border-dim);
+  border-radius: 8px; font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.op-nav-btn:hover:not(:disabled) { border-color: var(--accent-rose); color: var(--accent-rose); }
+.op-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.opt-pdots { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.op-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-raised); border: 1px solid var(--border-dim); transition: var(--transition); cursor: pointer; }
+.op-dot.active { background: var(--accent-rose); border-color: var(--accent-rose); transform: scale(1.2); }
+.op-dot.done { background: var(--accent-emerald); border-color: var(--accent-emerald); }
+
+/* Optimizer comparison tabs */
+.opt-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.opt-tab {
+  padding: 7px 16px; background: var(--bg-raised); border: 1px solid var(--border-dim);
+  border-radius: 8px; font-size: 12px; color: var(--text-muted);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.opt-tab:hover { color: var(--text-secondary); }
+.opt-tab.active { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(252,129,129,0.08); }
+
+/* Sidebar */
+.opt-side-title { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--text-primary); margin-bottom: 14px; }
+.opt-prog-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.opt-prog-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); border-radius: 8px;
+  font-size: 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition);
+}
+.opt-prog-item:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.opt-prog-item.done { border-color: rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.opt-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-soft); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+.opt-check.done { background: rgba(104,211,145,0.15); border-color: var(--accent-emerald); }
+.opt-cheatsheet { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 16px; }
+.opt-cheat-item { padding: 10px 0; border-bottom: 1px solid var(--border-dim); }
+.opt-cheat-item:last-child { border-bottom: none; }
+.opt-cheat-name { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.opt-cheat-eq { background: var(--bg-raised); border-radius: 6px; padding: 8px 12px; text-align: center; font-size: 13px; }
+.opt-notes-ta {
+  width: 100%; background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 12px; color: var(--text-primary);
+  font-family: var(--font-body); font-size: 12px; line-height: 1.7;
+  resize: vertical; min-height: 100px; outline: none; transition: var(--transition);
+}
+.opt-notes-ta:focus { border-color: rgba(252,129,129,0.4); }
+.opt-save-btn {
+  margin-top: 8px; padding: 6px 14px; background: rgba(252,129,129,0.1);
+  border: 1px solid rgba(252,129,129,0.2); border-radius: 6px;
+  font-size: 11px; color: var(--accent-rose); cursor: pointer; font-family: var(--font-body);
+}
+.opt-term { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.opt-term-name { font-size: 11px; color: var(--accent-rose); font-family: var(--font-display); font-weight: 700; margin-bottom: 3px; }
+.opt-term-def { font-size: 11px; color: var(--text-muted); }
+
+/* Quiz */
+.opt-quiz { padding: 48px 60px; border-top: 1px solid var(--border-dim); background: var(--bg-deep); }
+.opt-quiz-eyebrow { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.opt-quiz-title { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 8px; }
+.opt-quiz-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+.opt-qcard { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; }
+.opt-qnum { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.opt-qtext { font-size: 15px; color: var(--text-primary); line-height: 1.6; margin-bottom: 20px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.2px; }
+.opt-opts { display: flex; flex-direction: column; gap: 10px; }
+.opt-opt {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: var(--bg-raised);
+  border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  cursor: pointer; transition: var(--transition); font-size: 13px; color: var(--text-secondary);
+}
+.opt-opt:hover { border-color: var(--border-soft); color: var(--text-primary); background: var(--bg-hover); }
+.opt-opt.selected { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(252,129,129,0.08); }
+.opt-opt.correct { border-color: var(--accent-emerald); color: var(--accent-emerald); background: rgba(104,211,145,0.08); }
+.opt-opt.wrong { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(252,129,129,0.08); }
+.opt-letter {
+  width: 26px; height: 26px; border-radius: 6px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 12px; flex-shrink: 0;
+}
+.opt-opt.selected .opt-letter { background: rgba(252,129,129,0.2); border-color: var(--accent-rose); color: var(--accent-rose); }
+.opt-opt.correct .opt-letter { background: rgba(104,211,145,0.2); border-color: var(--accent-emerald); color: var(--accent-emerald); }
+.opt-opt.wrong .opt-letter { background: rgba(252,129,129,0.2); border-color: var(--accent-rose); }
+.opt-qfb { display: none; margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; line-height: 1.6; }
+.opt-qfb.show { display: block; animation: fadeIn 0.3s ease; }
+.opt-qfb.ok { background: rgba(104,211,145,0.08); border: 1px solid rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.opt-qfb.no { background: rgba(252,129,129,0.08); border: 1px solid rgba(252,129,129,0.2); color: var(--accent-rose); }
+.opt-quiz-row { display: flex; align-items: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
+.opt-quiz-btn {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-violet));
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-display); font-weight: 700; font-size: 14px;
+  color: var(--bg-void); cursor: pointer; transition: var(--transition);
+}
+.opt-quiz-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(252,129,129,0.3); }
+.opt-quiz-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.opt-score { display: none; font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.opt-score.show { display: block; animation: fadeIn 0.5s ease; }
+
+@media (max-width: 1100px) { .opt-content-area { grid-template-columns: 1fr; } .opt-side { border-top: 1px solid var(--border-dim); } .opt-main { border-right: none; } }
+@media (max-width: 768px) { .opt-hero, .opt-main, .opt-quiz { padding-left: 24px; padding-right: 24px; } .opt-level-bar { margin: 24px; } .opt-util-bar { padding: 12px 24px; } }
+</style>
+
+<div class="opt-page">
+
+  <!-- Hero -->
+  <div class="opt-hero">
+    <div class="opt-hero-bg"></div>
+    <div class="opt-hero-grid"></div>
+    <div class="opt-hero-content">
+      <div class="opt-breadcrumb">
+        <span class="opt-bc" onclick="App.showSection('home')">Home</span> <span>›</span>
+        <span class="opt-bc" onclick="App.showSection('statistics')">Statistics</span> <span>›</span>
+        <span class="opt-bc" onclick="App.showSection('linear-algebra')">Linear Algebra</span> <span>›</span>
+        <span class="opt-bc" onclick="App.showSection('calculus')">Calculus</span> <span>›</span>
+        <span>Optimization</span>
+      </div>
+      <div class="opt-hero-top">
+        <div class="opt-hero-left">
+          <div class="opt-tag">Topic&nbsp;&nbsp;·&nbsp;&nbsp;Optimization</div>
+          <h1 class="opt-hero-title">Finding the <em>Best</em><br>Answer</h1>
+          <p class="opt-hero-desc">
+            Optimization is the mathematical art of finding the minimum (or maximum) of a function.
+            Every trained model is the answer to an optimization problem — the set of parameters
+            that minimizes a loss function over your data.
+          </p>
+          <div class="opt-why">
+            <div class="opt-why-label">Why does a data scientist need this?</div>
+            <div class="opt-why-text">
+              Training a model IS optimization. Understanding convexity tells you whether you'll find the global optimum.
+              Understanding gradient descent variants tells you which optimizer to pick and why.
+              Understanding constrained optimization unlocks SVMs, regularisation, and Lagrangians.
+              This is the "why does training actually work?" chapter.
+            </div>
+          </div>
+        </div>
+        <div class="opt-meta">
+          <div class="opt-chip">⏱️ ~4 hours</div>
+          <div class="opt-chip">🎯 3 depth levels</div>
+          <div class="opt-chip">📊 3 live visualizers</div>
+          <div class="opt-chip">⭐ +180 XP available</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Switcher -->
+  <div class="opt-level-bar">
+    <button class="opt-lvl-btn ob active" onclick="OptSection.setLevel('beginner',this)"><span class="odot"></span>Beginner</button>
+    <button class="opt-lvl-btn oi" onclick="OptSection.setLevel('intermediate',this)"><span class="odot"></span>Intermediate</button>
+    <button class="opt-lvl-btn op" onclick="OptSection.setLevel('pro',this)"><span class="odot"></span>Pro</button>
+  </div>
+
+  <!-- Utility Bar -->
+  <div class="opt-util-bar">
+    <button class="opt-util-btn" id="opt-notes-btn" onclick="OptSection.toggleNotes()">✏️ My Notes</button>
+    <button class="opt-util-btn" id="opt-cheat-btn" onclick="OptSection.toggleCheat()">📋 Cheat Sheet</button>
+    <div class="opt-util-sep"></div>
+    <button class="opt-util-btn" onclick="document.getElementById('opt-quiz-section').scrollIntoView({behavior:'smooth'})">🧪 Jump to Quiz</button>
+    <button class="opt-util-btn" onclick="OptSection.markDone()">✅ Mark Complete</button>
+  </div>
+
+  <!-- Content -->
+  <div class="opt-content-area">
+    <div class="opt-main">
+
+      <!-- ══ CONCEPT 1: Convexity ════════════════════════════ -->
+      <div class="opt-concept" id="opt-c1">
+        <div class="opt-concept-num">Concept 01 / 04</div>
+        <div class="opt-concept-title"><span class="opt-icon">🥣</span>Convexity — Why Some Problems Are Easy</div>
+
+        <div class="opt-level visible" data-olv="beginner">
+          <div class="opt-body">
+            <p>A function is <strong>convex</strong> if the line segment between any two points on its graph lies above (or on) the graph. Think of a bowl — any two points on the rim, the straight line between them stays above the bowl's surface.</p>
+            <p>Why does this matter? For a convex function, <strong>every local minimum is the global minimum</strong>. If gradient descent finds a flat point, you're guaranteed it's the best possible answer — no sneaky better valley hiding elsewhere.</p>
+          </div>
+          <div class="opt-intuition">
+            <div class="opt-intuition-label">💡 The Bowl vs. Mountain Range</div>
+            <div class="opt-intuition-text">A convex loss landscape is like a smooth bowl — one valley, gradient descent always finds it. A non-convex landscape (like a neural network's loss surface) is like a mountain range with many valleys. Gradient descent finds <em>a</em> valley, not necessarily the deepest one. The chart below shows the difference.</div>
+          </div>
+
+          <!-- CONVEXITY VISUALIZER -->
+          <div class="opt-viz">
+            <div class="opt-viz-header">
+              <div class="opt-viz-title">🥣 Convex vs Non-Convex Loss Landscape</div>
+              <div class="opt-viz-badge">Interactive</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+              <button class="opt-tab active" id="tab-convex" onclick="ConvexViz.show('convex',this)">Convex (linear reg)</button>
+              <button class="opt-tab" id="tab-nonconvex" onclick="ConvexViz.show('nonconvex',this)">Non-Convex (neural net)</button>
+              <button class="opt-tab" id="tab-saddle" onclick="ConvexViz.show('saddle',this)">Saddle Point</button>
+            </div>
+            <canvas id="convex-canvas" class="opt-canvas" height="260"></canvas>
+            <div id="convex-info" style="margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.8;"></div>
+          </div>
+
+          <div class="opt-ds">
+            <div class="opt-ds-label">🤖 In Data Science</div>
+            <div class="opt-body">Linear regression and logistic regression have convex loss functions — gradient descent is guaranteed to find the global optimum. Neural networks are non-convex — but overparameterisation means most local minima are nearly as good as the global one (a key empirical finding in deep learning theory).</div>
+          </div>
+          <button class="opt-math-toggle" onclick="OptSection.toggleMath(this)">∑ Show me the math</button>
+          <div class="opt-math-reveal">
+            <div class="opt-math-box">
+              <div class="opt-math-label">📐 Convexity Definition</div>
+              <div class="opt-eq">$$f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y) \quad \forall x,y,\, \lambda\in[0,1]$$</div>
+              <div class="opt-eq" style="margin-top:10px;">$$\text{Equivalent (smooth case): } \nabla^2 f(x) \succeq 0 \text{ (positive semidefinite Hessian)}$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="opt-level" data-olv="intermediate">
+          <div class="opt-body">
+            <p><strong>Strongly convex</strong> functions satisfy $f(y) \geq f(x) + \nabla f(x)^T(y-x) + \frac{\mu}{2}\|y-x\|^2$ for some $\mu > 0$. This gives a quadratic lower bound — the function grows at least as fast as a parabola. Strong convexity guarantees linear convergence of gradient descent.</p>
+            <p><strong>L-smooth</strong> functions have Lipschitz-continuous gradients: $\|\nabla f(x) - \nabla f(y)\| \leq L\|x-y\|$. This gives a quadratic upper bound. Together, $\mu$-strong convexity and $L$-smoothness give the convergence rate $O\big((1 - \mu/L)^t\big)$ — the condition number $\kappa = L/\mu$ governs how fast gradient descent converges.</p>
+          </div>
+          <div class="opt-math-box">
+            <div class="opt-math-label">📐 Convergence Rate (Gradient Descent)</div>
+            <div class="opt-eq">$$f(x_t) - f^* \leq \left(1 - \frac{\mu}{L}\right)^t (f(x_0) - f^*) \quad \text{with } \eta = \frac{1}{L}$$</div>
+          </div>
+        </div>
+
+        <div class="opt-level" data-olv="pro">
+          <div class="opt-body">
+            <p><strong>Polyak-Łojasiewicz (PL) condition</strong>: $\frac{1}{2}\|\nabla f(x)\|^2 \geq \mu(f(x) - f^*)$. This is weaker than strong convexity but still guarantees linear convergence — and neural networks with sufficient width have been shown to satisfy PL in certain regimes, explaining why non-convex deep learning still converges well in practice.</p>
+          </div>
+          <div class="opt-math-box">
+            <div class="opt-math-label">📐 Polyak-Łojasiewicz Condition</div>
+            <div class="opt-eq">$$\|\nabla f(x)\|^2 \geq 2\mu(f(x) - f^*) \implies f(x_t) - f^* \leq (1-2\mu\eta)^t(f(x_0)-f^*)$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 2: Optimizer Comparison (viz) ══════════ -->
+      <div class="opt-concept" id="opt-c2">
+        <div class="opt-concept-num">Concept 02 / 04</div>
+        <div class="opt-concept-title"><span class="opt-icon">🏎️</span>Gradient Descent Variants — Choosing Your Optimizer</div>
+
+        <div class="opt-level visible" data-olv="beginner">
+          <div class="opt-body">
+            <p>Plain gradient descent takes the same step size in every direction. But real loss surfaces are elongated — some directions are steep, others nearly flat. Better optimizers adapt their step size per parameter.</p>
+            <p>Watch how different optimizers navigate the same loss contour below. SGD crawls. Momentum builds speed. Adam adapts and zooms straight to the minimum.</p>
+          </div>
+
+          <!-- OPTIMIZER COMPARISON VISUALIZER -->
+          <div class="opt-viz">
+            <div class="opt-viz-header">
+              <div class="opt-viz-title">🏎️ Optimizer Paths — Live Comparison</div>
+              <div class="opt-viz-badge">Animated</div>
+            </div>
+            <canvas id="opt-compare-canvas" class="opt-canvas" height="320"></canvas>
+            <div class="opt-controls">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+                <button onclick="OptimizerViz.toggle('sgd')" id="togsgd" style="padding:6px 14px;background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.4);border-radius:6px;font-size:12px;color:#63b3ed;cursor:pointer;">● SGD</button>
+                <button onclick="OptimizerViz.toggle('momentum')" id="togmomentum" style="padding:6px 14px;background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.4);border-radius:6px;font-size:12px;color:#f6ad55;cursor:pointer;">● Momentum</button>
+                <button onclick="OptimizerViz.toggle('rmsprop')" id="togrmsprop" style="padding:6px 14px;background:rgba(159,122,234,0.15);border:1px solid rgba(159,122,234,0.4);border-radius:6px;font-size:12px;color:#9f7aea;cursor:pointer;">● RMSProp</button>
+                <button onclick="OptimizerViz.toggle('adam')" id="togadam" style="padding:6px 14px;background:rgba(104,211,145,0.15);border:1px solid rgba(104,211,145,0.4);border-radius:6px;font-size:12px;color:#68d391;cursor:pointer;">● Adam</button>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button onclick="OptimizerViz.start()" style="padding:7px 16px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:8px;font-size:12px;color:var(--text-secondary);cursor:pointer;" id="opt-start-btn">▶ Race!</button>
+                <button onclick="OptimizerViz.reset()" style="padding:7px 16px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:8px;font-size:12px;color:var(--text-secondary);cursor:pointer;">↺ Reset</button>
+              </div>
+              <div id="opt-compare-info" style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.9;"></div>
+            </div>
+          </div>
+
+          <div class="opt-intuition">
+            <div class="opt-intuition-label">💡 Why Adam Wins (Usually)</div>
+            <div class="opt-intuition-text">Adam tracks a running average of gradients (momentum) AND a running average of squared gradients (per-parameter learning rate scaling). Parameters that get large gradients get smaller step sizes; parameters with small gradients get larger steps. It's self-tuning — which is why it's the default for ~90% of deep learning.</div>
+          </div>
+          <div class="opt-ds">
+            <div class="opt-ds-label">🤖 In Data Science</div>
+            <div class="opt-body">Quick guide: <strong>Adam</strong> for most deep learning. <strong>SGD + momentum</strong> for vision models (often generalises better with tuning). <strong>AdamW</strong> (Adam + weight decay) for transformers/LLMs. <strong>Lion</strong> (sign-based) for large-scale training. <strong>Adagrad</strong> for sparse data (NLP embeddings). The optimizer choice can change final accuracy by 1–3%.</div>
+          </div>
+          <button class="opt-math-toggle" onclick="OptSection.toggleMath(this)">∑ Show me the math</button>
+          <div class="opt-math-reveal">
+            <div class="opt-math-box">
+              <div class="opt-math-label">📐 Optimizer Update Rules</div>
+              <div class="opt-eq">$$\text{SGD: } \theta \leftarrow \theta - \eta g_t$$</div>
+              <div class="opt-eq" style="margin-top:8px;">$$\text{Momentum: } v_t = \beta v_{t-1} + g_t,\quad \theta \leftarrow \theta - \eta v_t$$</div>
+              <div class="opt-eq" style="margin-top:8px;">$$\text{Adam: } \theta \leftarrow \theta - \eta\frac{\hat{m}_t}{\sqrt{\hat{v}_t}+\epsilon}$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="opt-level" data-olv="intermediate">
+          <div class="opt-body">
+            <p><strong>AdamW</strong> decouples weight decay from the gradient update: $\theta \leftarrow (1-\lambda)\theta - \eta\hat{m}_t/(\sqrt{\hat{v}_t}+\epsilon)$. In standard Adam, L2 regularisation and weight decay are not equivalent because the adaptive scaling also scales the regularisation term — AdamW fixes this, which is why it's the standard for transformers.</p>
+            <p><strong>Learning rate warmup</strong>: For the first few thousand steps, linearly increase $\eta$ from 0 to $\eta_{\max}$. This prevents early instability when gradient estimates are noisy and the adaptive terms haven't warmed up yet. Critical for training large models.</p>
+          </div>
+          <div class="opt-math-box">
+            <div class="opt-math-label">📐 AdamW vs Adam</div>
+            <div class="opt-eq">$$\text{Adam L2: } \theta \leftarrow \theta - \eta\frac{\hat{m}_t + \lambda\theta}{\sqrt{\hat{v}_t}+\epsilon} \quad\text{(wrong — scales decay)}$$</div>
+            <div class="opt-eq" style="margin-top:8px;">$$\text{AdamW: } \theta \leftarrow (1-\eta\lambda)\theta - \eta\frac{\hat{m}_t}{\sqrt{\hat{v}_t}+\epsilon} \quad\text{(correct)}$$</div>
+          </div>
+        </div>
+
+        <div class="opt-level" data-olv="pro">
+          <div class="opt-body">
+            <p><strong>Muon</strong> (2024) and <strong>SOAP</strong> use Nesterov momentum in the eigenbasis of the gradient's second moment — essentially an online approximation to Newton's method that scales to large models. <strong>Lion</strong> uses only the sign of the gradient update, reducing memory from storing $m_t$ and $v_t$ to just $m_t$, while achieving competitive performance on large-scale vision and language tasks.</p>
+          </div>
+          <div class="opt-math-box">
+            <div class="opt-math-label">📐 Lion Optimizer</div>
+            <div class="opt-eq">$$c_t = \beta_1 m_{t-1} + (1-\beta_1)g_t \quad \theta_t = \theta_{t-1} - \eta(\text{sign}(c_t) + \lambda\theta_{t-1})$$</div>
+            <div class="opt-eq" style="margin-top:8px;">$$m_t = \beta_2 m_{t-1} + (1-\beta_2)g_t$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 3: Lagrangians & Constrained Opt ════════ -->
+      <div class="opt-concept" id="opt-c3">
+        <div class="opt-concept-num">Concept 03 / 04</div>
+        <div class="opt-concept-title"><span class="opt-icon">⚖️</span>Constrained Optimization & Lagrangians</div>
+
+        <div class="opt-level visible" data-olv="beginner">
+          <div class="opt-body">
+            <p>Sometimes you don't just want to minimize a function — you want to minimize it <strong>subject to constraints</strong>. Like: minimize your commute time, but you can only use roads (not cut through buildings).</p>
+            <p>The <strong>Lagrangian</strong> is a clever trick: you convert a constrained problem into an unconstrained one by adding a penalty term for violating the constraint, scaled by a <strong>Lagrange multiplier</strong> λ.</p>
+          </div>
+          <div class="opt-intuition">
+            <div class="opt-intuition-label">💡 Intuition</div>
+            <div class="opt-intuition-text">At the optimal constrained point, the gradient of your objective function must be parallel to the gradient of the constraint — they point in the same direction. The Lagrange multiplier λ is the scale factor between them. If λ = 0, the constraint wasn't active and you could have solved the unconstrained problem instead.</div>
+          </div>
+          <div class="opt-math-box">
+            <div class="opt-math-label">📐 Lagrangian</div>
+            <div class="opt-eq">$$\min_x f(x) \text{ s.t. } g(x) = 0 \implies \mathcal{L}(x,\lambda) = f(x) + \lambda g(x)$$</div>
+            <div class="opt-eq" style="margin-top:10px;">$$\text{Optimality: } \nabla_x \mathcal{L} = 0 \text{ and } \nabla_\lambda \mathcal{L} = 0$$</div>
+          </div>
+          <div class="opt-ds">
+            <div class="opt-ds-label">🤖 In Data Science</div>
+            <div class="opt-body">SVMs find the maximum-margin hyperplane using Lagrangians — the support vectors are exactly the training points where the Lagrange multipliers are non-zero. Ridge regression (L2) and LASSO (L1) are constrained optimization problems in disguise. The KKT conditions generalize Lagrangians to inequality constraints and underpin the entire field of convex optimization.</div>
+          </div>
+        </div>
+
+        <!-- PROOF WALKER: KKT Conditions -->
+        <div class="opt-level visible" data-olv="beginner">
+          <div class="opt-proof">
+            <div class="opt-proof-title">🧩 Proof Walker: Deriving the SVM from Lagrangians</div>
+            <div>
+              <div class="opt-proof-step active" data-ops="0">
+                <div class="op-snum">Step 1 of 4</div>
+                <div class="op-stitle">The SVM objective</div>
+                <div class="op-sbody">We want the widest possible margin between two classes. The margin width is $2/\|w\|$. Maximising margin = minimising $\|w\|^2$. Subject to: each training point is correctly classified with margin ≥ 1.</div>
+                <div class="op-seq">$$\min_{\mathbf{w},b} \frac{1}{2}\|\mathbf{w}\|^2 \quad \text{s.t.} \quad y_i(\mathbf{w}^T\mathbf{x}_i + b) \geq 1 \; \forall i$$</div>
+              </div>
+              <div class="opt-proof-step" data-ops="1">
+                <div class="op-snum">Step 2 of 4</div>
+                <div class="op-stitle">Form the Lagrangian</div>
+                <div class="op-sbody">Introduce Lagrange multipliers $\alpha_i \geq 0$ for each inequality constraint (one per training point):</div>
+                <div class="op-seq">$$\mathcal{L}(\mathbf{w},b,\boldsymbol\alpha) = \frac{1}{2}\|\mathbf{w}\|^2 - \sum_i \alpha_i[y_i(\mathbf{w}^T\mathbf{x}_i+b) - 1]$$</div>
+              </div>
+              <div class="opt-proof-step" data-ops="2">
+                <div class="op-snum">Step 3 of 4</div>
+                <div class="op-stitle">Optimality conditions → dual problem</div>
+                <div class="op-sbody">Set $\nabla_w \mathcal{L} = 0$ and $\nabla_b \mathcal{L} = 0$. This gives $\mathbf{w} = \sum_i \alpha_i y_i \mathbf{x}_i$. Substituting back yields the <strong>dual</strong>:</div>
+                <div class="op-seq">$$\max_{\boldsymbol\alpha} \sum_i \alpha_i - \frac{1}{2}\sum_{i,j}\alpha_i\alpha_j y_i y_j \mathbf{x}_i^T\mathbf{x}_j \quad \text{s.t.} \quad \alpha_i \geq 0, \sum_i\alpha_i y_i=0$$</div>
+              </div>
+              <div class="opt-proof-step" data-ops="3">
+                <div class="op-snum">Step 4 of 4 ✓</div>
+                <div class="op-stitle">Support vectors emerge naturally</div>
+                <div class="op-sbody">By the KKT complementary slackness condition: $\alpha_i[y_i(\mathbf{w}^T\mathbf{x}_i+b)-1] = 0$. So $\alpha_i > 0$ only when $y_i(\mathbf{w}^T\mathbf{x}_i+b) = 1$ — exactly on the margin boundary. These are the <strong>support vectors</strong>. The decision boundary only depends on these points, not the rest of the training data.</div>
+                <div class="op-seq">$$f(\mathbf{x}) = \text{sign}\!\left(\sum_i \alpha_i y_i \mathbf{x}_i^T\mathbf{x} + b\right) \quad \text{(only support vectors matter)}$$</div>
+              </div>
+            </div>
+            <div class="opt-proof-nav">
+              <button class="op-nav-btn" id="opt-pprev" onclick="OptSection.proofStep(-1)" disabled>← Back</button>
+              <button class="op-nav-btn" id="opt-pnext" onclick="OptSection.proofStep(1)">Next →</button>
+              <div class="opt-pdots">
+                <div class="op-dot active" onclick="OptSection.proofGo(0)"></div>
+                <div class="op-dot" onclick="OptSection.proofGo(1)"></div>
+                <div class="op-dot" onclick="OptSection.proofGo(2)"></div>
+                <div class="op-dot" onclick="OptSection.proofGo(3)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="opt-level" data-olv="intermediate">
+          <div class="opt-body">
+            <p>The <strong>KKT (Karush-Kuhn-Tucker) conditions</strong> generalise Lagrange multipliers to inequality constraints. For $\min f(x)$ s.t. $g_i(x) \leq 0$, $h_j(x)=0$: stationarity $\nabla f + \sum\mu_i\nabla g_i + \sum\lambda_j\nabla h_j = 0$, primal feasibility, dual feasibility $\mu_i \geq 0$, and complementary slackness $\mu_i g_i(x^*) = 0$.</p>
+            <p>For <strong>convex</strong> problems, KKT conditions are both necessary and sufficient. Strong duality holds (Slater's condition), meaning the primal and dual optima coincide: $p^* = d^*$.</p>
+          </div>
+          <div class="opt-math-box">
+            <div class="opt-math-label">📐 KKT Conditions</div>
+            <div class="opt-eq">$$\nabla f(x^*) + \sum_i \mu_i \nabla g_i(x^*) + \sum_j \lambda_j \nabla h_j(x^*) = 0$$</div>
+            <div class="opt-eq" style="margin-top:8px;">$$\mu_i \geq 0, \quad \mu_i g_i(x^*) = 0 \quad \text{(complementary slackness)}$$</div>
+          </div>
+        </div>
+
+        <div class="opt-level" data-olv="pro">
+          <div class="opt-body">
+            <p><strong>Duality gap</strong> and <strong>Slater's condition</strong>: If the primal is convex and strictly feasible (Slater's condition holds), strong duality holds: $p^* = d^*$. This means you can solve the (often easier) dual problem and recover the primal solution. For SVMs, this converts a QP in $d+1$ variables to a QP in $n$ variables — better when $d \gg n$. The kernel trick then replaces $\mathbf{x}_i^T\mathbf{x}_j$ with $k(\mathbf{x}_i, \mathbf{x}_j)$, enabling nonlinear SVMs without ever computing the feature map $\phi$.</p>
+          </div>
+          <div class="opt-math-box">
+            <div class="opt-math-label">📐 Strong Duality</div>
+            <div class="opt-eq">$$p^* = \min_x \max_{\lambda,\mu\geq0}\mathcal{L}(x,\lambda,\mu) = \max_{\lambda,\mu\geq0}\min_x\mathcal{L}(x,\lambda,\mu) = d^*$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 4: Regularisation as Optimization ══════ -->
+      <div class="opt-concept" id="opt-c4">
+        <div class="opt-concept-num">Concept 04 / 04</div>
+        <div class="opt-concept-title"><span class="opt-icon">🎛️</span>Regularisation — Constrained Optimization in Disguise</div>
+
+        <div class="opt-level visible" data-olv="beginner">
+          <div class="opt-body">
+            <p><strong>Regularisation</strong> prevents overfitting by penalising model complexity. But it's not just a heuristic — it's a constrained optimization problem in disguise.</p>
+            <p>Ridge regression (L2) minimizes loss subject to $\|w\|^2 \leq t$. LASSO (L1) minimizes loss subject to $\|w\|_1 \leq t$. The Lagrangian of each gives exactly the familiar penalised objective. The Lagrange multiplier λ is the regularisation strength.</p>
+          </div>
+
+          <!-- REGULARISATION VISUALIZER -->
+          <div class="opt-viz">
+            <div class="opt-viz-header">
+              <div class="opt-viz-title">🎛️ L1 vs L2 Regularisation — Constraint Geometry</div>
+              <div class="opt-viz-badge">Interactive</div>
+            </div>
+            <canvas id="reg-canvas" class="opt-canvas" height="300"></canvas>
+            <div class="opt-controls">
+              <div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+                <button onclick="RegViz.show('l2')" id="reg-l2-btn" class="opt-tab active">L2 (Ridge) — circle</button>
+                <button onclick="RegViz.show('l1')" id="reg-l1-btn" class="opt-tab">L1 (LASSO) — diamond</button>
+              </div>
+              <div class="opt-slider-row">
+                <div class="opt-slider-label">Regularisation strength λ <span id="reg-lambda-val">1.0</span></div>
+                <input type="range" id="reg-lambda" min="0.1" max="3" step="0.1" value="1" oninput="RegViz.update()">
+              </div>
+              <div id="reg-info" style="font-size:12px;color:var(--text-muted);margin-top:10px;line-height:1.9;"></div>
+            </div>
+          </div>
+
+          <div class="opt-intuition">
+            <div class="opt-intuition-label">💡 Why L1 Creates Sparsity</div>
+            <div class="opt-intuition-text">The L1 constraint is a diamond shape with corners on the axes. The loss function's elliptical contours are most likely to touch the diamond at a corner — which lies on an axis, meaning one weight is exactly zero. L2's circular constraint has no corners, so the optimal point can land anywhere — weights shrink but rarely hit zero.</div>
+          </div>
+          <div class="opt-ds">
+            <div class="opt-ds-label">🤖 In Data Science</div>
+            <div class="opt-body">Use <strong>L2 (Ridge)</strong> when all features are potentially useful — it shrinks all weights smoothly. Use <strong>L1 (LASSO)</strong> when you want automatic feature selection — it zeros out irrelevant features. Use <strong>Elastic Net</strong> (L1 + L2) when you have many correlated features. In neural networks, weight decay (AdamW) is L2 regularisation.</div>
+          </div>
+          <button class="opt-math-toggle" onclick="OptSection.toggleMath(this)">∑ Show me the math</button>
+          <div class="opt-math-reveal">
+            <div class="opt-math-box">
+              <div class="opt-math-label">📐 Ridge vs LASSO as Constrained Problems</div>
+              <div class="opt-eq">$$\text{Ridge: } \min_w \|Xw-y\|^2 \text{ s.t. } \|w\|^2 \leq t \iff \min_w \|Xw-y\|^2 + \lambda\|w\|^2$$</div>
+              <div class="opt-eq" style="margin-top:8px;">$$\text{LASSO: } \min_w \|Xw-y\|^2 \text{ s.t. } \|w\|_1 \leq t \iff \min_w \|Xw-y\|^2 + \lambda\|w\|_1$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="opt-level" data-olv="intermediate">
+          <div class="opt-body">
+            <p>The <strong>ridge regression</strong> closed form: $\hat{w} = (X^TX + \lambda I)^{-1}X^Ty$. Adding $\lambda I$ to $X^TX$ makes the matrix invertible even when $X^TX$ is singular — regularisation solves the ill-conditioned linear system problem.</p>
+            <p>For LASSO, there's no closed form. The <strong>coordinate descent</strong> algorithm solves it by cycling through each weight and applying a soft-thresholding operator $S_\lambda(z) = \text{sign}(z)\max(|z|-\lambda, 0)$ — exactly zeroing weights below the threshold.</p>
+          </div>
+          <div class="opt-math-box">
+            <div class="opt-math-label">📐 Soft Thresholding (LASSO Solution)</div>
+            <div class="opt-eq">$$\hat{w}_j = S_\lambda\!\left(\frac{1}{n}\mathbf{x}_j^T(y - X_{-j}\hat{w}_{-j})\right) = \text{sign}(z_j)\max(|z_j|-\lambda,0)$$</div>
+          </div>
+        </div>
+
+        <div class="opt-level" data-olv="pro">
+          <div class="opt-body">
+            <p><strong>Proximal gradient methods</strong> handle composite objectives $f(w) + g(w)$ where $f$ is smooth (differentiable) and $g$ is convex but non-smooth (e.g. L1). The proximal operator $\text{prox}_{\eta g}(v) = \arg\min_w \{g(w) + \frac{1}{2\eta}\|w-v\|^2\}$ generalises gradient descent to non-smooth problems. For L1, $\text{prox}_{\eta\|\cdot\|_1}$ is exactly soft-thresholding. ADMM (Alternating Direction Method of Multipliers) solves distributed constrained problems by splitting them across machines — the backbone of large-scale convex optimization in production ML systems.</p>
+          </div>
+          <div class="opt-math-box">
+            <div class="opt-math-label">📐 Proximal Gradient Descent</div>
+            <div class="opt-eq">$$w_{t+1} = \text{prox}_{\eta g}(w_t - \eta\nabla f(w_t))$$</div>
+            <div class="opt-eq" style="margin-top:8px;">$$\text{prox}_{\eta\|\cdot\|_1}(v)_j = \text{sign}(v_j)\max(|v_j|-\eta,0)$$</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /opt-main -->
+
+    <!-- Sidebar -->
+    <div class="opt-side">
+      <div class="opt-side-title">📍 Section Progress</div>
+      <div class="opt-prog-list">
+        <div class="opt-prog-item" id="opt-p1" onclick="document.getElementById('opt-c1').scrollIntoView({behavior:'smooth'})"><div class="opt-check" id="opt-ck1">1</div>Convexity</div>
+        <div class="opt-prog-item" id="opt-p2" onclick="document.getElementById('opt-c2').scrollIntoView({behavior:'smooth'})"><div class="opt-check" id="opt-ck2">2</div>Optimizer Variants</div>
+        <div class="opt-prog-item" id="opt-p3" onclick="document.getElementById('opt-c3').scrollIntoView({behavior:'smooth'})"><div class="opt-check" id="opt-ck3">3</div>Lagrangians & SVMs</div>
+        <div class="opt-prog-item" id="opt-p4" onclick="document.getElementById('opt-c4').scrollIntoView({behavior:'smooth'})"><div class="opt-check" id="opt-ck4">4</div>Regularisation</div>
+      </div>
+
+      <div id="opt-cheat-panel" style="display:none;margin-bottom:24px;">
+        <div class="opt-side-title">📋 Cheat Sheet</div>
+        <div class="opt-cheatsheet">
+          <div class="opt-cheat-item"><div class="opt-cheat-name">Convexity</div><div class="opt-cheat-eq">$f(\lambda x+(1-\lambda)y)\leq\lambda f(x)+(1-\lambda)f(y)$</div></div>
+          <div class="opt-cheat-item"><div class="opt-cheat-name">SGD</div><div class="opt-cheat-eq">$\theta\leftarrow\theta-\eta g_t$</div></div>
+          <div class="opt-cheat-item"><div class="opt-cheat-name">Adam</div><div class="opt-cheat-eq">$\theta\leftarrow\theta-\eta\hat{m}_t/(\sqrt{\hat{v}_t}+\epsilon)$</div></div>
+          <div class="opt-cheat-item"><div class="opt-cheat-name">Lagrangian</div><div class="opt-cheat-eq">$\mathcal{L}(x,\lambda)=f(x)+\lambda g(x)$</div></div>
+          <div class="opt-cheat-item"><div class="opt-cheat-name">Ridge</div><div class="opt-cheat-eq">$\|Xw-y\|^2+\lambda\|w\|^2$</div></div>
+          <div class="opt-cheat-item"><div class="opt-cheat-name">LASSO</div><div class="opt-cheat-eq">$\|Xw-y\|^2+\lambda\|w\|_1$</div></div>
+          <div class="opt-cheat-item"><div class="opt-cheat-name">KKT slackness</div><div class="opt-cheat-eq">$\mu_i g_i(x^*)=0,\;\mu_i\geq0$</div></div>
+        </div>
+      </div>
+
+      <div id="opt-notes-panel" style="display:none;margin-bottom:24px;">
+        <div class="opt-side-title">✏️ My Notes</div>
+        <textarea class="opt-notes-ta" id="opt-notes-ta" placeholder="Your optimization notes..."></textarea>
+        <button class="opt-save-btn" onclick="OptSection.saveNote()">💾 Save</button>
+        <div id="opt-saved-msg" style="font-size:11px;color:var(--accent-emerald);margin-top:6px;display:none;">✓ Saved!</div>
+      </div>
+
+      <div class="opt-side-title">🔑 Key Terms</div>
+      <div class="opt-term"><div class="opt-term-name">Convex</div><div class="opt-term-def">Only one valley — gradient descent finds the global minimum.</div></div>
+      <div class="opt-term"><div class="opt-term-name">Saddle Point</div><div class="opt-term-def">Flat region that's a minimum in one direction, maximum in another. Common in deep nets.</div></div>
+      <div class="opt-term"><div class="opt-term-name">Lagrange Multiplier</div><div class="opt-term-def">The shadow price of a constraint — how much the optimum improves per unit relaxation.</div></div>
+      <div class="opt-term"><div class="opt-term-name">Support Vector</div><div class="opt-term-def">Training points on the margin boundary — the only ones that matter for the SVM decision boundary.</div></div>
+      <div class="opt-term"><div class="opt-term-name">Weight Decay</div><div class="opt-term-def">L2 regularisation in neural network training — keeps weights small, reduces overfitting.</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ QUIZ ════════════════════════════════════════════════ -->
+  <div class="opt-quiz" id="opt-quiz-section">
+    <div class="opt-quiz-eyebrow">Knowledge Check</div>
+    <div class="opt-quiz-title">Optimization Quiz</div>
+    <div class="opt-quiz-sub">5 questions · +180 XP · Unlocks Information Theory on pass</div>
+
+    <div class="opt-qcard" id="opt-qc1">
+      <div class="opt-qnum">Question 1 of 5</div>
+      <div class="opt-qtext">For a convex loss function, what is guaranteed about any local minimum found by gradient descent?</div>
+      <div class="opt-opts">
+        <div class="opt-opt" onclick="OptQuiz.sel(1,this,'A')"><div class="opt-letter">A</div>It is a saddle point</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(1,this,'B')"><div class="opt-letter">B</div>It is also the global minimum</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(1,this,'C')"><div class="opt-letter">C</div>It depends on the learning rate</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(1,this,'D')"><div class="opt-letter">D</div>It is only a local minimum — no guarantees</div>
+      </div>
+      <div class="opt-qfb ok" id="opt-fb1">✅ Correct! For convex functions, every local minimum is the global minimum — there are no other valleys to get stuck in. This is why logistic regression and linear regression always find the optimal solution.</div>
+      <div class="opt-qfb no" id="opt-fb1w" style="display:none;">❌ For convex functions, every local minimum is also the global minimum (B). The "bowl" shape means there's only one bottom. This guarantee disappears for non-convex problems like neural networks.</div>
+    </div>
+
+    <div class="opt-qcard" id="opt-qc2">
+      <div class="opt-qnum">Question 2 of 5</div>
+      <div class="opt-qtext">What key advantage does Adam have over plain SGD?</div>
+      <div class="opt-opts">
+        <div class="opt-opt" onclick="OptQuiz.sel(2,this,'A')"><div class="opt-letter">A</div>Adam always finds the global minimum, SGD does not</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(2,this,'B')"><div class="opt-letter">B</div>Adam uses less memory than SGD</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(2,this,'C')"><div class="opt-letter">C</div>Adam adapts the learning rate per parameter using gradient history, making it self-tuning</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(2,this,'D')"><div class="opt-letter">D</div>Adam avoids computing gradients entirely</div>
+      </div>
+      <div class="opt-qfb ok" id="opt-fb2">✅ Exactly! Adam tracks first and second moment estimates of gradients per parameter — giving each weight its own adaptive learning rate. Infrequently updated parameters get larger steps; frequently updated ones get smaller steps.</div>
+      <div class="opt-qfb no" id="opt-fb2w" style="display:none;">❌ Adam's key advantage is C — adaptive per-parameter learning rates. It tracks the mean and variance of each parameter's gradient history, automatically tuning the step size. It actually uses more memory than SGD (stores m_t and v_t), not less.</div>
+    </div>
+
+    <div class="opt-qcard" id="opt-qc3">
+      <div class="opt-qnum">Question 3 of 5</div>
+      <div class="opt-qtext">In a Support Vector Machine, what are "support vectors"?</div>
+      <div class="opt-opts">
+        <div class="opt-opt" onclick="OptQuiz.sel(3,this,'A')"><div class="opt-letter">A</div>The weight vectors of the SVM model</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(3,this,'B')"><div class="opt-letter">B</div>The training points closest to the decision boundary — the ones that define the margin</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(3,this,'C')"><div class="opt-letter">C</div>All training points used in the model</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(3,this,'D')"><div class="opt-letter">D</div>The eigenvectors of the kernel matrix</div>
+      </div>
+      <div class="opt-qfb ok" id="opt-fb3">✅ Correct! Support vectors are the training points that sit exactly on the margin boundary. By KKT complementary slackness, only these points have non-zero Lagrange multipliers — meaning the entire decision boundary is determined solely by them.</div>
+      <div class="opt-qfb no" id="opt-fb3w" style="display:none;">❌ Support vectors (B) are the training points on the margin boundary. The key insight from the Lagrangian derivation is that only these points matter — you could delete all other training data and get the same model.</div>
+    </div>
+
+    <div class="opt-qcard" id="opt-qc4">
+      <div class="opt-qnum">Question 4 of 5</div>
+      <div class="opt-qtext">Why does L1 regularisation (LASSO) produce sparse models while L2 (Ridge) does not?</div>
+      <div class="opt-opts">
+        <div class="opt-opt" onclick="OptQuiz.sel(4,this,'A')"><div class="opt-letter">A</div>L1 penalises large weights more strongly than L2</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(4,this,'B')"><div class="opt-letter">B</div>The L1 constraint is a diamond with corners on the axes — loss contours typically touch these corners, setting weights to exactly zero</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(4,this,'C')"><div class="opt-letter">C</div>L2 is non-convex so it cannot reach zero</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(4,this,'D')"><div class="opt-letter">D</div>L1 uses a different gradient descent algorithm</div>
+      </div>
+      <div class="opt-qfb ok" id="opt-fb4">✅ Correct! The geometry of the L1 constraint ball (a diamond/rhombus) is the key. Its corners point along the axes, and the elliptical loss contours tend to hit these corners first — forcing the solution to have some weights exactly equal to zero.</div>
+      <div class="opt-qfb no" id="opt-fb4w" style="display:none;">❌ The geometric reason is B. The L1 ball is diamond-shaped with corners on the coordinate axes. When the loss function's contours expand outward, they hit a corner of the diamond first — meaning one weight is exactly zero. The L2 ball is circular with no corners, so the optimal point can be anywhere.</div>
+    </div>
+
+    <div class="opt-qcard" id="opt-qc5">
+      <div class="opt-qnum">Question 5 of 5</div>
+      <div class="opt-qtext">AdamW differs from Adam with L2 regularisation in which important way?</div>
+      <div class="opt-opts">
+        <div class="opt-opt" onclick="OptQuiz.sel(5,this,'A')"><div class="opt-letter">A</div>AdamW uses a different momentum formula</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(5,this,'B')"><div class="opt-letter">B</div>AdamW decouples weight decay from the adaptive gradient scaling, applying it directly to the weights</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(5,this,'C')"><div class="opt-letter">C</div>AdamW removes the second moment estimate entirely</div>
+        <div class="opt-opt" onclick="OptQuiz.sel(5,this,'D')"><div class="opt-letter">D</div>AdamW only works for transformer models</div>
+      </div>
+      <div class="opt-qfb ok" id="opt-fb5">✅ Exactly right! In standard Adam+L2, the weight decay term gets divided by √v̂ just like the gradient — so frequently updated parameters get less regularisation. AdamW applies weight decay directly to the weights before the gradient update, ensuring consistent regularisation regardless of gradient history.</div>
+      <div class="opt-qfb no" id="opt-fb5w" style="display:none;">❌ AdamW (B) decouples weight decay from the adaptive scaling. In Adam+L2, the L2 penalty gets scaled by 1/√v̂ — parameters that update frequently get weaker regularisation, which is wrong. AdamW fixes this by applying weight decay directly: θ ← (1−ηλ)θ − η·gradient_update.</div>
+    </div>
+
+    <div class="opt-quiz-row">
+      <button class="opt-quiz-btn" id="opt-qbtn" onclick="OptQuiz.submit()" disabled>Check Answers</button>
+      <div class="opt-score" id="opt-qscore"></div>
+    </div>
+  </div>
+
+</div><!-- /opt-page -->
+
+<script>
+// ── Optimization Section Controller ──────────────────────────
+const OptSection = {
+  level: 'beginner', proofStep: 0, proofTotal: 4,
+  notesOpen: false, cheatOpen: false,
+
+  setLevel(lv, btn) {
+    this.level = lv;
+    document.querySelectorAll('.opt-lvl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.opt-level').forEach(el => {
+      el.classList.remove('visible');
+      if (el.dataset.olv === lv) el.classList.add('visible');
+    });
+    if (typeof renderMathInElement !== 'undefined') {
+      setTimeout(() => renderMathInElement(document.getElementById('section-optimization') || document.body, {
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      }), 100);
+    }
+    setTimeout(() => { ConvexViz.draw(); OptimizerViz.draw(); RegViz.draw(); }, 150);
+  },
+
+  toggleMath(btn) {
+    const rev = btn.nextElementSibling;
+    rev.classList.toggle('visible');
+    btn.textContent = rev.classList.contains('visible') ? '∑ Hide math' : '∑ Show me the math';
+    if (rev.classList.contains('visible') && typeof renderMathInElement !== 'undefined') {
+      setTimeout(() => renderMathInElement(rev, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}), 50);
+    }
+  },
+
+  proofStep(dir) { this.proofGo(this.proofStep + dir); },
+  proofGo(idx) {
+    const steps = document.querySelectorAll('.opt-proof-step');
+    steps.forEach(s => s.classList.remove('active'));
+    if (steps[idx]) steps[idx].classList.add('active');
+    this.proofStep = idx;
+    document.querySelectorAll('.op-dot').forEach((d,i) => {
+      d.classList.remove('active','done');
+      if (i===idx) d.classList.add('active');
+      else if (i<idx) d.classList.add('done');
+    });
+    const prev=document.getElementById('opt-pprev'), next=document.getElementById('opt-pnext');
+    if (prev) prev.disabled = idx===0;
+    if (next) { next.disabled = idx>=this.proofTotal-1; next.textContent = idx>=this.proofTotal-1?'✓ Done!':'Next →'; }
+    if (typeof renderMathInElement!=='undefined'&&steps[idx]) {
+      setTimeout(()=>renderMathInElement(steps[idx],{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}),50);
+    }
+  },
+
+  toggleNotes() {
+    this.notesOpen = !this.notesOpen;
+    const p=document.getElementById('opt-notes-panel'), b=document.getElementById('opt-notes-btn');
+    if(p) p.style.display=this.notesOpen?'block':'none';
+    if(b) b.classList.toggle('active',this.notesOpen);
+    if(this.notesOpen){const s=localStorage.getItem('opt-notes');const t=document.getElementById('opt-notes-ta');if(s&&t)t.value=s;}
+  },
+  toggleCheat() {
+    this.cheatOpen = !this.cheatOpen;
+    const p=document.getElementById('opt-cheat-panel'), b=document.getElementById('opt-cheat-btn');
+    if(p) p.style.display=this.cheatOpen?'block':'none';
+    if(b) b.classList.toggle('active',this.cheatOpen);
+    if(this.cheatOpen&&typeof renderMathInElement!=='undefined'){
+      setTimeout(()=>renderMathInElement(p,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}),50);
+    }
+  },
+  saveNote() {
+    const t=document.getElementById('opt-notes-ta');
+    if(t){localStorage.setItem('opt-notes',t.value);const m=document.getElementById('opt-saved-msg');if(m){m.style.display='block';setTimeout(()=>m.style.display='none',2000);}}
+  },
+  markDone() {
+    [1,2,3,4].forEach(i=>{
+      const c=document.getElementById('opt-ck'+i),p=document.getElementById('opt-p'+i);
+      if(c){c.classList.add('done');c.textContent='✓';}if(p)p.classList.add('done');
+    });
+    if(typeof App!=='undefined') App.showToast('✅ All concepts marked complete!');
+  }
+};
+
+// ── Convexity Visualizer ──────────────────────────────────────
+const ConvexViz = {
+  mode: 'convex',
+  show(mode, btn) {
+    this.mode = mode;
+    document.querySelectorAll('.opt-tab').forEach(b=>b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    this.draw();
+  },
+  draw() {
+    const canvas = document.getElementById('convex-canvas');
+    if(!canvas) return;
+    const W=canvas.offsetWidth||600, H=260;
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+    const mg={t:20,b:40,l:44,r:20};
+    const iW=W-mg.l-mg.r, iH=H-mg.t-mg.b;
+    const xMin=-3.5, xMax=3.5;
+
+    let fn, title, info, color;
+    if(this.mode==='convex'){
+      fn=x=>0.8*x*x+0.5;
+      title='Convex (quadratic loss)';
+      info='✅ One global minimum. Any local minimum is the global minimum. Gradient descent always converges to the optimal solution.';
+      color='#68d391';
+    } else if(this.mode==='nonconvex'){
+      fn=x=>0.5*Math.sin(2.5*x)+0.3*x*x+0.5;
+      title='Non-Convex (neural network loss)';
+      info='⚠️ Multiple local minima and saddle points. Gradient descent may get stuck — but overparameterisation means most local minima are nearly optimal.';
+      color='#f6ad55';
+    } else {
+      fn=x=>x*x*x*x*0.1 - x*x*0.5 + 0.5;
+      title='Saddle Point';
+      info='⚡ Minimum in one direction, maximum in another. The gradient is zero but it\'s not a minimum. Common in high-dimensional non-convex landscapes.';
+      color='#fc8181';
+    }
+
+    const pts=[];
+    for(let px=0;px<=iW;px++){
+      const x=xMin+(xMax-xMin)*(px/iW);
+      pts.push({x,y:fn(x)});
+    }
+    const yVals=pts.map(p=>p.y);
+    const yMin=Math.min(...yVals)-0.2, yMax=Math.max(...yVals)+0.4;
+    const toX=x=>mg.l+(x-xMin)/(xMax-xMin)*iW;
+    const toY=y=>mg.t+(1-(y-yMin)/(yMax-yMin))*iH;
+
+    // Grid
+    for(let i=-3;i<=3;i++){
+      ctx.beginPath();ctx.moveTo(toX(i),mg.t);ctx.lineTo(toX(i),mg.t+iH);
+      ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;ctx.stroke();
+    }
+    ctx.beginPath();ctx.moveTo(mg.l,toY(0));ctx.lineTo(mg.l+iW,toY(0));ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.stroke();
+
+    // Fill
+    const grad=ctx.createLinearGradient(0,mg.t,0,mg.t+iH);
+    grad.addColorStop(0,color.replace(')',',0.2)').replace('rgb','rgba').replace('#','rgba(').replace(/([0-9a-f]{2})/gi,(m,p)=>parseInt(p,16)+',').slice(0,-1)+')');
+    grad.addColorStop(0,color+'33'); grad.addColorStop(1,color+'05');
+    ctx.beginPath();
+    ctx.moveTo(toX(pts[0].x),toY(pts[0].y));
+    pts.forEach(p=>ctx.lineTo(toX(p.x),Math.min(toY(p.y),mg.t+iH)));
+    ctx.lineTo(mg.l+iW,mg.t+iH);ctx.lineTo(mg.l,mg.t+iH);ctx.closePath();
+    ctx.fillStyle=color+'22';ctx.fill();
+
+    // Curve
+    ctx.beginPath();
+    pts.forEach((p,i)=>{
+      const py=Math.min(Math.max(toY(p.y),mg.t-5),mg.t+iH+5);
+      i===0?ctx.moveTo(toX(p.x),py):ctx.lineTo(toX(p.x),py);
+    });
+    ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.stroke();
+
+    // Mark minima
+    if(this.mode==='convex'){
+      ctx.beginPath();ctx.arc(toX(0),toY(fn(0)),7,0,2*Math.PI);
+      ctx.fillStyle='#68d391';ctx.fill();
+      ctx.font='11px Syne,sans-serif';ctx.fillStyle='#68d391';ctx.fillText('Global Min',toX(0)+10,toY(fn(0)));
+    }
+    if(this.mode==='nonconvex'){
+      [[-2.2,fn(-2.2)],[0.6,fn(0.6)],[2.8,fn(2.8)]].forEach(([x,y],i)=>{
+        ctx.beginPath();ctx.arc(toX(x),toY(y),5,0,2*Math.PI);
+        ctx.fillStyle=i===0?'#f6ad55':'rgba(246,173,85,0.5)';ctx.fill();
+      });
+      ctx.font='11px Syne,sans-serif';ctx.fillStyle='#f6ad55';
+      ctx.fillText('Global Min?',toX(-2.2)+8,toY(fn(-2.2))-8);
+      ctx.fillText('Local Min',toX(0.6)+8,toY(fn(0.6))-8);
+    }
+    if(this.mode==='saddle'){
+      ctx.beginPath();ctx.arc(toX(0),toY(fn(0)),7,0,2*Math.PI);
+      ctx.fillStyle='#fc8181';ctx.fill();
+      ctx.font='11px Syne,sans-serif';ctx.fillStyle='#fc8181';ctx.fillText('Saddle Point',toX(0)+10,toY(fn(0)));
+    }
+
+    // Title + info
+    ctx.font='bold 12px Syne,sans-serif';ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.fillText(title,mg.l+8,mg.t+16);
+    const infoEl=document.getElementById('convex-info');
+    if(infoEl) infoEl.innerHTML=info;
+  }
+};
+
+// ── Optimizer Comparison Visualizer ──────────────────────────
+const OptimizerViz = {
+  enabled: {sgd:true, momentum:true, rmsprop:true, adam:true},
+  states: {},
+  animFrame: null, running: false,
+
+  // Elongated bowl: loss surface
+  f:  (x,y) => 0.5*x*x + 5*y*y,
+  gx: (x,y) => x,
+  gy: (x,y) => 10*y,
+
+  toggle(name) {
+    this.enabled[name] = !this.enabled[name];
+    const btn=document.getElementById('tog'+name);
+    if(btn) btn.style.opacity = this.enabled[name]?'1':'0.3';
+    if(!this.running) this.draw();
+  },
+
+  reset() {
+    if(this.animFrame) cancelAnimationFrame(this.animFrame);
+    this.running=false;
+    const start={x:1.8,y:0.9};
+    this.states={
+      sgd:      {x:start.x,y:start.y,history:[{...start}]},
+      momentum: {x:start.x,y:start.y,vx:0,vy:0,history:[{...start}]},
+      rmsprop:  {x:start.x,y:start.y,ex2:0,ey2:0,history:[{...start}]},
+      adam:     {x:start.x,y:start.y,mx:0,my:0,vx:0,vy:0,t:0,history:[{...start}]},
+    };
+    const btn=document.getElementById('opt-start-btn');
+    if(btn){btn.textContent='▶ Race!';btn.style.color='';}
+    this.draw();
+  },
+
+  start() {
+    if(this.running){
+      cancelAnimationFrame(this.animFrame);this.running=false;
+      const btn=document.getElementById('opt-start-btn');
+      if(btn)btn.textContent='▶ Resume';
+      return;
+    }
+    if(Object.keys(this.states).length===0) this.reset();
+    this.running=true;
+    const btn=document.getElementById('opt-start-btn');
+    if(btn){btn.textContent='⏸ Pause';}
+    this.animate();
+  },
+
+  animate() {
+    if(!this.running) return;
+    const lr=0.08, beta=0.9, beta2=0.999, eps=1e-8;
+    let allDone=true;
+
+    // SGD
+    if(this.enabled.sgd && Math.abs(this.states.sgd.x)>0.01){
+      allDone=false;
+      const s=this.states.sgd;
+      s.x -= lr*this.gx(s.x,s.y);
+      s.y -= lr*this.gy(s.x,s.y);
+      s.history.push({x:s.x,y:s.y});
+    }
+    // Momentum
+    if(this.enabled.momentum && Math.abs(this.states.momentum.x)>0.01){
+      allDone=false;
+      const s=this.states.momentum;
+      s.vx = beta*s.vx + (1-beta)*this.gx(s.x,s.y);
+      s.vy = beta*s.vy + (1-beta)*this.gy(s.x,s.y);
+      s.x -= lr*s.vx; s.y -= lr*s.vy;
+      s.history.push({x:s.x,y:s.y});
+    }
+    // RMSProp
+    if(this.enabled.rmsprop && Math.abs(this.states.rmsprop.x)>0.01){
+      allDone=false;
+      const s=this.states.rmsprop;
+      const gx=this.gx(s.x,s.y), gy=this.gy(s.x,s.y);
+      s.ex2=beta2*s.ex2+(1-beta2)*gx*gx;
+      s.ey2=beta2*s.ey2+(1-beta2)*gy*gy;
+      s.x -= lr*gx/(Math.sqrt(s.ex2)+eps);
+      s.y -= lr*gy/(Math.sqrt(s.ey2)+eps);
+      s.history.push({x:s.x,y:s.y});
+    }
+    // Adam
+    if(this.enabled.adam && Math.abs(this.states.adam.x)>0.005){
+      allDone=false;
+      const s=this.states.adam;
+      s.t++;
+      const gx=this.gx(s.x,s.y), gy=this.gy(s.x,s.y);
+      s.mx=beta*s.mx+(1-beta)*gx; s.my=beta*s.my+(1-beta)*gy;
+      s.vx=beta2*s.vx+(1-beta2)*gx*gx; s.vy=beta2*s.vy+(1-beta2)*gy*gy;
+      const mxh=s.mx/(1-Math.pow(beta,s.t)), myh=s.my/(1-Math.pow(beta,s.t));
+      const vxh=s.vx/(1-Math.pow(beta2,s.t)), vyh=s.vy/(1-Math.pow(beta2,s.t));
+      s.x -= lr*mxh/(Math.sqrt(vxh)+eps);
+      s.y -= lr*myh/(Math.sqrt(vyh)+eps);
+      s.history.push({x:s.x,y:s.y});
+    }
+
+    this.draw();
+    if(allDone||this.states.sgd?.history?.length>300){
+      this.running=false;
+      const btn=document.getElementById('opt-start-btn');
+      if(btn)btn.textContent='✓ Done';
+      return;
+    }
+    this.animFrame=requestAnimationFrame(()=>setTimeout(()=>this.animate(),30));
+  },
+
+  draw() {
+    const canvas=document.getElementById('opt-compare-canvas');
+    if(!canvas) return;
+    const W=canvas.offsetWidth||600, H=320;
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+    const cx=W/2, cy=H/2;
+    const sx=W/5, sy=H/2.2;
+
+    // Draw loss contours
+    for(let r=0.5;r<=2.5;r+=0.5){
+      ctx.beginPath();
+      for(let a=0;a<=2*Math.PI;a+=0.02){
+        const px=cx+r*Math.cos(a)*sx, py=cy+r*Math.sin(a)*sy*0.45;
+        a===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      }
+      ctx.closePath();
+      ctx.strokeStyle=`rgba(252,129,129,${0.08+r*0.06})`;ctx.lineWidth=1;ctx.stroke();
+    }
+    // Minimum
+    ctx.beginPath();ctx.arc(cx,cy,4,0,2*Math.PI);ctx.fillStyle='rgba(104,211,145,0.8)';ctx.fill();
+    ctx.font='10px Syne,sans-serif';ctx.fillStyle='rgba(104,211,145,0.8)';ctx.fillText('min',cx+6,cy+4);
+
+    const colors={sgd:'#63b3ed',momentum:'#f6ad55',rmsprop:'#9f7aea',adam:'#68d391'};
+
+    // Draw paths
+    Object.entries(this.states).forEach(([name,s])=>{
+      if(!this.enabled[name]||!s.history||s.history.length<2) return;
+      ctx.beginPath();
+      s.history.forEach((pt,i)=>{
+        const px=cx+pt.x*sx, py=cy+pt.y*sy;
+        i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      });
+      ctx.strokeStyle=colors[name]+'99';ctx.lineWidth=1.5;ctx.stroke();
+      // Current pos
+      const last=s.history[s.history.length-1];
+      ctx.beginPath();ctx.arc(cx+last.x*sx,cy+last.y*sy,5,0,2*Math.PI);
+      ctx.fillStyle=colors[name];ctx.fill();
+    });
+
+    // Info
+    const infoEl=document.getElementById('opt-compare-info');
+    if(infoEl&&Object.keys(this.states).length>0){
+      const parts=Object.entries(this.states).map(([name,s])=>{
+        if(!this.enabled[name]) return '';
+        const steps=s.history?s.history.length:0;
+        return `<span style="color:${colors[name]}">● ${name.toUpperCase()}: ${steps} steps</span>`;
+      }).filter(Boolean);
+      infoEl.innerHTML=parts.join(' &nbsp;|&nbsp; ');
+    }
+  }
+};
+
+// ── Regularisation Visualizer ─────────────────────────────────
+const RegViz = {
+  mode: 'l2',
+  show(mode) {
+    this.mode=mode;
+    document.getElementById('reg-l2-btn')?.classList.toggle('active',mode==='l2');
+    document.getElementById('reg-l1-btn')?.classList.toggle('active',mode==='l1');
+    this.update();
+  },
+  update() { this.draw(); },
+  draw() {
+    const canvas=document.getElementById('reg-canvas');
+    if(!canvas) return;
+    const W=canvas.offsetWidth||600, H=300;
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+    const lambda=parseFloat(document.getElementById('reg-lambda')?.value||1);
+    document.getElementById('reg-lambda-val').textContent=lambda.toFixed(1);
+
+    const cx=W/2, cy=H/2, S=Math.min(W,H)*0.35;
+    const r=S/lambda;
+
+    // Loss contours (ellipses centered off-origin)
+    const lossX=cx+S*0.5, lossY=cy-S*0.3;
+    for(let ri=0.3;ri<=1.5;ri+=0.3){
+      ctx.beginPath();
+      for(let a=0;a<=2*Math.PI;a+=0.02){
+        const px=lossX+ri*S*0.7*Math.cos(a), py=lossY+ri*S*0.4*Math.sin(a);
+        a===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      }
+      ctx.strokeStyle='rgba(99,179,237,0.2)';ctx.lineWidth=1;ctx.stroke();
+    }
+    ctx.font='10px IBM Plex Mono,monospace';ctx.fillStyle='rgba(99,179,237,0.5)';
+    ctx.fillText('Loss contours',lossX+S*0.4,lossY-S*0.25);
+
+    // Constraint region
+    ctx.beginPath();
+    if(this.mode==='l2'){
+      ctx.arc(cx,cy,r,0,2*Math.PI);
+      ctx.fillStyle='rgba(252,129,129,0.08)';ctx.fill();
+      ctx.strokeStyle='rgba(252,129,129,0.5)';ctx.lineWidth=2;ctx.stroke();
+    } else {
+      // Diamond
+      ctx.moveTo(cx,cy-r);ctx.lineTo(cx+r,cy);ctx.lineTo(cx,cy+r);ctx.lineTo(cx-r,cy);ctx.closePath();
+      ctx.fillStyle='rgba(159,122,234,0.08)';ctx.fill();
+      ctx.strokeStyle='rgba(159,122,234,0.5)';ctx.lineWidth=2;ctx.stroke();
+    }
+
+    // Optimal point (where loss contour touches constraint)
+    let optX, optY, optColor;
+    if(this.mode==='l2'){
+      // Tangent point on circle towards loss center
+      const dx=lossX-cx, dy=lossY-cy;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      optX=cx+r*dx/dist; optY=cy+r*dy/dist;
+      optColor='#fc8181';
+    } else {
+      // Diamond corner (LASSO sparsity)
+      optX=cx+r; optY=cy; // touches corner on w1 axis → w2=0
+      optColor='#9f7aea';
+    }
+    ctx.beginPath();ctx.arc(optX,optY,7,0,2*Math.PI);
+    ctx.fillStyle=optColor;ctx.fill();
+    ctx.beginPath();ctx.arc(optX,optY,4,0,2*Math.PI);
+    ctx.fillStyle='#080b12';ctx.fill();
+
+    // Axes
+    ctx.beginPath();ctx.moveTo(cx-S*1.1,cy);ctx.lineTo(cx+S*1.1,cy);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,cy-S*1.1);ctx.lineTo(cx,cy+S*1.1);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.stroke();
+    ctx.font='11px Syne,sans-serif';ctx.fillStyle='rgba(255,255,255,0.4)';
+    ctx.fillText('w₁',cx+S*1.05,cy-6);ctx.fillText('w₂',cx+6,cy-S*1.05);
+
+    // Info
+    const infoEl=document.getElementById('reg-info');
+    if(infoEl){
+      if(this.mode==='l2'){
+        infoEl.innerHTML=`<span style="color:#fc8181">L2 (Ridge)</span> — circular constraint. Optimal point can land anywhere on the circle. Weights shrink smoothly but rarely become exactly zero. λ=${lambda.toFixed(1)} → constraint radius = ${(S/lambda).toFixed(0)}px`;
+      } else {
+        infoEl.innerHTML=`<span style="color:#9f7aea">L1 (LASSO)</span> — diamond constraint with corners on axes. Optimal point likely hits a corner → one weight becomes <strong style="color:#9f7aea">exactly zero</strong>. This is automatic feature selection. λ=${lambda.toFixed(1)}`;
+      }
+    }
+  }
+};
+
+// ── Quiz ──────────────────────────────────────────────────────
+const OptQuiz = {
+  answers:{1:'B',2:'C',3:'B',4:'B',5:'B'}, selected:{},
+  sel(q,el,letter){
+    document.getElementById('opt-qc'+q).querySelectorAll('.opt-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');this.selected[q]=letter;
+    const btn=document.getElementById('opt-qbtn');
+    if(btn&&Object.keys(this.selected).length===5)btn.disabled=false;
+  },
+  submit(){
+    let score=0;
+    for(let q=1;q<=5;q++){
+      const ua=this.selected[q],ca=this.answers[q];
+      const card=document.getElementById('opt-qc'+q);
+      const letters=['A','B','C','D'];
+      card.querySelectorAll('.opt-opt').forEach((o,i)=>{
+        if(letters[i]===ca)o.classList.add('correct');
+        else if(letters[i]===ua&&ua!==ca)o.classList.add('wrong');
+      });
+      const fb=document.getElementById('opt-fb'+q),fbw=document.getElementById('opt-fb'+q+'w');
+      if(ua===ca){score++;if(fb)fb.classList.add('show');}
+      else{if(fbw){fbw.style.display='block';fbw.classList.add('show');}}
+    }
+    const xp=score*36;
+    const sc=document.getElementById('opt-qscore');
+    const emoji=score===5?'🏆':score>=3?'⭐':'📚';
+    if(sc){sc.classList.add('show');sc.innerHTML=`${emoji} ${score}/5 correct — +${xp} XP earned`;}
+    const btn=document.getElementById('opt-qbtn');if(btn)btn.disabled=true;
+    if(typeof App!=='undefined'){
+      App.addXP(xp);
+      if(score>=3){
+        setTimeout(()=>{
+          App.showToast('🎉 Optimization complete! Information Theory unlocked!');
+          const itNav=document.querySelector('[data-nav="info-theory"]');
+          if(itNav){itNav.classList.remove('locked');const b=itNav.querySelector('.nav-badge');if(b)b.textContent='NEW';}
+          App.progress=80;App.initProgress();
+        },1000);
+      }
+    }
+  }
+};
+
+// ── Init ──────────────────────────────────────────────────────
+(function initOpt(){
+  setTimeout(()=>{
+    ConvexViz.draw();
+    OptimizerViz.reset();
+    RegViz.draw();
+    if(typeof renderMathInElement!=='undefined'){
+      renderMathInElement(document.getElementById('section-optimization')||document.body,{
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      });
+    }
+    const saved=localStorage.getItem('opt-notes');
+    const ta=document.getElementById('opt-notes-ta');
+    if(saved&&ta)ta.value=saved;
+  },300);
+})();
+</script>

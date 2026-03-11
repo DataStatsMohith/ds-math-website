@@ -1,0 +1,1209 @@
+<!-- ============================================================
+     CALCULUS & DERIVATIVES — Full Interactive Section
+     Concepts: Limits/Derivatives, Chain Rule, Partial Derivatives,
+               Gradient Descent
+     Visualizations: Live derivative tangent, 3D loss surface,
+                     Gradient descent path animation
+     Features: 3 levels, proof walker, cheat sheet, notes, quiz
+     ============================================================ -->
+<style>
+.calc-page { font-family: var(--font-body); }
+
+.calc-hero {
+  position: relative; padding: 56px 60px 40px; overflow: hidden;
+  border-bottom: 1px solid var(--border-dim);
+}
+.calc-hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 55% 70% at 80% 30%, rgba(246,173,85,0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 30% 50% at 15% 75%, rgba(104,211,145,0.05) 0%, transparent 55%);
+  pointer-events: none;
+}
+.calc-hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(246,173,85,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246,173,85,0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 100% 100% at center, black 20%, transparent 75%);
+  pointer-events: none;
+}
+.calc-hero-content { position: relative; z-index: 1; }
+.calc-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-muted);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px;
+}
+.calc-bc { color: var(--accent-cyan); cursor: pointer; }
+.calc-bc:hover { text-decoration: underline; }
+.calc-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(246,173,85,0.1); border: 1px solid rgba(246,173,85,0.25);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-amber); margin-bottom: 16px;
+}
+.calc-tag::before { content: '03'; font-weight: 800; font-family: var(--font-display); font-size: 9px; }
+.calc-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.calc-hero-left { flex: 1; min-width: 300px; }
+.calc-hero-title {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(28px, 3.5vw, 48px); letter-spacing: -1.5px; line-height: 1.05;
+  color: var(--text-primary); margin-bottom: 14px;
+}
+.calc-hero-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, #f6ad55, #fc8181);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.calc-hero-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.8; max-width: 520px; margin-bottom: 28px; }
+.calc-why {
+  background: rgba(246,173,85,0.06); border: 1px solid rgba(246,173,85,0.15);
+  border-radius: var(--radius-md); padding: 16px 20px; max-width: 520px;
+}
+.calc-why-label {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent-amber); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.calc-why-label::before { content: '🤖'; }
+.calc-why-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.calc-meta { display: flex; flex-direction: column; gap: 12px; min-width: 180px; align-items: flex-end; }
+.calc-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 8px 14px;
+  font-size: 12px; color: var(--text-secondary);
+}
+
+/* Level switcher — amber */
+.calc-level-bar {
+  display: flex; align-items: center;
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 5px;
+  width: fit-content; margin: 32px 60px 0;
+}
+.calc-lvl-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 12px; cursor: pointer;
+  border: none; background: transparent;
+  font-family: var(--font-display); font-weight: 600; font-size: 13px;
+  color: var(--text-muted); transition: var(--transition); white-space: nowrap;
+}
+.calc-lvl-btn:hover { color: var(--text-secondary); }
+.calc-lvl-btn.active { background: var(--bg-raised); color: var(--text-primary); box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+.calc-lvl-btn.active.cb { color: var(--accent-emerald); }
+.calc-lvl-btn.active.ci { color: var(--accent-amber); }
+.calc-lvl-btn.active.cp { color: var(--accent-rose); }
+.cdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.cb .cdot { background: var(--accent-emerald); }
+.ci .cdot { background: var(--accent-amber); }
+.cp .cdot { background: var(--accent-rose); }
+
+/* Util bar */
+.calc-util-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 60px; border-bottom: 1px solid var(--border-dim); flex-wrap: wrap;
+}
+.calc-util-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); border-radius: 8px;
+  font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.calc-util-btn:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.calc-util-btn.active { border-color: var(--accent-amber); color: var(--accent-amber); background: rgba(246,173,85,0.08); }
+.calc-util-sep { width: 1px; height: 24px; background: var(--border-dim); margin: 0 4px; }
+
+/* Content layout */
+.calc-content-area {
+  display: grid; grid-template-columns: 1fr 340px; min-height: 60vh;
+}
+.calc-main { padding: 40px 60px; border-right: 1px solid var(--border-dim); }
+.calc-side { padding: 28px 24px; background: var(--bg-deep); }
+
+/* Concept blocks */
+.calc-concept {
+  margin-bottom: 52px; padding-bottom: 52px;
+  border-bottom: 1px solid var(--border-dim);
+}
+.calc-concept:last-child { border-bottom: none; }
+.calc-concept-num { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.calc-concept-title {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 22px; letter-spacing: -0.5px; color: var(--text-primary);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+}
+.calc-icon { font-size: 26px; }
+.calc-body { font-size: 14px; color: var(--text-secondary); line-height: 1.9; }
+.calc-body p { margin-bottom: 14px; }
+.calc-body strong { color: var(--text-primary); font-weight: 500; }
+
+.calc-intuition {
+  background: rgba(246,173,85,0.06); border-left: 3px solid var(--accent-amber);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px; margin: 20px 0; font-size: 13px;
+}
+.calc-intuition-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-amber); margin-bottom: 6px;
+}
+.calc-intuition-text { color: var(--text-secondary); line-height: 1.7; }
+
+.calc-ds {
+  background: rgba(104,211,145,0.05); border-left: 3px solid var(--accent-emerald);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px; margin: 20px 0; font-size: 13px;
+}
+.calc-ds-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-emerald); margin-bottom: 6px;
+}
+
+.calc-math-box {
+  background: rgba(246,173,85,0.05); border: 1px solid rgba(246,173,85,0.15);
+  border-radius: var(--radius-md); padding: 20px 24px; margin: 20px 0;
+}
+.calc-math-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-amber); margin-bottom: 12px;
+}
+.calc-eq {
+  background: var(--bg-raised); border-radius: var(--radius-md);
+  padding: 14px 20px; text-align: center; margin: 10px 0; font-size: 15px;
+}
+
+.calc-math-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; background: rgba(246,173,85,0.08);
+  border: 1px solid rgba(246,173,85,0.2); border-radius: 8px;
+  font-size: 12px; color: var(--accent-amber);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body); margin: 12px 0;
+}
+.calc-math-toggle:hover { background: rgba(246,173,85,0.15); }
+.calc-math-reveal { display: none; margin-top: 12px; }
+.calc-math-reveal.visible { display: block; animation: fadeIn 0.3s ease; }
+
+/* Level visibility */
+.calc-level { display: none; }
+.calc-level.visible { display: block; animation: fadeIn 0.4s ease; }
+
+/* Viz containers */
+.calc-viz {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; overflow: hidden;
+}
+.calc-viz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.calc-viz-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.calc-viz-badge {
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 10px; background: rgba(246,173,85,0.1);
+  border: 1px solid rgba(246,173,85,0.2); border-radius: 10px; color: var(--accent-amber);
+}
+.calc-canvas { display: block; border-radius: var(--radius-md); background: var(--bg-raised); width: 100%; }
+.calc-controls { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.calc-slider-row { display: flex; flex-direction: column; gap: 6px; }
+.calc-slider-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
+.calc-slider-label span { color: var(--text-primary); font-family: var(--font-display); font-weight: 700; }
+.calc-slider-row input[type=range] { accent-color: var(--accent-amber); }
+
+/* Proof walker */
+.calc-proof {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; position: relative;
+}
+.calc-proof::before {
+  content: 'PROOF WALKER'; position: absolute; top: 12px; right: 16px;
+  font-size: 9px; letter-spacing: 2px; color: var(--text-muted);
+}
+.calc-proof-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin-bottom: 20px; }
+.calc-proof-step { display: none; animation: fadeIn 0.3s ease; }
+.calc-proof-step.active { display: block; }
+.cp-step-num { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.cp-step-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--accent-amber); margin-bottom: 10px; }
+.cp-step-body { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; }
+.cp-step-eq { background: var(--bg-raised); border-radius: var(--radius-md); padding: 16px 20px; text-align: center; margin: 12px 0; font-size: 15px; }
+.calc-proof-nav { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+.cp-nav-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: var(--bg-raised); border: 1px solid var(--border-dim);
+  border-radius: 8px; font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.cp-nav-btn:hover:not(:disabled) { border-color: var(--accent-amber); color: var(--accent-amber); }
+.cp-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.calc-proof-dots { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.cp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg-raised); border: 1px solid var(--border-dim); transition: var(--transition); cursor: pointer; }
+.cp-dot.active { background: var(--accent-amber); border-color: var(--accent-amber); transform: scale(1.2); }
+.cp-dot.done { background: var(--accent-emerald); border-color: var(--accent-emerald); }
+
+/* Gradient descent animation controls */
+.gd-btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.gd-btn {
+  padding: 8px 16px; background: var(--bg-raised); border: 1px solid var(--border-dim);
+  border-radius: 8px; font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.gd-btn:hover { border-color: var(--accent-amber); color: var(--accent-amber); }
+.gd-btn.running { border-color: var(--accent-emerald); color: var(--accent-emerald); }
+
+/* Sidebar */
+.calc-side-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 12px;
+  color: var(--text-primary); margin-bottom: 14px;
+}
+.calc-prog-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.calc-prog-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); border-radius: 8px;
+  font-size: 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition);
+}
+.calc-prog-item:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.calc-prog-item.done { border-color: rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.calc-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-soft); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+.calc-check.done { background: rgba(104,211,145,0.15); border-color: var(--accent-emerald); }
+.calc-cheatsheet { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-md); padding: 16px; }
+.calc-cheat-item { padding: 10px 0; border-bottom: 1px solid var(--border-dim); }
+.calc-cheat-item:last-child { border-bottom: none; }
+.calc-cheat-name { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.calc-cheat-eq { background: var(--bg-raised); border-radius: 6px; padding: 8px 12px; text-align: center; font-size: 13px; }
+.calc-notes-ta {
+  width: 100%; background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 12px; color: var(--text-primary);
+  font-family: var(--font-body); font-size: 12px; line-height: 1.7;
+  resize: vertical; min-height: 100px; outline: none; transition: var(--transition);
+}
+.calc-notes-ta:focus { border-color: rgba(246,173,85,0.4); }
+.calc-save-btn {
+  margin-top: 8px; padding: 6px 14px; background: rgba(246,173,85,0.1);
+  border: 1px solid rgba(246,173,85,0.2); border-radius: 6px;
+  font-size: 11px; color: var(--accent-amber); cursor: pointer; font-family: var(--font-body);
+}
+.calc-term { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.calc-term-name { font-size: 11px; color: var(--accent-amber); font-family: var(--font-display); font-weight: 700; margin-bottom: 3px; }
+.calc-term-def { font-size: 11px; color: var(--text-muted); }
+
+/* Quiz */
+.calc-quiz {
+  padding: 48px 60px; border-top: 1px solid var(--border-dim); background: var(--bg-deep);
+}
+.calc-quiz-eyebrow { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.calc-quiz-title { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 8px; }
+.calc-quiz-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+.calc-qcard { background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; }
+.calc-qnum { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.calc-qtext { font-size: 15px; color: var(--text-primary); line-height: 1.6; margin-bottom: 20px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.2px; }
+.calc-opts { display: flex; flex-direction: column; gap: 10px; }
+.calc-opt {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: var(--bg-raised);
+  border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  cursor: pointer; transition: var(--transition); font-size: 13px; color: var(--text-secondary);
+}
+.calc-opt:hover { border-color: var(--border-soft); color: var(--text-primary); background: var(--bg-hover); }
+.calc-opt.selected { border-color: var(--accent-amber); color: var(--accent-amber); background: rgba(246,173,85,0.08); }
+.calc-opt.correct { border-color: var(--accent-emerald); color: var(--accent-emerald); background: rgba(104,211,145,0.08); }
+.calc-opt.wrong { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(252,129,129,0.08); }
+.calc-letter {
+  width: 26px; height: 26px; border-radius: 6px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 12px; flex-shrink: 0;
+}
+.calc-opt.selected .calc-letter { background: rgba(246,173,85,0.2); border-color: var(--accent-amber); color: var(--accent-amber); }
+.calc-opt.correct .calc-letter { background: rgba(104,211,145,0.2); border-color: var(--accent-emerald); }
+.calc-opt.wrong .calc-letter { background: rgba(252,129,129,0.2); border-color: var(--accent-rose); }
+.calc-qfb { display: none; margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; line-height: 1.6; }
+.calc-qfb.show { display: block; animation: fadeIn 0.3s ease; }
+.calc-qfb.ok { background: rgba(104,211,145,0.08); border: 1px solid rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.calc-qfb.no { background: rgba(252,129,129,0.08); border: 1px solid rgba(252,129,129,0.2); color: var(--accent-rose); }
+.calc-quiz-row { display: flex; align-items: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
+.calc-quiz-btn {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--accent-amber), var(--accent-rose));
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-display); font-weight: 700; font-size: 14px;
+  color: var(--bg-void); cursor: pointer; transition: var(--transition);
+}
+.calc-quiz-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(246,173,85,0.3); }
+.calc-quiz-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.calc-score { display: none; font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.calc-score.show { display: block; animation: fadeIn 0.5s ease; }
+
+@media (max-width: 1100px) { .calc-content-area { grid-template-columns: 1fr; } .calc-side { border-top: 1px solid var(--border-dim); } .calc-main { border-right: none; } }
+@media (max-width: 768px) { .calc-hero, .calc-main, .calc-quiz { padding-left: 24px; padding-right: 24px; } .calc-level-bar { margin: 24px; } .calc-util-bar { padding: 12px 24px; } }
+</style>
+
+<!-- ═══ CALCULUS PAGE ════════════════════════════════════════ -->
+<div class="calc-page">
+
+  <!-- Hero -->
+  <div class="calc-hero">
+    <div class="calc-hero-bg"></div>
+    <div class="calc-hero-grid"></div>
+    <div class="calc-hero-content">
+      <div class="calc-breadcrumb">
+        <span class="calc-bc" onclick="App.showSection('home')">Home</span> <span>›</span>
+        <span class="calc-bc" onclick="App.showSection('statistics')">Statistics</span> <span>›</span>
+        <span class="calc-bc" onclick="App.showSection('linear-algebra')">Linear Algebra</span> <span>›</span>
+        <span>Calculus</span>
+      </div>
+      <div class="calc-hero-top">
+        <div class="calc-hero-left">
+          <div class="calc-tag">Topic&nbsp;&nbsp;·&nbsp;&nbsp;Calculus & Derivatives</div>
+          <h1 class="calc-hero-title">The <em>Engine</em> of<br>Learning</h1>
+          <p class="calc-hero-desc">
+            Every time a neural network trains, it's computing derivatives. Backpropagation
+            is just the chain rule applied recursively. Gradient descent is calculus navigating a loss landscape.
+            This is the mathematical engine that powers all of machine learning.
+          </p>
+          <div class="calc-why">
+            <div class="calc-why-label">Why does a data scientist need this?</div>
+            <div class="calc-why-text">
+              You cannot understand why neural networks work — or debug them when they don't — without calculus.
+              Vanishing gradients, learning rate tuning, adaptive optimisers like Adam, the entire backpropagation
+              algorithm: all of it is applied calculus. Without this, deep learning is a magic black box.
+            </div>
+          </div>
+        </div>
+        <div class="calc-meta">
+          <div class="calc-chip">⏱️ ~4 hours</div>
+          <div class="calc-chip">🎯 3 depth levels</div>
+          <div class="calc-chip">📊 3 live visualizers</div>
+          <div class="calc-chip">⭐ +180 XP available</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Switcher -->
+  <div class="calc-level-bar">
+    <button class="calc-lvl-btn cb active" onclick="CalcSection.setLevel('beginner',this)"><span class="cdot"></span>Beginner</button>
+    <button class="calc-lvl-btn ci" onclick="CalcSection.setLevel('intermediate',this)"><span class="cdot"></span>Intermediate</button>
+    <button class="calc-lvl-btn cp" onclick="CalcSection.setLevel('pro',this)"><span class="cdot"></span>Pro</button>
+  </div>
+
+  <!-- Utility Bar -->
+  <div class="calc-util-bar">
+    <button class="calc-util-btn" id="calc-notes-btn" onclick="CalcSection.toggleNotes()">✏️ My Notes</button>
+    <button class="calc-util-btn" id="calc-cheat-btn" onclick="CalcSection.toggleCheat()">📋 Cheat Sheet</button>
+    <div class="calc-util-sep"></div>
+    <button class="calc-util-btn" onclick="document.getElementById('calc-quiz-section').scrollIntoView({behavior:'smooth'})">🧪 Jump to Quiz</button>
+    <button class="calc-util-btn" onclick="CalcSection.markDone()">✅ Mark Complete</button>
+  </div>
+
+  <!-- Content Area -->
+  <div class="calc-content-area">
+    <div class="calc-main">
+
+      <!-- ══ CONCEPT 1: Derivatives ══════════════════════════ -->
+      <div class="calc-concept" id="calc-c1">
+        <div class="calc-concept-num">Concept 01 / 04</div>
+        <div class="calc-concept-title"><span class="calc-icon">📐</span>Limits & Derivatives — The Instantaneous Rate of Change</div>
+
+        <div class="calc-level visible" data-clv="beginner">
+          <div class="calc-body">
+            <p>A <strong>derivative</strong> measures how fast something is changing at any given instant. If you're driving and your speedometer reads 60 mph, that's a derivative — your position is changing at 60 miles per hour <em>right now</em>.</p>
+            <p>Geometrically, the derivative $f'(x)$ is the <strong>slope of the tangent line</strong> to the curve $y=f(x)$ at the point $x$. Drag the slider below and watch the tangent line pivot as you move along the curve.</p>
+          </div>
+          <div class="calc-intuition">
+            <div class="calc-intuition-label">💡 Intuition</div>
+            <div class="calc-intuition-text">The derivative tells you the "steepness" of a function at a point. A steep upward slope = large positive derivative. Flat region = derivative near zero. Local minimum = derivative is exactly zero. This is why we set the derivative to zero to find the minimum of a loss function.</div>
+          </div>
+
+          <!-- DERIVATIVE TANGENT VISUALIZER -->
+          <div class="calc-viz">
+            <div class="calc-viz-header">
+              <div class="calc-viz-title">📐 Derivative — Live Tangent Line</div>
+              <div class="calc-viz-badge">Interactive</div>
+            </div>
+            <canvas id="deriv-canvas" class="calc-canvas" height="260"></canvas>
+            <div class="calc-controls">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+                <button onclick="DerivViz.setFunc('cubic')" style="padding:5px 12px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;" id="func-cubic">x³ − 2x</button>
+                <button onclick="DerivViz.setFunc('sine')" style="padding:5px 12px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;" id="func-sine">sin(x)</button>
+                <button onclick="DerivViz.setFunc('quad')" style="padding:5px 12px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;" id="func-quad">x²</button>
+                <button onclick="DerivViz.setFunc('relu')" style="padding:5px 12px;background:var(--bg-raised);border:1px solid var(--border-dim);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;" id="func-relu">ReLU(x)</button>
+              </div>
+              <div class="calc-slider-row">
+                <div class="calc-slider-label">Point x <span id="deriv-x-val">0.0</span></div>
+                <input type="range" id="deriv-x" min="-2.8" max="2.8" step="0.05" value="0" oninput="DerivViz.update()">
+              </div>
+              <div id="deriv-info" style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.8;"></div>
+            </div>
+          </div>
+
+          <div class="calc-ds">
+            <div class="calc-ds-label">🤖 In Data Science</div>
+            <div class="calc-body">The loss function $\mathcal{L}(\theta)$ is a function of model parameters. Training means finding the $\theta$ where the loss is minimised — where $\frac{d\mathcal{L}}{d\theta} = 0$. We find it by following the negative derivative downhill. Note the ReLU activation: its derivative is 0 for x<0 and 1 for x>0 — that's the "gradient" that flows through neurons during backprop.</div>
+          </div>
+          <button class="calc-math-toggle" onclick="CalcSection.toggleMath(this)">∑ Show me the math</button>
+          <div class="calc-math-reveal">
+            <div class="calc-math-box">
+              <div class="calc-math-label">📐 Formal Definition</div>
+              <div class="calc-eq">$$f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$$</div>
+              <div class="calc-eq" style="margin-top:10px;">$$\frac{d}{dx}[x^n] = nx^{n-1} \quad \frac{d}{dx}[\sin x] = \cos x \quad \frac{d}{dx}[e^x] = e^x$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-level" data-clv="intermediate">
+          <div class="calc-body">
+            <p>Differentiation rules extend to compositions, products, and quotients. The <strong>product rule</strong>: $(fg)' = f'g + fg'$. The <strong>quotient rule</strong>: $(f/g)' = (f'g - fg')/g^2$. These aren't arbitrary — they follow directly from the limit definition.</p>
+            <p>For ML, the two most critical are the <strong>chain rule</strong> and derivatives of activation functions. The sigmoid $\sigma(x) = 1/(1+e^{-x})$ has derivative $\sigma(x)(1-\sigma(x))$ — it saturates near 0 and 1, causing vanishing gradients.</p>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 Key Activation Derivatives</div>
+            <div class="calc-eq">$$\sigma'(x) = \sigma(x)(1-\sigma(x)) \quad \tanh'(x) = 1-\tanh^2(x)$$</div>
+            <div class="calc-eq" style="margin-top:10px;">$$\text{ReLU}'(x) = \begin{cases}1 & x>0 \\ 0 & x<0\end{cases} \quad \text{GELU}'(x) = \Phi(x) + x\phi(x)$$</div>
+          </div>
+          <div class="calc-intuition">
+            <div class="calc-intuition-label">💡 Vanishing Gradients</div>
+            <div class="calc-intuition-text">Sigmoid squashes its derivative to be at most 0.25. In a 10-layer network, the gradient is multiplied by this factor 10 times: 0.25¹⁰ ≈ 0.000001. The gradient signal vanishes before it reaches early layers — which is why ReLU revolutionised deep learning.</div>
+          </div>
+        </div>
+
+        <div class="calc-level" data-clv="pro">
+          <div class="calc-body">
+            <p>At the pro level, we use <strong>automatic differentiation (autograd)</strong>. Modern frameworks (PyTorch, JAX) don't compute symbolic derivatives — they build a computational graph and apply the chain rule in <em>reverse mode</em>, accumulating gradients exactly.</p>
+            <p>Reverse-mode AD computes $\nabla_\theta \mathcal{L}$ for all parameters simultaneously in a single backward pass costing $O(1)$ times the forward pass — regardless of the number of parameters. This is why backprop scales to billions of weights.</p>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 Reverse-Mode Autodiff</div>
+            <div class="calc-eq">$$\bar{x}_i = \frac{\partial \mathcal{L}}{\partial x_i} = \sum_j \frac{\partial \mathcal{L}}{\partial y_j}\frac{\partial y_j}{\partial x_i} \quad \text{(Jacobian-vector product)}$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 2: Chain Rule (proof walker) ════════════ -->
+      <div class="calc-concept" id="calc-c2">
+        <div class="calc-concept-num">Concept 02 / 04</div>
+        <div class="calc-concept-title"><span class="calc-icon">🔗</span>The Chain Rule — Backpropagation's Core</div>
+
+        <div class="calc-level visible" data-clv="beginner">
+          <div class="calc-body">
+            <p>If $y = f(g(x))$ — a function of a function — how do you find $dy/dx$? The <strong>chain rule</strong> says: multiply the derivative of the outer function by the derivative of the inner function. In Leibniz notation:</p>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 Chain Rule</div>
+            <div class="calc-eq">$$\frac{dy}{dx} = \frac{dy}{du}\cdot\frac{du}{dx} \quad \text{where } u = g(x)$$</div>
+          </div>
+          <div class="calc-intuition">
+            <div class="calc-intuition-label">💡 Intuition</div>
+            <div class="calc-intuition-text">Think of gears. If gear A rotates at 2× the rate of gear B, and gear B rotates at 3× the rate of gear C, then gear A rotates at 6× the rate of gear C. The chain rule multiplies these rates together. Backprop is the chain rule applied to a chain of millions of operations.</div>
+          </div>
+
+          <!-- CHAIN RULE PROOF WALKER -->
+          <div class="calc-proof">
+            <div class="calc-proof-title">🧩 Proof Walker: Deriving Backpropagation from Chain Rule</div>
+            <div>
+              <div class="calc-proof-step active" data-cps="0">
+                <div class="cp-step-num">Step 1 of 5</div>
+                <div class="cp-step-title">A neural network is a composition of functions</div>
+                <div class="cp-step-body">A two-layer network computes: $\hat{y} = f_2(f_1(\mathbf{x}\,;\,W_1)\,;\,W_2)$. The loss is $\mathcal{L} = \text{loss}(\hat{y}, y)$. We need $\partial\mathcal{L}/\partial W_1$ and $\partial\mathcal{L}/\partial W_2$.</div>
+                <div class="cp-step-eq">$$\mathcal{L} = \ell\bigl(f_2(f_1(\mathbf{x}W_1)W_2), y\bigr)$$</div>
+              </div>
+              <div class="calc-proof-step" data-cps="1">
+                <div class="cp-step-num">Step 2 of 5</div>
+                <div class="cp-step-title">Differentiate the outer layer first (W₂)</div>
+                <div class="cp-step-body">By the chain rule, the gradient with respect to $W_2$ is the product of the loss gradient and the activation from layer 1:</div>
+                <div class="cp-step-eq">$$\frac{\partial\mathcal{L}}{\partial W_2} = \frac{\partial\mathcal{L}}{\partial\hat{y}}\cdot\frac{\partial\hat{y}}{\partial W_2} = \delta_2 \cdot \mathbf{a}_1^T$$</div>
+                <div class="cp-step-body" style="font-size:12px;color:var(--text-muted);">where $\delta_2$ is the "error signal" at the output, and $\mathbf{a}_1$ is the first layer's output.</div>
+              </div>
+              <div class="calc-proof-step" data-cps="2">
+                <div class="cp-step-num">Step 3 of 5</div>
+                <div class="cp-step-title">Propagate the error signal backwards (W₁)</div>
+                <div class="cp-step-body">Apply the chain rule again to find $\partial\mathcal{L}/\partial W_1$. The error must pass through layer 2's weights:</div>
+                <div class="cp-step-eq">$$\delta_1 = \frac{\partial\mathcal{L}}{\partial\mathbf{a}_1} = W_2^T\,\delta_2 \odot f_1'(\mathbf{z}_1)$$</div>
+                <div class="cp-step-body" style="font-size:12px;color:var(--text-muted);">$\odot$ is element-wise multiplication. $f_1'(\mathbf{z}_1)$ is the derivative of the activation function — this is exactly where vanishing gradients appear for sigmoid.</div>
+              </div>
+              <div class="calc-proof-step" data-cps="3">
+                <div class="cp-step-num">Step 4 of 5</div>
+                <div class="cp-step-title">Compute the gradient for W₁</div>
+                <div class="cp-step-body">Now we have the error signal $\delta_1$ at layer 1, so the weight gradient is simply:</div>
+                <div class="cp-step-eq">$$\frac{\partial\mathcal{L}}{\partial W_1} = \delta_1 \cdot \mathbf{x}^T$$</div>
+                <div class="cp-step-body" style="font-size:12px;color:var(--text-muted);">Notice the pattern: each layer's gradient = (incoming error signal) × (its input). This scales to any depth — just keep applying the chain rule backwards.</div>
+              </div>
+              <div class="calc-proof-step" data-cps="4">
+                <div class="cp-step-num">Step 5 of 5 ✓</div>
+                <div class="cp-step-title">Update weights with gradient descent</div>
+                <div class="cp-step-body">With all gradients computed, update every weight by stepping opposite to the gradient:</div>
+                <div class="cp-step-eq">$$W_i \leftarrow W_i - \eta\,\frac{\partial\mathcal{L}}{\partial W_i}$$</div>
+                <div class="cp-step-body" style="font-size:12px;color:var(--text-muted);">$\eta$ is the learning rate. This is the entire training algorithm for neural networks — gradient descent + chain rule. That's it. Every framework (PyTorch, TensorFlow, JAX) automates exactly this process.</div>
+              </div>
+            </div>
+            <div class="calc-proof-nav">
+              <button class="cp-nav-btn" id="calc-pprev" onclick="CalcSection.proofStep(-1)" disabled>← Back</button>
+              <button class="cp-nav-btn" id="calc-pnext" onclick="CalcSection.proofStep(1)">Next →</button>
+              <div class="calc-proof-dots" id="calc-pdots">
+                <div class="cp-dot active" onclick="CalcSection.proofGo(0)"></div>
+                <div class="cp-dot" onclick="CalcSection.proofGo(1)"></div>
+                <div class="cp-dot" onclick="CalcSection.proofGo(2)"></div>
+                <div class="cp-dot" onclick="CalcSection.proofGo(3)"></div>
+                <div class="cp-dot" onclick="CalcSection.proofGo(4)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="calc-ds">
+            <div class="calc-ds-label">🤖 In Data Science</div>
+            <div class="calc-body">When you call <code>loss.backward()</code> in PyTorch, it runs exactly this chain rule derivation automatically — computing gradients for every parameter from output to input. Understanding this means you can diagnose gradient issues, implement custom layers, and build training loops from scratch.</div>
+          </div>
+        </div>
+
+        <div class="calc-level" data-clv="intermediate">
+          <div class="calc-body">
+            <p>The <strong>multivariable chain rule</strong> for $z = f(x_1,\ldots,x_n)$ where each $x_i = g_i(t)$: $\frac{dz}{dt} = \sum_i \frac{\partial z}{\partial x_i}\frac{dx_i}{dt}$. This is the foundation for computing gradients through graphs with shared nodes (e.g. weight tying, residual connections).</p>
+            <p>In matrix form, the Jacobian $J_f$ at point $\mathbf{x}$ satisfies $(J_{f \circ g})(\mathbf{x}) = J_f(g(\mathbf{x})) \cdot J_g(\mathbf{x})$ — matrix multiplication of Jacobians. Backpropagation computes Jacobian-vector products efficiently without ever forming the full Jacobian.</p>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 Multivariable Chain Rule</div>
+            <div class="calc-eq">$$\frac{\partial z}{\partial t} = \sum_{i=1}^n \frac{\partial z}{\partial x_i}\frac{\partial x_i}{\partial t} = \nabla_\mathbf{x} z \cdot \frac{d\mathbf{x}}{dt}$$</div>
+          </div>
+        </div>
+
+        <div class="calc-level" data-clv="pro">
+          <div class="calc-body">
+            <p><strong>Higher-order derivatives</strong> and <strong>Hessians</strong>: The Hessian $H_{ij} = \partial^2\mathcal{L}/\partial\theta_i\partial\theta_j$ encodes the curvature of the loss landscape. Newton's method uses $\theta \leftarrow \theta - H^{-1}\nabla\mathcal{L}$ — optimal step sizes, but $O(n^2)$ to store and $O(n^3)$ to invert for $n$ parameters.</p>
+            <p><strong>Hessian-free optimisation</strong> and <strong>K-FAC</strong> (Kronecker-Factored Approximate Curvature) approximate the Hessian for practical use. <strong>SOAP</strong> and <strong>Shampoo</strong> use matrix preconditioning for efficient second-order-like steps in large models.</p>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 Newton's Method vs Gradient Descent</div>
+            <div class="calc-eq">$$\theta_{t+1} = \theta_t - \eta\nabla\mathcal{L} \quad \text{(GD, 1st order)}$$</div>
+            <div class="calc-eq" style="margin-top:10px;">$$\theta_{t+1} = \theta_t - H^{-1}\nabla\mathcal{L} \quad \text{(Newton, 2nd order)}$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 3: Partial Derivatives ══════════════════ -->
+      <div class="calc-concept" id="calc-c3">
+        <div class="calc-concept-num">Concept 03 / 04</div>
+        <div class="calc-concept-title"><span class="calc-icon">🗺️</span>Partial Derivatives & Gradients</div>
+
+        <div class="calc-level visible" data-clv="beginner">
+          <div class="calc-body">
+            <p>When a function takes multiple inputs — like a loss function that depends on thousands of parameters — you need to know how the output changes when you adjust <em>each input independently</em>. That's a <strong>partial derivative</strong>.</p>
+            <p>The <strong>gradient</strong> $\nabla f$ is a vector of all the partial derivatives. It points in the direction of steepest ascent. To minimise a function, you step in the direction of the <em>negative</em> gradient.</p>
+          </div>
+          <div class="calc-intuition">
+            <div class="calc-intuition-label">💡 Think of a Mountain</div>
+            <div class="calc-intuition-text">You're standing on a loss surface (a hilly landscape). The gradient tells you which direction is "uphill" in every direction simultaneously. To reach the valley (minimum loss), you step downhill — opposite to the gradient. This is gradient descent.</div>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 Gradient Definition</div>
+            <div class="calc-eq">$$\frac{\partial f}{\partial x_i} = \lim_{h\to 0}\frac{f(x_1,\ldots,x_i+h,\ldots) - f(\mathbf{x})}{h}$$</div>
+            <div class="calc-eq" style="margin-top:10px;">$$\nabla f(\mathbf{x}) = \begin{bmatrix}\frac{\partial f}{\partial x_1} & \frac{\partial f}{\partial x_2} & \cdots & \frac{\partial f}{\partial x_n}\end{bmatrix}^T$$</div>
+          </div>
+          <div class="calc-ds">
+            <div class="calc-ds-label">🤖 In Data Science</div>
+            <div class="calc-body">A neural network with 70 billion parameters (like LLaMA-2) has a gradient vector of 70 billion numbers — one per parameter. Each training step computes this entire vector and subtracts a scaled version from the weights. That's 70 billion partial derivatives per step, millions of steps per training run.</div>
+          </div>
+        </div>
+
+        <div class="calc-level" data-clv="intermediate">
+          <div class="calc-body">
+            <p>The <strong>directional derivative</strong> in direction $\hat{\mathbf{u}}$ is $D_{\hat{u}}f = \nabla f \cdot \hat{\mathbf{u}}$. This is maximised when $\hat{\mathbf{u}} = \nabla f/\|\nabla f\|$ — confirming that the gradient points in the direction of steepest ascent.</p>
+            <p>For matrix-valued functions (like neural network layers), we have <strong>matrix calculus</strong>: $\frac{\partial}{\partial W}[XW] = X^T$ in the sense that $\frac{\partial \mathcal{L}}{\partial W} = X^T\frac{\partial\mathcal{L}}{\partial\text{output}}$. This is the key formula for computing weight gradients in linear layers.</p>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 Matrix Calculus (Linear Layer)</div>
+            <div class="calc-eq">$$\mathbf{y} = W\mathbf{x} \implies \frac{\partial\mathcal{L}}{\partial W} = \frac{\partial\mathcal{L}}{\partial\mathbf{y}}\mathbf{x}^T, \quad \frac{\partial\mathcal{L}}{\partial\mathbf{x}} = W^T\frac{\partial\mathcal{L}}{\partial\mathbf{y}}$$</div>
+          </div>
+        </div>
+
+        <div class="calc-level" data-clv="pro">
+          <div class="calc-body">
+            <p>The <strong>Jacobian matrix</strong> $J_{ij} = \partial y_i/\partial x_j$ generalises the gradient to vector-valued functions $f: \mathbb{R}^n \to \mathbb{R}^m$. For backprop through a batch normalisation layer, you need the full Jacobian — which has a non-trivial off-diagonal structure because normalising one element affects the gradients of all others in the batch.</p>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 BatchNorm Jacobian</div>
+            <div class="calc-eq">$$\frac{\partial \hat{x}_i}{\partial x_j} = \frac{1}{\sigma}\left(\delta_{ij} - \frac{1}{m} - \frac{\hat{x}_i\hat{x}_j}{m}\right)$$</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONCEPT 4: Gradient Descent (animated viz) ══════ -->
+      <div class="calc-concept" id="calc-c4">
+        <div class="calc-concept-num">Concept 04 / 04</div>
+        <div class="calc-concept-title"><span class="calc-icon">⛷️</span>Gradient Descent — Training in Motion</div>
+
+        <div class="calc-level visible" data-clv="beginner">
+          <div class="calc-body">
+            <p><strong>Gradient descent</strong> is the algorithm that trains almost every machine learning model. Starting from a random position on the loss surface, it repeatedly computes the gradient and takes a step downhill — until it reaches a (local) minimum.</p>
+            <p>The <strong>learning rate</strong> $\eta$ controls how large each step is. Too large: you overshoot and diverge. Too small: training takes forever. Finding the right learning rate is one of the most important hyperparameter choices in deep learning.</p>
+          </div>
+
+          <!-- GRADIENT DESCENT VISUALIZER -->
+          <div class="calc-viz">
+            <div class="calc-viz-header">
+              <div class="calc-viz-title">⛷️ Gradient Descent — Animated Path</div>
+              <div class="calc-viz-badge">Animated</div>
+            </div>
+            <canvas id="gd-canvas" class="calc-canvas" height="300"></canvas>
+            <div class="calc-controls">
+              <div class="calc-slider-row">
+                <div class="calc-slider-label">Learning Rate η <span id="gd-lr-val">0.10</span></div>
+                <input type="range" id="gd-lr" min="0.01" max="0.95" step="0.01" value="0.1" oninput="GDViz.updateLR()">
+              </div>
+              <div class="gd-btn-row">
+                <button class="gd-btn" id="gd-start-btn" onclick="GDViz.start()">▶ Start</button>
+                <button class="gd-btn" onclick="GDViz.reset()">↺ Reset</button>
+                <button class="gd-btn" onclick="GDViz.randomStart()">🎲 Random Start</button>
+              </div>
+              <div id="gd-info" style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.8;"></div>
+            </div>
+          </div>
+
+          <div class="calc-intuition">
+            <div class="calc-intuition-label">💡 Try It</div>
+            <div class="calc-intuition-text">Set a high learning rate and watch the path overshoot. Set a low one and watch it converge slowly. This is exactly the tradeoff you face when tuning real models — only scaled to millions of dimensions.</div>
+          </div>
+          <div class="calc-ds">
+            <div class="calc-ds-label">🤖 In Data Science</div>
+            <div class="calc-body">Modern variants: <strong>SGD with momentum</strong> (smooths the path), <strong>Adam</strong> (adapts learning rates per parameter using first and second moment estimates), <strong>AdaGrad</strong> (accumulates squared gradients to reduce LR for frequently updated params). Adam is the default choice for ~90% of deep learning today.</div>
+          </div>
+          <button class="calc-math-toggle" onclick="CalcSection.toggleMath(this)">∑ Show me the math</button>
+          <div class="calc-math-reveal">
+            <div class="calc-math-box">
+              <div class="calc-math-label">📐 Adam Optimiser</div>
+              <div class="calc-eq">$$m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t \quad v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2$$</div>
+              <div class="calc-eq" style="margin-top:10px;">$$\hat{m}_t = \frac{m_t}{1-\beta_1^t} \quad \hat{v}_t = \frac{v_t}{1-\beta_2^t} \quad \theta_t = \theta_{t-1} - \eta\frac{\hat{m}_t}{\sqrt{\hat{v}_t}+\epsilon}$$</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-level" data-clv="intermediate">
+          <div class="calc-body">
+            <p><strong>Mini-batch SGD</strong> approximates the true gradient using a random subset of data. The noise in this approximation turns out to be beneficial — it helps escape sharp local minima and find flatter minima that generalise better (Keskar et al., 2017).</p>
+            <p><strong>Learning rate schedules</strong>: constant (simple), step decay (halve every k epochs), cosine annealing ($\eta_t = \eta_{\min} + \frac{1}{2}(\eta_{\max}-\eta_{\min})(1+\cos(\pi t/T))$), warmup + cosine (used in LLM training). Warmup prevents early divergence when gradients are noisy.</p>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 Cosine Annealing</div>
+            <div class="calc-eq">$$\eta_t = \eta_{\min} + \frac{1}{2}(\eta_{\max}-\eta_{\min})\left(1+\cos\!\left(\frac{\pi t}{T}\right)\right)$$</div>
+          </div>
+        </div>
+
+        <div class="calc-level" data-clv="pro">
+          <div class="calc-body">
+            <p><strong>Loss landscape geometry</strong>: For overparameterised networks, the loss surface has many global minima connected by flat valleys (manifolds). The <strong>sharpness-aware minimisation (SAM)</strong> algorithm explicitly seeks flat minima by computing gradients at adversarial perturbations of the weights, improving generalisation.</p>
+            <p>The <strong>Neural Tangent Kernel (NTK)</strong> shows that infinitely wide networks trained with gradient descent are equivalent to kernel regression with a specific kernel — linearising training dynamics and explaining why overparameterised models generalise despite having more parameters than data.</p>
+          </div>
+          <div class="calc-math-box">
+            <div class="calc-math-label">📐 SAM Optimiser</div>
+            <div class="calc-eq">$$\min_\theta \max_{\|\epsilon\|\leq\rho} \mathcal{L}(\theta + \epsilon) \approx \min_\theta \mathcal{L}\!\left(\theta + \rho\frac{\nabla\mathcal{L}}{\|\nabla\mathcal{L}\|}\right)$$</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /calc-main -->
+
+    <!-- Sidebar -->
+    <div class="calc-side">
+      <div class="calc-side-title">📍 Section Progress</div>
+      <div class="calc-prog-list">
+        <div class="calc-prog-item" id="calc-p1" onclick="document.getElementById('calc-c1').scrollIntoView({behavior:'smooth'})"><div class="calc-check" id="calc-ck1">1</div>Limits & Derivatives</div>
+        <div class="calc-prog-item" id="calc-p2" onclick="document.getElementById('calc-c2').scrollIntoView({behavior:'smooth'})"><div class="calc-check" id="calc-ck2">2</div>The Chain Rule</div>
+        <div class="calc-prog-item" id="calc-p3" onclick="document.getElementById('calc-c3').scrollIntoView({behavior:'smooth'})"><div class="calc-check" id="calc-ck3">3</div>Partial Derivatives</div>
+        <div class="calc-prog-item" id="calc-p4" onclick="document.getElementById('calc-c4').scrollIntoView({behavior:'smooth'})"><div class="calc-check" id="calc-ck4">4</div>Gradient Descent</div>
+      </div>
+
+      <div id="calc-cheat-panel" style="display:none;margin-bottom:24px;">
+        <div class="calc-side-title">📋 Cheat Sheet</div>
+        <div class="calc-cheatsheet">
+          <div class="calc-cheat-item"><div class="calc-cheat-name">Derivative def</div><div class="calc-cheat-eq">$f'(x)=\lim_{h\to0}\frac{f(x+h)-f(x)}{h}$</div></div>
+          <div class="calc-cheat-item"><div class="calc-cheat-name">Power rule</div><div class="calc-cheat-eq">$\frac{d}{dx}x^n = nx^{n-1}$</div></div>
+          <div class="calc-cheat-item"><div class="calc-cheat-name">Chain rule</div><div class="calc-cheat-eq">$\frac{d}{dx}f(g(x))=f'(g(x))\cdot g'(x)$</div></div>
+          <div class="calc-cheat-item"><div class="calc-cheat-name">Gradient</div><div class="calc-cheat-eq">$\nabla f = [\partial f/\partial x_1,\ldots,\partial f/\partial x_n]^T$</div></div>
+          <div class="calc-cheat-item"><div class="calc-cheat-name">GD update</div><div class="calc-cheat-eq">$\theta \leftarrow \theta - \eta\nabla\mathcal{L}$</div></div>
+          <div class="calc-cheat-item"><div class="calc-cheat-name">Sigmoid'</div><div class="calc-cheat-eq">$\sigma'(x) = \sigma(x)(1-\sigma(x))$</div></div>
+          <div class="calc-cheat-item"><div class="calc-cheat-name">Product rule</div><div class="calc-cheat-eq">$(fg)'=f'g+fg'$</div></div>
+        </div>
+      </div>
+
+      <div id="calc-notes-panel" style="display:none;margin-bottom:24px;">
+        <div class="calc-side-title">✏️ My Notes</div>
+        <textarea class="calc-notes-ta" id="calc-notes-ta" placeholder="Your calculus notes..."></textarea>
+        <button class="calc-save-btn" onclick="CalcSection.saveNote()">💾 Save</button>
+        <div id="calc-saved-msg" style="font-size:11px;color:var(--accent-emerald);margin-top:6px;display:none;">✓ Saved!</div>
+      </div>
+
+      <div class="calc-side-title">🔑 Key Terms</div>
+      <div class="calc-term"><div class="calc-term-name">Derivative</div><div class="calc-term-def">Instantaneous rate of change; slope of the tangent line.</div></div>
+      <div class="calc-term"><div class="calc-term-name">Gradient</div><div class="calc-term-def">Vector of all partial derivatives; points uphill.</div></div>
+      <div class="calc-term"><div class="calc-term-name">Backpropagation</div><div class="calc-term-def">Chain rule applied backwards through a neural network.</div></div>
+      <div class="calc-term"><div class="calc-term-name">Learning Rate</div><div class="calc-term-def">Step size for gradient descent. Most critical hyperparameter.</div></div>
+      <div class="calc-term"><div class="calc-term-name">Vanishing Gradient</div><div class="calc-term-def">Gradients approaching zero in early layers — caused by saturating activations like sigmoid in deep nets.</div></div>
+    </div>
+  </div><!-- /calc-content-area -->
+
+  <!-- ═══ QUIZ ════════════════════════════════════════════════ -->
+  <div class="calc-quiz" id="calc-quiz-section">
+    <div class="calc-quiz-eyebrow">Knowledge Check</div>
+    <div class="calc-quiz-title">Calculus & Derivatives Quiz</div>
+    <div class="calc-quiz-sub">5 questions · +180 XP · Unlocks Optimization on pass</div>
+
+    <div class="calc-qcard" id="calc-qc1">
+      <div class="calc-qnum">Question 1 of 5</div>
+      <div class="calc-qtext">The derivative f′(x) at a point x represents what geometrically?</div>
+      <div class="calc-opts">
+        <div class="calc-opt" onclick="CalcQuiz.sel(1,this,'A')"><div class="calc-letter">A</div>The area under the curve up to x</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(1,this,'B')"><div class="calc-letter">B</div>The slope of the tangent line to f at x</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(1,this,'C')"><div class="calc-letter">C</div>The value of f at the point x</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(1,this,'D')"><div class="calc-letter">D</div>The second derivative evaluated at x</div>
+      </div>
+      <div class="calc-qfb ok" id="calc-fb1">✅ Correct! The derivative is the slope of the tangent line — how steeply the function rises or falls at exactly that point. This is why setting f′(x) = 0 finds the flat points (minima and maxima).</div>
+      <div class="calc-qfb no" id="calc-fb1w" style="display:none;">❌ The derivative (B) is the slope of the tangent line at that point — the instantaneous rate of change. The area under the curve is the integral — the opposite operation.</div>
+    </div>
+
+    <div class="calc-qcard" id="calc-qc2">
+      <div class="calc-qnum">Question 2 of 5</div>
+      <div class="calc-qtext">In neural network training, backpropagation is fundamentally an application of which calculus rule?</div>
+      <div class="calc-opts">
+        <div class="calc-opt" onclick="CalcQuiz.sel(2,this,'A')"><div class="calc-letter">A</div>The product rule</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(2,this,'B')"><div class="calc-letter">B</div>The quotient rule</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(2,this,'C')"><div class="calc-letter">C</div>The chain rule</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(2,this,'D')"><div class="calc-letter">D</div>L'Hôpital's rule</div>
+      </div>
+      <div class="calc-qfb ok" id="calc-fb2">✅ Exactly right! Backpropagation is the chain rule applied recursively from the loss backward through every layer. It computes ∂L/∂W for every weight W by chaining partial derivatives.</div>
+      <div class="calc-qfb no" id="calc-fb2w" style="display:none;">❌ Backpropagation is the chain rule (C). A neural network is a composition of functions, and the chain rule tells us how to differentiate compositions — which is exactly what backprop does layer by layer.</div>
+    </div>
+
+    <div class="calc-qcard" id="calc-qc3">
+      <div class="calc-qnum">Question 3 of 5</div>
+      <div class="calc-qtext">Why did ReLU largely replace sigmoid as an activation function in deep networks?</div>
+      <div class="calc-opts">
+        <div class="calc-opt" onclick="CalcQuiz.sel(3,this,'A')"><div class="calc-letter">A</div>ReLU is bounded between 0 and 1, making outputs more stable</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(3,this,'B')"><div class="calc-letter">B</div>ReLU's derivative is either 0 or 1 — it doesn't saturate, preventing vanishing gradients in deep networks</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(3,this,'C')"><div class="calc-letter">C</div>ReLU is differentiable everywhere, unlike sigmoid</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(3,this,'D')"><div class="calc-letter">D</div>ReLU computes faster because it avoids matrix multiplication</div>
+      </div>
+      <div class="calc-qfb ok" id="calc-fb3">✅ Correct! Sigmoid's derivative is at most 0.25 and approaches 0 at extremes. In deep networks, multiplying these tiny gradients together causes them to vanish. ReLU's gradient is 1 for positive inputs — no saturation, no vanishing.</div>
+      <div class="calc-qfb no" id="calc-fb3w" style="display:none;">❌ The key reason is B: ReLU's derivative is either 0 or 1 — it doesn't saturate. Sigmoid's derivative approaches 0 for large |x|, causing gradients to vanish in deep networks. Note: ReLU is NOT differentiable at x=0, but this edge case is handled in practice.</div>
+    </div>
+
+    <div class="calc-qcard" id="calc-qc4">
+      <div class="calc-qnum">Question 4 of 5</div>
+      <div class="calc-qtext">The gradient of a loss function with respect to the model weights points in which direction?</div>
+      <div class="calc-opts">
+        <div class="calc-opt" onclick="CalcQuiz.sel(4,this,'A')"><div class="calc-letter">A</div>The direction of steepest descent — towards the minimum</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(4,this,'B')"><div class="calc-letter">B</div>The direction of steepest ascent — away from the minimum</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(4,this,'C')"><div class="calc-letter">C</div>Perpendicular to the loss surface</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(4,this,'D')"><div class="calc-letter">D</div>Towards the nearest saddle point</div>
+      </div>
+      <div class="calc-qfb ok" id="calc-fb4">✅ Right! The gradient points uphill — in the direction of steepest increase. To minimise loss, gradient descent steps in the negative gradient direction: θ ← θ − η∇L.</div>
+      <div class="calc-qfb no" id="calc-fb4w" style="display:none;">❌ The gradient points uphill — direction of steepest ascent (B). That's why gradient descent subtracts the gradient: θ ← θ − η∇L. We go opposite to the gradient to descend towards lower loss.</div>
+    </div>
+
+    <div class="calc-qcard" id="calc-qc5">
+      <div class="calc-qnum">Question 5 of 5</div>
+      <div class="calc-qtext">What happens if the learning rate η in gradient descent is set too high?</div>
+      <div class="calc-opts">
+        <div class="calc-opt" onclick="CalcQuiz.sel(5,this,'A')"><div class="calc-letter">A</div>Training converges faster to the global minimum</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(5,this,'B')"><div class="calc-letter">B</div>The model underfits because weights stay near initialisation</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(5,this,'C')"><div class="calc-letter">C</div>Steps overshoot the minimum, causing oscillations or divergence</div>
+        <div class="calc-opt" onclick="CalcQuiz.sel(5,this,'D')"><div class="calc-letter">D</div>Gradients vanish because steps are too large</div>
+      </div>
+      <div class="calc-qfb ok" id="calc-fb5">✅ Correct! A large learning rate takes steps that jump over the minimum entirely, landing on the other side of the valley — and potentially taking an even larger step away from the minimum on the next iteration, diverging completely.</div>
+      <div class="calc-qfb no" id="calc-fb5w" style="display:none;">❌ Too-high learning rate causes overshooting (C). Each step jumps over the minimum, oscillating back and forth, and potentially diverging. Try it in the visualizer above — set η near 1 and watch it bounce wildly.</div>
+    </div>
+
+    <div class="calc-quiz-row">
+      <button class="calc-quiz-btn" id="calc-qbtn" onclick="CalcQuiz.submit()" disabled>Check Answers</button>
+      <div class="calc-score" id="calc-qscore"></div>
+    </div>
+  </div>
+
+</div><!-- /calc-page -->
+
+<script>
+// ── Calculus Section Controller ───────────────────────────────
+const CalcSection = {
+  level: 'beginner', proofStep: 0, proofTotal: 5,
+  notesOpen: false, cheatOpen: false,
+
+  setLevel(lv, btn) {
+    this.level = lv;
+    document.querySelectorAll('.calc-lvl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.calc-level').forEach(el => {
+      el.classList.remove('visible');
+      if (el.dataset.clv === lv) el.classList.add('visible');
+    });
+    if (typeof renderMathInElement !== 'undefined') {
+      setTimeout(() => renderMathInElement(document.getElementById('section-calculus') || document.body, {
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      }), 100);
+    }
+    setTimeout(() => { DerivViz.draw(); GDViz.draw(); }, 150);
+  },
+
+  toggleMath(btn) {
+    const rev = btn.nextElementSibling;
+    rev.classList.toggle('visible');
+    btn.textContent = rev.classList.contains('visible') ? '∑ Hide math' : '∑ Show me the math';
+    if (rev.classList.contains('visible') && typeof renderMathInElement !== 'undefined') {
+      setTimeout(() => renderMathInElement(rev, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}), 50);
+    }
+  },
+
+  proofStep(dir) { this.proofGo(this.proofStep + dir); },
+  proofGo(idx) {
+    const steps = document.querySelectorAll('.calc-proof-step');
+    steps.forEach(s => s.classList.remove('active'));
+    if (steps[idx]) steps[idx].classList.add('active');
+    this.proofStep = idx;
+    document.querySelectorAll('.cp-dot').forEach((d,i) => {
+      d.classList.remove('active','done');
+      if (i===idx) d.classList.add('active');
+      else if (i<idx) d.classList.add('done');
+    });
+    const prev=document.getElementById('calc-pprev'), next=document.getElementById('calc-pnext');
+    if (prev) prev.disabled = idx===0;
+    if (next) { next.disabled = idx>=this.proofTotal-1; next.textContent = idx>=this.proofTotal-1?'✓ Done!':'Next →'; }
+    if (typeof renderMathInElement!=='undefined'&&steps[idx]) {
+      setTimeout(()=>renderMathInElement(steps[idx],{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}),50);
+    }
+  },
+
+  toggleNotes() {
+    this.notesOpen = !this.notesOpen;
+    const p=document.getElementById('calc-notes-panel'), b=document.getElementById('calc-notes-btn');
+    if(p) p.style.display=this.notesOpen?'block':'none';
+    if(b) b.classList.toggle('active',this.notesOpen);
+    if(this.notesOpen){const s=localStorage.getItem('calc-notes');const t=document.getElementById('calc-notes-ta');if(s&&t)t.value=s;}
+  },
+
+  toggleCheat() {
+    this.cheatOpen = !this.cheatOpen;
+    const p=document.getElementById('calc-cheat-panel'), b=document.getElementById('calc-cheat-btn');
+    if(p) p.style.display=this.cheatOpen?'block':'none';
+    if(b) b.classList.toggle('active',this.cheatOpen);
+    if(this.cheatOpen&&typeof renderMathInElement!=='undefined'){
+      setTimeout(()=>renderMathInElement(p,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}),50);
+    }
+  },
+
+  saveNote() {
+    const t=document.getElementById('calc-notes-ta');
+    if(t){localStorage.setItem('calc-notes',t.value);const m=document.getElementById('calc-saved-msg');if(m){m.style.display='block';setTimeout(()=>m.style.display='none',2000);}}
+  },
+
+  markDone() {
+    [1,2,3,4].forEach(i=>{
+      const c=document.getElementById('calc-ck'+i),p=document.getElementById('calc-p'+i);
+      if(c){c.classList.add('done');c.textContent='✓';}if(p)p.classList.add('done');
+    });
+    if(typeof App!=='undefined') App.showToast('✅ All concepts marked complete!');
+  }
+};
+
+// ── Derivative Tangent Visualizer ─────────────────────────────
+const DerivViz = {
+  func: 'cubic',
+
+  funcs: {
+    cubic:  { f: x => x*x*x - 2*x,       df: x => 3*x*x - 2,    label: 'f(x) = x³ − 2x' },
+    sine:   { f: x => Math.sin(x),         df: x => Math.cos(x),  label: 'f(x) = sin(x)' },
+    quad:   { f: x => x*x,                 df: x => 2*x,          label: 'f(x) = x²' },
+    relu:   { f: x => Math.max(0,x),       df: x => x>0?1:0,      label: 'f(x) = ReLU(x)' },
+  },
+
+  setFunc(name) {
+    this.func = name;
+    ['cubic','sine','quad','relu'].forEach(n => {
+      const btn = document.getElementById('func-'+n);
+      if(btn) btn.style.color = n===name ? 'var(--accent-amber)' : 'var(--text-muted)';
+      if(btn) btn.style.borderColor = n===name ? 'rgba(246,173,85,0.4)' : 'var(--border-dim)';
+    });
+    this.draw();
+  },
+
+  update() { this.draw(); },
+
+  draw() {
+    const canvas = document.getElementById('deriv-canvas');
+    if (!canvas) return;
+    const W = canvas.offsetWidth || 600, H = 260;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const fn = this.funcs[this.func];
+    const xv = parseFloat(document.getElementById('deriv-x')?.value || 0);
+    document.getElementById('deriv-x-val').textContent = xv.toFixed(2);
+
+    const xMin=-3, xMax=3;
+    const pts = [];
+    for(let px=0;px<=W;px++){
+      const x = xMin + (xMax-xMin)*(px/W);
+      pts.push({x, y:fn.f(x)});
+    }
+    const yVals = pts.map(p=>p.y).filter(y=>isFinite(y));
+    const yMin = Math.min(...yVals)-0.5, yMax = Math.max(...yVals)+0.5;
+    const mg={t:20,b:36,l:44,r:20};
+    const iW=W-mg.l-mg.r, iH=H-mg.t-mg.b;
+    const toX = x => mg.l + (x-xMin)/(xMax-xMin)*iW;
+    const toY = y => mg.t + (1-(y-yMin)/(yMax-yMin))*iH;
+
+    // Grid
+    for(let gx=-3;gx<=3;gx++){
+      ctx.beginPath();ctx.moveTo(toX(gx),mg.t);ctx.lineTo(toX(gx),mg.t+iH);
+      ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;ctx.stroke();
+    }
+    // Axes
+    ctx.beginPath();ctx.moveTo(mg.l,toY(0));ctx.lineTo(mg.l+iW,toY(0));ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(toX(0),mg.t);ctx.lineTo(toX(0),mg.t+iH);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.stroke();
+
+    // Curve
+    ctx.beginPath();
+    pts.forEach((p,i)=>{
+      const px=toX(p.x), py=toY(p.y);
+      if(!isFinite(py)||py<mg.t-50||py>mg.t+iH+50){ctx.moveTo(px,py);return;}
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    });
+    ctx.strokeStyle='#63b3ed';ctx.lineWidth=2.5;ctx.stroke();
+
+    // Tangent line
+    const fy = fn.f(xv), fdy = fn.df(xv);
+    if(isFinite(fy)&&isFinite(fdy)){
+      const tangRange=1.5;
+      const tx1=xv-tangRange, tx2=xv+tangRange;
+      const ty1=fy+fdy*(tx1-xv), ty2=fy+fdy*(tx2-xv);
+      ctx.beginPath();ctx.moveTo(toX(tx1),toY(ty1));ctx.lineTo(toX(tx2),toY(ty2));
+      ctx.strokeStyle='#f6ad55';ctx.lineWidth=2;ctx.setLineDash([6,3]);ctx.stroke();ctx.setLineDash([]);
+      // Point on curve
+      ctx.beginPath();ctx.arc(toX(xv),toY(fy),6,0,2*Math.PI);
+      ctx.fillStyle='#f6ad55';ctx.fill();
+      ctx.beginPath();ctx.arc(toX(xv),toY(fy),3,0,2*Math.PI);
+      ctx.fillStyle='#080b12';ctx.fill();
+    }
+
+    // Axes labels
+    ctx.font='10px IBM Plex Mono,monospace';ctx.fillStyle='#4a5568';
+    [-2,-1,1,2].forEach(v=>{
+      ctx.fillText(v,toX(v)-4,mg.t+iH+16);
+    });
+
+    // Info
+    const infoEl=document.getElementById('deriv-info');
+    if(infoEl&&isFinite(fy)){
+      const slopeColor=fdy===0?'#68d391':fdy>0?'#63b3ed':'#fc8181';
+      infoEl.innerHTML=`
+        ${fn.label} &nbsp;|&nbsp; x = ${xv.toFixed(2)}<br>
+        f(${xv.toFixed(2)}) = <strong style="color:var(--text-primary)">${fy.toFixed(3)}</strong> &nbsp;|&nbsp;
+        <span style="color:${slopeColor}">f′(${xv.toFixed(2)}) = ${fdy.toFixed(3)}</span>
+        ${Math.abs(fdy)<0.05?' ← 🎯 Near minimum!':''}
+      `;
+    }
+  }
+};
+
+// ── Gradient Descent Visualizer ───────────────────────────────
+const GDViz = {
+  x: 2.0, lr: 0.1, history: [],
+  animFrame: null, running: false, step: 0,
+
+  // Loss function: bumpy surface
+  f:  x => 0.1*x*x*x*x - 1.2*x*x + 0.5*x + 3 + 0.4*Math.sin(3*x),
+  df: x => 0.4*x*x*x - 2.4*x + 0.5 + 1.2*Math.cos(3*x),
+
+  updateLR() {
+    this.lr = parseFloat(document.getElementById('gd-lr')?.value||0.1);
+    document.getElementById('gd-lr-val').textContent = this.lr.toFixed(2);
+    if(!this.running) this.draw();
+  },
+
+  reset() {
+    if(this.animFrame) cancelAnimationFrame(this.animFrame);
+    this.running=false;this.step=0;
+    this.x=2.0;this.history=[];
+    const btn=document.getElementById('gd-start-btn');
+    if(btn){btn.textContent='▶ Start';btn.classList.remove('running');}
+    this.draw();
+  },
+
+  randomStart() {
+    this.reset();
+    this.x=(Math.random()-0.5)*5;
+    this.draw();
+  },
+
+  start() {
+    if(this.running){
+      cancelAnimationFrame(this.animFrame);this.running=false;
+      const btn=document.getElementById('gd-start-btn');
+      if(btn){btn.textContent='▶ Resume';btn.classList.remove('running');}
+      return;
+    }
+    this.running=true;
+    const btn=document.getElementById('gd-start-btn');
+    if(btn){btn.textContent='⏸ Pause';btn.classList.add('running');}
+    this.animate();
+  },
+
+  animate() {
+    if(!this.running) return;
+    // Take a GD step
+    const grad = this.df(this.x);
+    const newX = this.x - this.lr * grad;
+    this.history.push({x:this.x,y:this.f(this.x)});
+    this.x = Math.max(-3.5, Math.min(3.5, newX));
+    this.step++;
+    this.draw();
+    // Convergence check
+    if(Math.abs(this.lr*grad) < 0.0001 || this.step>200){
+      this.running=false;
+      const btn=document.getElementById('gd-start-btn');
+      if(btn){btn.textContent='✓ Converged';btn.classList.remove('running');}
+      return;
+    }
+    this.animFrame = requestAnimationFrame(()=>setTimeout(()=>this.animate(),50));
+  },
+
+  draw() {
+    const canvas=document.getElementById('gd-canvas');
+    if(!canvas) return;
+    const W=canvas.offsetWidth||600,H=300;
+    canvas.width=W;canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    const xMin=-3.5,xMax=3.5;
+    const pts=[];
+    for(let px=0;px<=W;px++){
+      const x=xMin+(xMax-xMin)*(px/W);
+      pts.push({x,y:this.f(x)});
+    }
+    const yMin=0,yMax=6;
+    const mg={t:20,b:36,l:44,r:20};
+    const iW=W-mg.l-mg.r,iH=H-mg.t-mg.b;
+    const toX=x=>mg.l+(x-xMin)/(xMax-xMin)*iW;
+    const toY=y=>mg.t+(1-(y-yMin)/(yMax-yMin))*iH;
+
+    // Grid
+    for(let gx=-3;gx<=3;gx++){
+      ctx.beginPath();ctx.moveTo(toX(gx),mg.t);ctx.lineTo(toX(gx),mg.t+iH);
+      ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;ctx.stroke();
+    }
+    for(let gy=0;gy<=6;gy++){
+      ctx.beginPath();ctx.moveTo(mg.l,toY(gy));ctx.lineTo(mg.l+iW,toY(gy));
+      ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;ctx.stroke();
+    }
+
+    // Loss curve gradient fill
+    const grad2=ctx.createLinearGradient(0,mg.t,0,mg.t+iH);
+    grad2.addColorStop(0,'rgba(246,173,85,0.2)');grad2.addColorStop(1,'rgba(246,173,85,0.02)');
+    ctx.beginPath();
+    ctx.moveTo(toX(pts[0].x),toY(Math.min(pts[0].y,yMax)));
+    pts.forEach(p=>{const py=Math.min(Math.max(toY(p.y),mg.t),mg.t+iH);ctx.lineTo(toX(p.x),py);});
+    ctx.lineTo(toX(pts[pts.length-1].x),mg.t+iH);ctx.lineTo(mg.l,mg.t+iH);ctx.closePath();
+    ctx.fillStyle=grad2;ctx.fill();
+
+    // Loss curve
+    ctx.beginPath();
+    pts.forEach((p,i)=>{
+      const py=Math.min(Math.max(toY(p.y),mg.t-5),mg.t+iH+5);
+      i===0?ctx.moveTo(toX(p.x),py):ctx.lineTo(toX(p.x),py);
+    });
+    ctx.strokeStyle='#f6ad55';ctx.lineWidth=2.5;ctx.stroke();
+
+    // GD path
+    if(this.history.length>1){
+      ctx.beginPath();
+      this.history.forEach((pt,i)=>{
+        const px2=toX(pt.x),py2=Math.min(Math.max(toY(pt.y),mg.t),mg.t+iH);
+        i===0?ctx.moveTo(px2,py2):ctx.lineTo(px2,py2);
+      });
+      ctx.strokeStyle='rgba(104,211,145,0.6)';ctx.lineWidth=2;ctx.stroke();
+      // Step dots
+      this.history.forEach((pt,i)=>{
+        if(i%Math.max(1,Math.floor(this.history.length/20))===0){
+          ctx.beginPath();ctx.arc(toX(pt.x),Math.min(Math.max(toY(pt.y),mg.t),mg.t+iH),3,0,2*Math.PI);
+          ctx.fillStyle=`rgba(104,211,145,${0.3+0.7*(i/this.history.length)})`;ctx.fill();
+        }
+      });
+    }
+
+    // Current position
+    const curY=this.f(this.x);
+    const cpx=toX(this.x),cpy=Math.min(Math.max(toY(curY),mg.t),mg.t+iH);
+    ctx.beginPath();ctx.arc(cpx,cpy,8,0,2*Math.PI);
+    ctx.fillStyle='rgba(104,211,145,0.2)';ctx.fill();
+    ctx.beginPath();ctx.arc(cpx,cpy,5,0,2*Math.PI);
+    ctx.fillStyle='#68d391';ctx.fill();
+
+    // Info
+    const infoEl=document.getElementById('gd-info');
+    if(infoEl){
+      const g=this.df(this.x);
+      infoEl.innerHTML=`
+        Step ${this.step} &nbsp;|&nbsp; x = ${this.x.toFixed(4)} &nbsp;|&nbsp; Loss = <strong style="color:var(--accent-amber)">${curY.toFixed(4)}</strong><br>
+        Gradient = ${g.toFixed(4)} &nbsp;|&nbsp; Step size = ${(this.lr*Math.abs(g)).toFixed(4)} &nbsp;|&nbsp; η = ${this.lr.toFixed(2)}
+      `;
+    }
+  }
+};
+
+// ── Quiz ──────────────────────────────────────────────────────
+const CalcQuiz = {
+  answers:{1:'B',2:'C',3:'B',4:'B',5:'C'},selected:{},
+
+  sel(q,el,letter){
+    document.getElementById('calc-qc'+q).querySelectorAll('.calc-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');this.selected[q]=letter;
+    const btn=document.getElementById('calc-qbtn');
+    if(btn&&Object.keys(this.selected).length===5)btn.disabled=false;
+  },
+
+  submit(){
+    let score=0;
+    for(let q=1;q<=5;q++){
+      const ua=this.selected[q],ca=this.answers[q];
+      const card=document.getElementById('calc-qc'+q);
+      const letters=['A','B','C','D'];
+      card.querySelectorAll('.calc-opt').forEach((o,i)=>{
+        if(letters[i]===ca)o.classList.add('correct');
+        else if(letters[i]===ua&&ua!==ca)o.classList.add('wrong');
+      });
+      const fb=document.getElementById('calc-fb'+q),fbw=document.getElementById('calc-fb'+q+'w');
+      if(ua===ca){score++;if(fb)fb.classList.add('show');}
+      else{if(fbw){fbw.style.display='block';fbw.classList.add('show');}}
+    }
+    const xp=score*36;
+    const sc=document.getElementById('calc-qscore');
+    const emoji=score===5?'🏆':score>=3?'⭐':'📚';
+    if(sc){sc.classList.add('show');sc.innerHTML=`${emoji} ${score}/5 correct — +${xp} XP earned`;}
+    const btn=document.getElementById('calc-qbtn');if(btn)btn.disabled=true;
+    if(typeof App!=='undefined'){
+      App.addXP(xp);
+      if(score>=3){
+        setTimeout(()=>{
+          App.showToast('🎉 Calculus complete! Optimization unlocked!');
+          const optNav=document.querySelector('[data-nav="optimization"]');
+          if(optNav){optNav.classList.remove('locked');const b=optNav.querySelector('.nav-badge');if(b){b.textContent='NEW';}}
+          App.progress=60;App.initProgress();
+        },1000);
+      }
+    }
+  }
+};
+
+// ── Init ──────────────────────────────────────────────────────
+(function initCalc(){
+  const tryInit=()=>{
+    DerivViz.setFunc('cubic');
+    DerivViz.draw();
+    GDViz.draw();
+    if(typeof renderMathInElement!=='undefined'){
+      renderMathInElement(document.getElementById('section-calculus')||document.body,{
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      });
+    }
+    const saved=localStorage.getItem('calc-notes');
+    const ta=document.getElementById('calc-notes-ta');
+    if(saved&&ta)ta.value=saved;
+  };
+  setTimeout(tryInit,300);
+})();
+</script>
