@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DS Math — Mohit's Learning Universe</title>
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sections.css">
 
   <!-- KaTeX -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -134,6 +135,9 @@
   <!-- ═══ HEADER ═══════════════════════════════ -->
   <header class="header">
     <div class="header-brand">
+      <button class="hamburger" id="hamburger-btn" aria-label="Toggle menu" onclick="App.toggleSidebar()">
+        <span></span><span></span><span></span>
+      </button>
       <div class="brand-icon">∑</div>
       <div class="brand-text">
         <span class="brand-name">DS Math</span>
@@ -155,6 +159,7 @@
     </div>
   </header>
 
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="App.toggleSidebar()"></div>
   <!-- ═══ SIDEBAR ══════════════════════════════ -->
   <aside class="sidebar">
     <div class="sidebar-section-label">Navigation</div>

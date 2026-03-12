@@ -1,0 +1,235 @@
+/* ============================================================
+   sections.css — Shared styles across all 5 section pages
+   Eliminates ~500 lines of duplication from individual sections
+   ============================================================ */
+
+/* ── Shared canvas / viz container ─────────────────────────── */
+.sec-viz {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; overflow: hidden;
+}
+.sec-viz-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+}
+.sec-viz-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary);
+}
+.sec-viz-badge {
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 10px;
+}
+.sec-canvas {
+  display: block; border-radius: var(--radius-md); background: var(--bg-raised); width: 100%;
+}
+.sec-controls { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.sec-slider-row { display: flex; flex-direction: column; gap: 6px; }
+.sec-slider-label {
+  display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary);
+}
+.sec-slider-label span { color: var(--text-primary); font-family: var(--font-display); font-weight: 700; }
+
+/* ── Shared proof walker ────────────────────────────────────── */
+.sec-proof {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0; position: relative;
+}
+.sec-proof::before {
+  content: 'PROOF WALKER'; position: absolute; top: 12px; right: 16px;
+  font-size: 9px; letter-spacing: 2px; color: var(--text-muted);
+}
+.sec-proof-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  color: var(--text-primary); margin-bottom: 20px;
+}
+.sec-proof-step { display: none; animation: fadeIn 0.3s ease; }
+.sec-proof-step.active { display: block; }
+.sec-step-num {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 8px;
+}
+.sec-step-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 15px; margin-bottom: 10px;
+}
+.sec-step-body {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px;
+}
+.sec-step-eq {
+  background: var(--bg-raised); border-radius: var(--radius-md);
+  padding: 16px 20px; text-align: center; margin: 12px 0; font-size: 15px;
+}
+.sec-proof-nav { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+.sec-nav-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: var(--bg-raised); border: 1px solid var(--border-dim);
+  border-radius: 8px; font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
+}
+.sec-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.sec-proof-dots { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.sec-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--bg-raised); border: 1px solid var(--border-dim);
+  transition: var(--transition); cursor: pointer;
+}
+.sec-dot.active { transform: scale(1.2); }
+.sec-dot.done { background: var(--accent-emerald); border-color: var(--accent-emerald); }
+
+/* ── Shared concept block ───────────────────────────────────── */
+.sec-concept {
+  margin-bottom: 52px; padding-bottom: 52px; border-bottom: 1px solid var(--border-dim);
+}
+.sec-concept:last-child { border-bottom: none; }
+.sec-concept-num {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 8px;
+}
+.sec-concept-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 22px;
+  letter-spacing: -0.5px; color: var(--text-primary);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+}
+.sec-body { font-size: 14px; color: var(--text-secondary); line-height: 1.9; }
+.sec-body p { margin-bottom: 14px; }
+.sec-body strong { color: var(--text-primary); font-weight: 500; }
+
+/* ── Shared callout blocks ──────────────────────────────────── */
+.sec-ds {
+  background: rgba(104,211,145,0.05); border-left: 3px solid var(--accent-emerald);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px; margin: 20px 0; font-size: 13px;
+}
+.sec-ds-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent-emerald); margin-bottom: 6px;
+}
+
+/* ── Shared math reveal toggle ──────────────────────────────── */
+.sec-math-reveal { display: none; margin-top: 12px; }
+.sec-math-reveal.visible { display: block; animation: fadeIn 0.3s ease; }
+.sec-math-box {
+  border-radius: var(--radius-md); padding: 20px 24px; margin: 20px 0;
+}
+.sec-math-label {
+  font-family: var(--font-display); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px;
+}
+.sec-eq {
+  background: var(--bg-raised); border-radius: var(--radius-md);
+  padding: 14px 20px; text-align: center; margin: 10px 0; font-size: 15px;
+}
+
+/* ── Shared quiz styles ─────────────────────────────────────── */
+.sec-quiz {
+  padding: 48px 60px; border-top: 1px solid var(--border-dim); background: var(--bg-deep);
+}
+.sec-quiz-eyebrow {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 10px;
+}
+.sec-quiz-title {
+  font-family: var(--font-display); font-weight: 800; font-size: 24px;
+  letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 8px;
+}
+.sec-quiz-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+.sec-qcard {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px;
+}
+.sec-qnum {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 10px;
+}
+.sec-qtext {
+  font-size: 15px; color: var(--text-primary); line-height: 1.6; margin-bottom: 20px;
+  font-family: var(--font-display); font-weight: 600; letter-spacing: -0.2px;
+}
+.sec-opts { display: flex; flex-direction: column; gap: 10px; }
+.sec-opt {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: var(--bg-raised);
+  border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  cursor: pointer; transition: var(--transition); font-size: 13px; color: var(--text-secondary);
+}
+.sec-opt:hover { border-color: var(--border-soft); color: var(--text-primary); background: var(--bg-hover); }
+.sec-opt.correct { border-color: var(--accent-emerald); color: var(--accent-emerald); background: rgba(104,211,145,0.08); }
+.sec-opt.wrong { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(252,129,129,0.08); }
+.sec-letter {
+  width: 26px; height: 26px; border-radius: 6px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 12px; flex-shrink: 0;
+}
+.sec-opt.correct .sec-letter { background: rgba(104,211,145,0.2); border-color: var(--accent-emerald); color: var(--accent-emerald); }
+.sec-opt.wrong .sec-letter { background: rgba(252,129,129,0.2); border-color: var(--accent-rose); }
+.sec-qfb { display: none; margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; line-height: 1.6; }
+.sec-qfb.show { display: block; animation: fadeIn 0.3s ease; }
+.sec-qfb.ok { background: rgba(104,211,145,0.08); border: 1px solid rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.sec-qfb.no { background: rgba(252,129,129,0.08); border: 1px solid rgba(252,129,129,0.2); color: var(--accent-rose); }
+.sec-quiz-row { display: flex; align-items: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
+.sec-quiz-btn {
+  padding: 12px 28px; border: none; border-radius: var(--radius-md);
+  font-family: var(--font-display); font-weight: 700; font-size: 14px;
+  color: var(--bg-void); cursor: pointer; transition: var(--transition);
+}
+.sec-quiz-btn:hover { transform: translateY(-2px); }
+.sec-quiz-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.sec-score { display: none; font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.sec-score.show { display: block; animation: fadeIn 0.5s ease; }
+
+/* ── Shared sidebar ─────────────────────────────────────────── */
+.sec-side-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 12px;
+  color: var(--text-primary); margin-bottom: 14px;
+}
+.sec-prog-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--bg-surface);
+  border: 1px solid var(--border-dim); border-radius: 8px;
+  font-size: 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition);
+}
+.sec-prog-item:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.sec-prog-item.done { border-color: rgba(104,211,145,0.2); color: var(--accent-emerald); }
+.sec-check {
+  width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0;
+}
+.sec-check.done { background: rgba(104,211,145,0.15); border-color: var(--accent-emerald); }
+.sec-notes-ta {
+  width: 100%; background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 12px; color: var(--text-primary);
+  font-family: var(--font-body); font-size: 12px; line-height: 1.7;
+  resize: vertical; min-height: 100px; outline: none; transition: var(--transition);
+}
+.sec-save-btn {
+  margin-top: 8px; padding: 6px 14px; border-radius: 6px;
+  font-size: 11px; cursor: pointer; font-family: var(--font-body);
+  border: 1px solid; background: transparent;
+}
+.sec-term {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+}
+.sec-term-name {
+  font-size: 11px; font-family: var(--font-display); font-weight: 700; margin-bottom: 3px;
+}
+.sec-term-def { font-size: 11px; color: var(--text-muted); }
+
+/* ── Shared cheat sheet ─────────────────────────────────────── */
+.sec-cheatsheet {
+  background: var(--bg-surface); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); padding: 16px;
+}
+.sec-cheat-item { padding: 10px 0; border-bottom: 1px solid var(--border-dim); }
+.sec-cheat-item:last-child { border-bottom: none; }
+.sec-cheat-name {
+  font-size: 10px; color: var(--text-muted); letter-spacing: 1px;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.sec-cheat-eq {
+  background: var(--bg-raised); border-radius: 6px;
+  padding: 8px 12px; text-align: center; font-size: 12px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sec-quiz { padding-left: 24px; padding-right: 24px; }
+}

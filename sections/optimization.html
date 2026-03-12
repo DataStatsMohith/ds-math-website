@@ -880,7 +880,7 @@ const OptSection = {
   },
   saveNote() {
     const t=document.getElementById('opt-notes-ta');
-    if(t){localStorage.setItem('opt-notes',t.value);const m=document.getElementById('opt-saved-msg');if(m){m.style.display='block';setTimeout(()=>m.style.display='none',2000);}}
+    if(t){if(typeof Persistence!=='undefined')Persistence.saveNote('optimization',t.value);else localStorage.setItem('opt-notes',t.value);const m=document.getElementById('opt-saved-msg');if(m){m.style.display='block';setTimeout(()=>m.style.display='none',2000);}}
   },
   markDone() {
     [1,2,3,4].forEach(i=>{

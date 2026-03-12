@@ -44,6 +44,13 @@ const App = {
     if (id === 'optimization') { this.loadSection('optimization', 'optimization-content-mount'); }
     if (id === 'info-theory') { this.loadSection('information-theory', 'info-theory-content-mount'); }
     window.scrollTo(0, 0);
+    // Close mobile sidebar on navigation
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const btn = document.getElementById('hamburger-btn');
+    sidebar?.classList.remove('mobile-open');
+    overlay?.classList.remove('show');
+    btn?.classList.remove('open');
   },
 
   loadSection(name, mountId) {
@@ -118,6 +125,16 @@ const App = {
     toast.classList.add('show');
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+  },
+
+  toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const btn = document.getElementById('hamburger-btn');
+    if (!sidebar) return;
+    const isOpen = sidebar.classList.toggle('mobile-open');
+    overlay?.classList.toggle('show', isOpen);
+    btn?.classList.toggle('open', isOpen);
   }
 };
 

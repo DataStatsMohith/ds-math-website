@@ -966,7 +966,7 @@ const LASection = {
 
   saveNote() {
     const t = document.getElementById('la-notes-ta');
-    if (t) { localStorage.setItem('la-notes', t.value); const m = document.getElementById('la-saved-msg'); if (m) { m.style.display='block'; setTimeout(()=>m.style.display='none',2000); } }
+    if (t) { if(typeof Persistence!=='undefined')Persistence.saveNote('linear-algebra',t.value);else localStorage.setItem('la-notes',t.value); const m = document.getElementById('la-saved-msg'); if (m) { m.style.display='block'; setTimeout(()=>m.style.display='none',2000); } }
   },
 
   markDone() {

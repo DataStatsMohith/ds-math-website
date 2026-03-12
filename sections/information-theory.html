@@ -844,7 +844,7 @@ const ITSection = {
   },
   saveNote() {
     const t=document.getElementById('it-notes-ta');
-    if(t){localStorage.setItem('it-notes',t.value);const m=document.getElementById('it-saved-msg');if(m){m.style.display='block';setTimeout(()=>m.style.display='none',2000);}}
+    if(t){if(typeof Persistence!=='undefined')Persistence.saveNote('info-theory',t.value);else localStorage.setItem('it-notes',t.value);const m=document.getElementById('it-saved-msg');if(m){m.style.display='block';setTimeout(()=>m.style.display='none',2000);}}
   },
   markDone() {
     [1,2,3,4].forEach(i=>{
