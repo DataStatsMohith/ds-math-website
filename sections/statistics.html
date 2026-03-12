@@ -1128,6 +1128,7 @@ const StatsSection = {
       if (prog)  prog.classList.add('done');
     });
     if (typeof App !== 'undefined') App.showToast('✅ All concepts marked complete!');
+    if (typeof Persistence !== 'undefined') Persistence.markCompleted('statistics');
   }
 };
 
@@ -1396,6 +1397,10 @@ const Quiz = {
     if (typeof App !== 'undefined') {
       App.addXP(xpEarned);
       if (score >= 3) {
+        if (typeof Persistence !== 'undefined') {
+          Persistence.saveQuizScore('statistics', score, 5);
+          Persistence.markCompleted('statistics');
+        }
         setTimeout(() => {
           App.showToast('🎉 Statistics complete! Linear Algebra unlocked!');
           // Unlock linear algebra in nav
@@ -1403,6 +1408,7 @@ const Quiz = {
           if (laNav) { laNav.classList.remove('locked'); const badge = laNav.querySelector('.nav-badge'); if (badge) { badge.textContent = 'NEW'; badge.classList.add('now'); } }
           App.progress = 20;
           App.initProgress();
+          if (typeof Persistence !== 'undefined') Persistence.saveProgress(20);
         }, 1000);
       }
     }
@@ -1423,9 +1429,8 @@ const Quiz = {
       });
     }
     // Load saved notes
-    const saved = localStorage.getItem('stats-notes');
     const ta = document.getElementById('stats-notes');
-    if (saved && ta) ta.value = saved;
+    if (ta) ta.value = (typeof Persistence !== 'undefined') ? Persistence.loadNote('statistics') : (localStorage.getItem('stats-notes') || '');
   };
   setTimeout(tryInit, 300);
 })();

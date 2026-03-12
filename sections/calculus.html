@@ -895,6 +895,7 @@ const CalcSection = {
       if(c){c.classList.add('done');c.textContent='✓';}if(p)p.classList.add('done');
     });
     if(typeof App!=='undefined') App.showToast('✅ All concepts marked complete!');
+    if(typeof Persistence!=='undefined') Persistence.markCompleted('calculus');
   }
 };
 
@@ -1178,11 +1179,16 @@ const CalcQuiz = {
     if(typeof App!=='undefined'){
       App.addXP(xp);
       if(score>=3){
+        if(typeof Persistence!=='undefined'){
+          Persistence.saveQuizScore('calculus',score,5);
+          Persistence.markCompleted('calculus');
+        }
         setTimeout(()=>{
           App.showToast('🎉 Calculus complete! Optimization unlocked!');
           const optNav=document.querySelector('[data-nav="optimization"]');
           if(optNav){optNav.classList.remove('locked');const b=optNav.querySelector('.nav-badge');if(b){b.textContent='NEW';}}
           App.progress=60;App.initProgress();
+          if(typeof Persistence!=='undefined') Persistence.saveProgress(60);
         },1000);
       }
     }
@@ -1200,9 +1206,8 @@ const CalcQuiz = {
         delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
       });
     }
-    const saved=localStorage.getItem('calc-notes');
     const ta=document.getElementById('calc-notes-ta');
-    if(saved&&ta)ta.value=saved;
+    if(ta) ta.value=(typeof Persistence!=='undefined')?Persistence.loadNote('calculus'):(localStorage.getItem('calc-notes')||'');
   };
   setTimeout(tryInit,300);
 })();

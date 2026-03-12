@@ -12,8 +12,8 @@ const App = {
     this.bindNav();
     this.initProgress();
     this.animateHeroStats();
-    this.initToast();
     this.showSection('home');
+    Persistence.load();
   },
 
   bindNav() {
@@ -63,7 +63,8 @@ const App = {
         });
       })
       .catch(() => {
-        mount.innerHTML = '<div style="padding:60px;text-align:center;color:#4a5568;font-size:13px;line-height:1.8;">⚠️ Could not load section.<br>Open the site with a local server:<br><code style='background:#1a2233;padding:4px 10px;border-radius:4px;color:#63b3ed;'>python -m http.server 8000</code><br>Then visit <strong>http://localhost:8000</strong></div>';
+        mount.innerHTML = `<div style="padding:60px;text-align:center;color:#4a5568;font-size:13px;line-height:1.8;">⚠️ Could not load section.<br>Open the site with a local server:<br><code style="background:#1a2233;padding:4px 10px;border-radius:4px;color:#63b3ed;">python -m http.server 8000</code><br>Then visit <strong>http://localhost:8000</strong></div>`;
+
       });
   },
 
@@ -117,9 +118,7 @@ const App = {
     toast.classList.add('show');
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
-  },
-
-  initToast() {}
+  }
 };
 
 // ============================================
@@ -169,15 +168,27 @@ const RoadmapViz = {
 
     const defs = d3svg.append('defs');
 
-    // Glow filters
-    ['cyan','violet','amber','emerald','rose','gold'].forEach((name, i) => {
-      const colors = ['#63b3ed','#9f7aea','#f6ad55','#68d391','#fc8181','#f6e05e'];
+    // Glow filters — one per node color
+    const glowColors = [
+      { name: 'cyan',    hex: '#63b3ed' },
+      { name: 'violet',  hex: '#9f7aea' },
+      { name: 'amber',   hex: '#f6ad55' },
+      { name: 'emerald', hex: '#68d391' },
+      { name: 'rose',    hex: '#fc8181' },
+      { name: 'gold',    hex: '#f6e05e' },
+    ];
+    glowColors.forEach(({ name }) => {
       const f = defs.append('filter').attr('id', `glow-${name}`).attr('x','-50%').attr('y','-50%').attr('width','200%').attr('height','200%');
       f.append('feGaussianBlur').attr('stdDeviation','6').attr('result','blur');
       const feMerge = f.append('feMerge');
       feMerge.append('feMergeNode').attr('in','blur');
       feMerge.append('feMergeNode').attr('in','SourceGraphic');
     });
+    // Map node colors to filter names
+    const colorToGlow = {
+      '#63b3ed': 'glow-cyan', '#9f7aea': 'glow-violet', '#f6ad55': 'glow-amber',
+      '#68d391': 'glow-emerald', '#fc8181': 'glow-rose', '#f6e05e': 'glow-gold',
+    };
 
     const nodeMap = {};
     this.nodes.forEach(n => { nodeMap[n.id] = n; });
@@ -225,15 +236,6 @@ const RoadmapViz = {
     // Draw nodes
     this.nodes.forEach((n, i) => {
       const x = n.x * W, y = n.y * H;
-      const g = d3svg.append('g')
-        .attr('transform', `translate(${x},${y})`)
-        .style('cursor', n.unlocked ? 'pointer' : 'not-allowed')
-        .style('opacity', 0)
-        .transition().delay(i * 120).duration(500)
-        .style('opacity', 1);
-
-      const gSel = d3svg.select(`g:nth-child(${this.edges.length * 3 + i + 1})`);
-
       const nodeG = d3svg.append('g').attr('transform', `translate(${x},${y})`).style('cursor', n.unlocked ? 'pointer' : 'default');
 
       // Outer ring
@@ -243,11 +245,12 @@ const RoadmapViz = {
         .style('animation', `spin-${i % 2 === 0 ? 'cw' : 'ccw'} 20s linear infinite`);
 
       // Main circle
+      const glowId = colorToGlow[n.color] || 'glow-cyan';
       nodeG.append('circle').attr('r', 34)
         .attr('fill', n.unlocked ? `rgba(${hexToRgb(n.color)},0.12)` : 'rgba(255,255,255,0.02)')
         .attr('stroke', n.color).attr('stroke-width', n.unlocked ? 2 : 0.5)
         .attr('opacity', n.unlocked ? 1 : 0.35)
-        .attr('filter', n.unlocked ? `url(#glow-cyan)` : '');
+        .attr('filter', n.unlocked ? `url(#${glowId})` : '');
 
       // Icon
       nodeG.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central')

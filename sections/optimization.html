@@ -888,6 +888,7 @@ const OptSection = {
       if(c){c.classList.add('done');c.textContent='✓';}if(p)p.classList.add('done');
     });
     if(typeof App!=='undefined') App.showToast('✅ All concepts marked complete!');
+    if(typeof Persistence!=='undefined') Persistence.markCompleted('optimization');
   }
 };
 
@@ -1268,11 +1269,16 @@ const OptQuiz = {
     if(typeof App!=='undefined'){
       App.addXP(xp);
       if(score>=3){
+        if(typeof Persistence!=='undefined'){
+          Persistence.saveQuizScore('optimization',score,5);
+          Persistence.markCompleted('optimization');
+        }
         setTimeout(()=>{
           App.showToast('🎉 Optimization complete! Information Theory unlocked!');
           const itNav=document.querySelector('[data-nav="info-theory"]');
           if(itNav){itNav.classList.remove('locked');const b=itNav.querySelector('.nav-badge');if(b)b.textContent='NEW';}
           App.progress=80;App.initProgress();
+          if(typeof Persistence!=='undefined') Persistence.saveProgress(80);
         },1000);
       }
     }
@@ -1290,9 +1296,8 @@ const OptQuiz = {
         delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
       });
     }
-    const saved=localStorage.getItem('opt-notes');
     const ta=document.getElementById('opt-notes-ta');
-    if(saved&&ta)ta.value=saved;
+    if(ta) ta.value=(typeof Persistence!=='undefined')?Persistence.loadNote('optimization'):(localStorage.getItem('opt-notes')||'');
   },300);
 })();
 </script>

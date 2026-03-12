@@ -852,6 +852,7 @@ const ITSection = {
       if(c){c.classList.add('done');c.textContent='✓';}if(p)p.classList.add('done');
     });
     if(typeof App!=='undefined') App.showToast('🎓 Information Theory complete! Curriculum finished!');
+    if(typeof Persistence!=='undefined') Persistence.markCompleted('info-theory');
   }
 };
 
@@ -1124,6 +1125,11 @@ const ITQuiz = {
     if(typeof App!=='undefined'){
       App.addXP(xp);
       if(score>=3){
+        if(typeof Persistence!=='undefined'){
+          Persistence.saveQuizScore('info-theory',score,5);
+          Persistence.markCompleted('info-theory');
+          Persistence.saveProgress(100);
+        }
         setTimeout(()=>{
           App.showToast('🎓 Curriculum complete! You did it, Mohit!');
           App.progress=100;App.initProgress();
@@ -1144,9 +1150,8 @@ const ITQuiz = {
         delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
       });
     }
-    const saved=localStorage.getItem('it-notes');
     const ta=document.getElementById('it-notes-ta');
-    if(saved&&ta)ta.value=saved;
+    if(ta) ta.value=(typeof Persistence!=='undefined')?Persistence.loadNote('info-theory'):(localStorage.getItem('it-notes')||'');
   },300);
 })();
 </script>

@@ -1298,11 +1298,16 @@ const LAQuiz = {
     if(typeof App!=='undefined'){
       App.addXP(xp);
       if(score>=3){
+        if(typeof Persistence!=='undefined'){
+          Persistence.saveQuizScore('linear-algebra',score,5);
+          Persistence.markCompleted('linear-algebra');
+        }
         setTimeout(()=>{
           App.showToast('🎉 Linear Algebra complete! Calculus unlocked!');
           const calcNav=document.querySelector('[data-nav="calculus"]');
           if(calcNav){calcNav.classList.remove('locked');const b=calcNav.querySelector('.nav-badge');if(b){b.textContent='NEW';b.classList.add('now');}}
           App.progress=40; App.initProgress();
+          if(typeof Persistence!=='undefined') Persistence.saveProgress(40);
         },1000);
       }
     }
@@ -1321,9 +1326,8 @@ const LAQuiz = {
         delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
       });
     }
-    const saved=localStorage.getItem('la-notes');
     const ta=document.getElementById('la-notes-ta');
-    if(saved&&ta) ta.value=saved;
+    if(ta) ta.value=(typeof Persistence!=='undefined')?Persistence.loadNote('linear-algebra'):(localStorage.getItem('la-notes')||'');
   };
   setTimeout(tryInit,300);
 })();
