@@ -1,3 +1,85 @@
+<!-- ★ DEEP SPACE OBSERVATORY — Visual Override ★ -->
+<style>
+:root { --sec-accent:#f87171; --sec-accent2:#fbbf24; }
+
+/* Glassmorphism hero */
+.opt-hero {
+  position:relative;padding:56px 60px 44px;overflow:hidden;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.opt-hero::before {
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 100% at 80% 50%,#f8717118 0%,transparent 70%);
+}
+.opt-hero-grid {
+  background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 100% 100% at center,black 30%,transparent 80%);
+  opacity:.5;
+}
+.opt-hero-title {
+  font-family:var(--font-display)!important;font-weight:900!important;
+  font-size:clamp(28px,4vw,52px)!important;letter-spacing:-2px!important;line-height:1.05!important;
+  background:linear-gradient(135deg,#f87171,#fbbf24);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.opt-section-tag {
+  display:inline-flex;align-items:center;gap:8px;
+  background:#f8717118;border:1px solid #f8717140;
+  border-radius:20px;padding:5px 14px;margin-bottom:18px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;color:#f87171;
+}
+.opt-section-tag::before {
+  content:'●';color:#f87171;font-size:8px;animation:blink 2s ease-in-out infinite;
+}
+
+/* Glassmorphism panels */
+.opt-concept-card, .concept-card,
+.opt-viz-box, .viz-frame,
+.opt-quiz-card, .quiz-panel,
+.opt-proof-walker, .proof-walker,
+.opt-cheat-card, .cheat-card {
+  background:rgba(7,11,22,.75)!important;
+  border:1px solid rgba(255,255,255,0.06)!important;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:20px!important;
+  box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+
+/* Viz toolbar terminal style */
+.opt-viz-toolbar, .viz-toolbar {
+  background:rgba(255,255,255,.02)!important;
+  border-bottom:1px solid rgba(255,255,255,0.06)!important;
+}
+
+/* Quiz options */
+.opt-opt, .quiz-opt {
+  background:rgba(13,19,32,.8)!important;
+  border:1px solid rgba(255,255,255,0.07)!important;
+  border-radius:12px!important;
+  transition:all .2s cubic-bezier(.4,0,.2,1)!important;
+  font-family:var(--font-body)!important;
+}
+.opt-opt:hover, .quiz-opt:hover {
+  border-color:#f8717150!important;background:#f8717112!important;
+  transform:translateX(4px)!important;
+}
+.opt-opt.correct, .quiz-opt.correct { border-color:#34d39960!important;background:rgba(52,211,153,.1)!important; }
+.opt-opt.wrong, .quiz-opt.wrong { border-color:#f8717160!important;background:rgba(248,113,113,.1)!important; }
+
+/* Inputs and sliders accent */
+input[type=range]::-webkit-slider-thumb { background:#f87171!important;box-shadow:0 0 8px #f8717180!important; }
+.opt-slider-val, .slider-val { color:#f87171!important; }
+
+/* Section main body padding */
+.opt-main-col, .opt-body, .sec-body {
+  padding-left:60px;padding-right:60px;padding-bottom:80px;
+}
+@media(max-width:900px) {
+  .opt-hero,.opt-main-col,.opt-body,.sec-body { padding-left:24px!important;padding-right:24px!important; }
+}
+</style>
 <!-- ============================================================
      OPTIMIZATION — Full Interactive Section
      Concepts: Convexity, Gradient Descent variants, Constrained

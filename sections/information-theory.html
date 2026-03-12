@@ -1,3 +1,85 @@
+<!-- ★ DEEP SPACE OBSERVATORY — Visual Override ★ -->
+<style>
+:root { --sec-accent:#e879f9; --sec-accent2:#a78bfa; }
+
+/* Glassmorphism hero */
+.it-hero {
+  position:relative;padding:56px 60px 44px;overflow:hidden;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.it-hero::before {
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 100% at 80% 50%,#e879f918 0%,transparent 70%);
+}
+.it-hero-grid {
+  background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 100% 100% at center,black 30%,transparent 80%);
+  opacity:.5;
+}
+.it-hero-title {
+  font-family:var(--font-display)!important;font-weight:900!important;
+  font-size:clamp(28px,4vw,52px)!important;letter-spacing:-2px!important;line-height:1.05!important;
+  background:linear-gradient(135deg,#e879f9,#a78bfa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.it-section-tag {
+  display:inline-flex;align-items:center;gap:8px;
+  background:#e879f918;border:1px solid #e879f940;
+  border-radius:20px;padding:5px 14px;margin-bottom:18px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;color:#e879f9;
+}
+.it-section-tag::before {
+  content:'●';color:#e879f9;font-size:8px;animation:blink 2s ease-in-out infinite;
+}
+
+/* Glassmorphism panels */
+.it-concept-card, .concept-card,
+.it-viz-box, .viz-frame,
+.it-quiz-card, .quiz-panel,
+.it-proof-walker, .proof-walker,
+.it-cheat-card, .cheat-card {
+  background:rgba(7,11,22,.75)!important;
+  border:1px solid rgba(255,255,255,0.06)!important;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:20px!important;
+  box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+
+/* Viz toolbar terminal style */
+.it-viz-toolbar, .viz-toolbar {
+  background:rgba(255,255,255,.02)!important;
+  border-bottom:1px solid rgba(255,255,255,0.06)!important;
+}
+
+/* Quiz options */
+.it-opt, .quiz-opt {
+  background:rgba(13,19,32,.8)!important;
+  border:1px solid rgba(255,255,255,0.07)!important;
+  border-radius:12px!important;
+  transition:all .2s cubic-bezier(.4,0,.2,1)!important;
+  font-family:var(--font-body)!important;
+}
+.it-opt:hover, .quiz-opt:hover {
+  border-color:#e879f950!important;background:#e879f912!important;
+  transform:translateX(4px)!important;
+}
+.it-opt.correct, .quiz-opt.correct { border-color:#34d39960!important;background:rgba(52,211,153,.1)!important; }
+.it-opt.wrong, .quiz-opt.wrong { border-color:#f8717160!important;background:rgba(248,113,113,.1)!important; }
+
+/* Inputs and sliders accent */
+input[type=range]::-webkit-slider-thumb { background:#e879f9!important;box-shadow:0 0 8px #e879f980!important; }
+.it-slider-val, .slider-val { color:#e879f9!important; }
+
+/* Section main body padding */
+.it-main-col, .it-body, .sec-body {
+  padding-left:60px;padding-right:60px;padding-bottom:80px;
+}
+@media(max-width:900px) {
+  .it-hero,.it-main-col,.it-body,.sec-body { padding-left:24px!important;padding-right:24px!important; }
+}
+</style>
 <!-- ============================================================
      INFORMATION THEORY — Full Interactive Section
      Concepts: Entropy, KL Divergence, Mutual Information,

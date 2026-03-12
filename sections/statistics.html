@@ -1,1437 +1,486 @@
-<!-- ============================================================
-     STATISTICS & PROBABILITY — Full Interactive Section
-     Features: 3 depth levels, 2 D3 visualizations, proof walker,
-     cheat sheet, mini quiz, notes panel, XP rewards
-     ============================================================ -->
+<!-- STATISTICS & PROBABILITY — Deep Space Observatory Design -->
 <style>
-/* ── Stats Section Scope ─────────────────────────────────────── */
-.stats-page { font-family: var(--font-body); }
-
-/* ── Section Hero ────────────────────────────────────────────── */
-.stats-hero {
-  position: relative;
-  padding: 56px 60px 40px;
-  overflow: hidden;
-  border-bottom: 1px solid var(--border-dim);
-}
-.stats-hero-bg {
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 50% 80% at 80% 50%, rgba(99,179,237,0.07) 0%, transparent 70%),
-    radial-gradient(ellipse 30% 40% at 10% 80%, rgba(104,211,145,0.04) 0%, transparent 60%);
-  pointer-events: none;
-}
-.stats-hero-grid {
-  position: absolute; inset: 0;
-  background-image: linear-gradient(var(--border-dim) 1px, transparent 1px),
-                    linear-gradient(90deg, var(--border-dim) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 100% 100% at center, black 20%, transparent 75%);
-  pointer-events: none; opacity: 0.4;
-}
-.stats-hero-content { position: relative; z-index: 1; }
-.stats-breadcrumb {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 11px; color: var(--text-muted);
-  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px;
-}
-.stats-breadcrumb span { color: var(--accent-cyan); }
-.stats-breadcrumb-sep { opacity: 0.4; }
-.stats-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
-.stats-hero-left { flex: 1; min-width: 300px; }
-.stats-section-tag {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(99,179,237,0.1); border: 1px solid rgba(99,179,237,0.2);
-  border-radius: 20px; padding: 4px 12px;
-  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--accent-cyan); margin-bottom: 16px;
-}
-.stats-section-tag::before { content: '01'; font-weight: 800; font-family: var(--font-display); font-size: 9px; }
-.stats-hero-title {
-  font-family: var(--font-display); font-weight: 800;
-  font-size: clamp(28px, 3.5vw, 46px); letter-spacing: -1.5px; line-height: 1.05;
-  color: var(--text-primary); margin-bottom: 14px;
-}
-.stats-hero-title em {
-  font-style: normal;
-  background: linear-gradient(135deg, #63b3ed, #68d391);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.stats-hero-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.8; max-width: 520px; margin-bottom: 28px; }
-.stats-why-ds {
-  background: rgba(104,211,145,0.06); border: 1px solid rgba(104,211,145,0.15);
-  border-radius: var(--radius-md); padding: 16px 20px;
-  max-width: 520px;
-}
-.stats-why-label {
-  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--accent-emerald); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
-}
-.stats-why-label::before { content: '🤖'; }
-.stats-why-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
-.stats-hero-meta { display: flex; flex-direction: column; gap: 12px; min-width: 180px; align-items: flex-end; }
-.meta-chip {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--bg-surface); border: 1px solid var(--border-dim);
-  border-radius: var(--radius-md); padding: 8px 14px;
-  font-size: 12px; color: var(--text-secondary);
-}
-.meta-chip-icon { font-size: 16px; }
-
-/* ── Level Switcher ──────────────────────────────────────────── */
-.level-switcher-bar {
-  display: flex; align-items: center; gap: 0;
-  background: var(--bg-surface); border: 1px solid var(--border-dim);
-  border-radius: var(--radius-lg); padding: 5px;
-  width: fit-content; margin: 32px 60px 0;
-}
-.level-btn {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 20px; border-radius: 12px; cursor: pointer;
-  border: none; background: transparent;
-  font-family: var(--font-display); font-weight: 600; font-size: 13px;
-  color: var(--text-muted); transition: var(--transition); white-space: nowrap;
-}
-.level-btn:hover { color: var(--text-secondary); }
-.level-btn.active {
-  background: var(--bg-raised); color: var(--text-primary);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-}
-.level-btn.active.beginner { color: var(--accent-emerald); }
-.level-btn.active.intermediate { color: var(--accent-cyan); }
-.level-btn.active.pro { color: var(--accent-violet); }
-.level-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.beginner .level-dot { background: var(--accent-emerald); }
-.intermediate .level-dot { background: var(--accent-cyan); }
-.pro .level-dot { background: var(--accent-violet); }
-
-/* ── Utility Bar ─────────────────────────────────────────────── */
-.utility-bar {
-  display: flex; align-items: center; gap: 10px;
-  padding: 16px 60px; border-bottom: 1px solid var(--border-dim);
-  flex-wrap: wrap;
-}
-.util-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 14px; background: var(--bg-surface);
-  border: 1px solid var(--border-dim); border-radius: 8px;
-  font-size: 12px; color: var(--text-secondary);
-  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
-}
-.util-btn:hover { border-color: var(--border-soft); color: var(--text-primary); }
-.util-btn.active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(99,179,237,0.08); }
-.util-sep { width: 1px; height: 24px; background: var(--border-dim); margin: 0 4px; }
-
-/* ── Main Content Layout ─────────────────────────────────────── */
-.stats-content-area {
-  display: grid; grid-template-columns: 1fr 340px; gap: 0;
-  min-height: 60vh;
-}
-.stats-main-col { padding: 40px 60px; border-right: 1px solid var(--border-dim); }
-.stats-side-col { padding: 28px 24px; background: var(--bg-deep); }
-
-/* ── Concept Blocks ──────────────────────────────────────────── */
-.concept-block {
-  margin-bottom: 48px; padding-bottom: 48px;
-  border-bottom: 1px solid var(--border-dim);
-  animation: fadeIn 0.4s ease;
-}
-.concept-block:last-child { border-bottom: none; }
-.concept-num {
-  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--text-muted); margin-bottom: 8px;
-}
-.concept-title {
-  font-family: var(--font-display); font-weight: 700;
-  font-size: 22px; letter-spacing: -0.5px; color: var(--text-primary);
-  margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
-}
-.concept-title-icon { font-size: 24px; }
-.concept-body { font-size: 14px; color: var(--text-secondary); line-height: 1.9; }
-.concept-body p { margin-bottom: 14px; }
-.concept-body strong { color: var(--text-primary); font-weight: 500; }
-
-/* Intuition callout */
-.intuition-box {
-  background: rgba(99,179,237,0.06); border-left: 3px solid var(--accent-cyan);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  padding: 16px 20px; margin: 20px 0; font-size: 13px;
-}
-.intuition-label {
-  font-family: var(--font-display); font-weight: 700; font-size: 10px;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--accent-cyan); margin-bottom: 6px;
-}
-.intuition-text { color: var(--text-secondary); line-height: 1.7; }
-
-/* DS Application callout */
-.ds-box {
-  background: rgba(104,211,145,0.05); border-left: 3px solid var(--accent-emerald);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  padding: 16px 20px; margin: 20px 0; font-size: 13px;
-}
-.ds-box-label {
-  font-family: var(--font-display); font-weight: 700; font-size: 10px;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--accent-emerald); margin-bottom: 6px;
-}
-
-/* Pro/math box */
-.math-box {
-  background: rgba(159,122,234,0.05); border: 1px solid rgba(159,122,234,0.15);
-  border-radius: var(--radius-md); padding: 20px 24px; margin: 20px 0;
-}
-.math-box-label {
-  font-family: var(--font-display); font-weight: 700; font-size: 10px;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--accent-violet); margin-bottom: 12px;
-}
-
-/* ── Math Toggle ─────────────────────────────────────────────── */
-.math-toggle-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 16px; background: rgba(159,122,234,0.08);
-  border: 1px solid rgba(159,122,234,0.2); border-radius: 8px;
-  font-size: 12px; color: var(--accent-violet);
-  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
-  margin: 12px 0;
-}
-.math-toggle-btn:hover { background: rgba(159,122,234,0.15); }
-.math-reveal { display: none; margin-top: 12px; }
-.math-reveal.visible { display: block; animation: fadeIn 0.3s ease; }
-
-/* ── Proof Walker ────────────────────────────────────────────── */
-.proof-walker {
-  background: var(--bg-surface); border: 1px solid var(--border-dim);
-  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0;
-  position: relative; overflow: hidden;
-}
-.proof-walker::before {
-  content: 'PROOF WALKER';
-  position: absolute; top: 12px; right: 16px;
-  font-size: 9px; letter-spacing: 2px; color: var(--text-muted);
-}
-.proof-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin-bottom: 20px; }
-.proof-steps-track { position: relative; }
-.proof-step {
-  display: none;
-  animation: fadeIn 0.3s ease;
-}
-.proof-step.active { display: block; }
-.proof-step-num {
-  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--text-muted); margin-bottom: 8px;
-}
-.proof-step-title {
-  font-family: var(--font-display); font-weight: 700; font-size: 15px;
-  color: var(--accent-cyan); margin-bottom: 10px;
-}
-.proof-step-body { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; }
-.proof-step-eq {
-  background: var(--bg-raised); border-radius: var(--radius-md);
-  padding: 16px 20px; text-align: center; margin: 12px 0;
-  font-size: 15px;
-}
-.proof-nav { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
-.proof-nav-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 16px; background: var(--bg-raised); border: 1px solid var(--border-dim);
-  border-radius: 8px; font-size: 12px; color: var(--text-secondary);
-  cursor: pointer; transition: var(--transition); font-family: var(--font-body);
-}
-.proof-nav-btn:hover:not(:disabled) { border-color: var(--accent-cyan); color: var(--accent-cyan); }
-.proof-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.proof-progress-dots { display: flex; gap: 6px; align-items: center; margin-left: auto; }
-.proof-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--bg-raised); border: 1px solid var(--border-dim);
-  transition: var(--transition); cursor: pointer;
-}
-.proof-dot.active { background: var(--accent-cyan); border-color: var(--accent-cyan); transform: scale(1.2); }
-.proof-dot.done { background: var(--accent-emerald); border-color: var(--accent-emerald); }
-
-/* ── Visualizations ──────────────────────────────────────────── */
-.viz-container {
-  background: var(--bg-surface); border: 1px solid var(--border-dim);
-  border-radius: var(--radius-lg); padding: 28px; margin: 24px 0;
-  position: relative; overflow: hidden;
-}
-.viz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.viz-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); }
-.viz-badge {
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
-  padding: 4px 10px; background: rgba(99,179,237,0.1);
-  border: 1px solid rgba(99,179,237,0.2); border-radius: 10px; color: var(--accent-cyan);
-}
-.viz-canvas { width: 100%; display: block; }
-.viz-controls { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
-.slider-row { display: flex; flex-direction: column; gap: 6px; }
-.slider-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
-.slider-label span { color: var(--text-primary); font-family: var(--font-display); font-weight: 700; }
-input[type=range] {
-  -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
-  background: var(--bg-raised); border-radius: 2px; outline: none; cursor: pointer;
-}
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none; width: 16px; height: 16px;
-  border-radius: 50%; background: var(--accent-cyan);
-  box-shadow: 0 0 10px rgba(99,179,237,0.4); cursor: pointer;
-  transition: transform 0.1s ease;
-}
-input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-/* ── Sidebar Panels ──────────────────────────────────────────── */
-.side-panel { margin-bottom: 24px; }
-.side-panel-title {
-  font-family: var(--font-display); font-weight: 700; font-size: 12px;
-  letter-spacing: 0.5px; color: var(--text-primary); margin-bottom: 14px;
-  display: flex; align-items: center; gap: 8px;
-}
-.side-panel-title::before { font-size: 14px; }
-
-/* Progress in section */
-.concept-progress-list { display: flex; flex-direction: column; gap: 8px; }
-.concept-progress-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px; background: var(--bg-surface);
-  border: 1px solid var(--border-dim); border-radius: 8px;
-  font-size: 12px; color: var(--text-secondary); cursor: pointer;
-  transition: var(--transition);
-}
-.concept-progress-item:hover { border-color: var(--border-soft); color: var(--text-primary); }
-.concept-progress-item.done { border-color: rgba(104,211,145,0.2); color: var(--accent-emerald); }
-.concept-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-soft); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
-.concept-check.done { background: rgba(104,211,145,0.15); border-color: var(--accent-emerald); }
-
-/* Cheat sheet */
-.cheatsheet-panel {
-  background: var(--bg-surface); border: 1px solid var(--border-dim);
-  border-radius: var(--radius-md); padding: 16px;
-}
-.cheat-formula { 
-  padding: 10px 0; border-bottom: 1px solid var(--border-dim);
-}
-.cheat-formula:last-child { border-bottom: none; }
-.cheat-name { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-.cheat-eq { background: var(--bg-raised); border-radius: 6px; padding: 8px 12px; text-align: center; font-size: 13px; }
-
-/* Notes panel */
-.notes-textarea {
-  width: 100%; background: var(--bg-surface); border: 1px solid var(--border-dim);
-  border-radius: var(--radius-md); padding: 12px; color: var(--text-primary);
-  font-family: var(--font-body); font-size: 12px; line-height: 1.7;
-  resize: vertical; min-height: 100px; outline: none; transition: var(--transition);
-}
-.notes-textarea:focus { border-color: var(--border-soft); }
-.notes-save-btn {
-  margin-top: 8px; padding: 6px 14px; background: rgba(99,179,237,0.1);
-  border: 1px solid rgba(99,179,237,0.2); border-radius: 6px;
-  font-size: 11px; color: var(--accent-cyan); cursor: pointer;
-  transition: var(--transition); font-family: var(--font-body);
-}
-.notes-save-btn:hover { background: rgba(99,179,237,0.2); }
-
-/* ── Quiz Section ────────────────────────────────────────────── */
-.quiz-section {
-  padding: 48px 60px; border-top: 1px solid var(--border-dim);
-  background: var(--bg-deep);
-}
-.quiz-header { margin-bottom: 32px; }
-.quiz-eyebrow {
-  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--text-muted); margin-bottom: 10px;
-}
-.quiz-title { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 8px; }
-.quiz-subtitle { font-size: 13px; color: var(--text-muted); }
-
-.quiz-card {
-  background: var(--bg-surface); border: 1px solid var(--border-dim);
-  border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px;
-  transition: var(--transition);
-}
-.quiz-q-num { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
-.quiz-q-text { font-size: 15px; color: var(--text-primary); line-height: 1.6; margin-bottom: 20px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.2px; }
-.quiz-options { display: flex; flex-direction: column; gap: 10px; }
-.quiz-option {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px; background: var(--bg-raised);
-  border: 1px solid var(--border-dim); border-radius: var(--radius-md);
-  cursor: pointer; transition: var(--transition); font-size: 13px; color: var(--text-secondary);
-}
-.quiz-option:hover { border-color: var(--border-soft); color: var(--text-primary); background: var(--bg-hover); }
-.quiz-option.selected { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(99,179,237,0.08); }
-.quiz-option.correct { border-color: var(--accent-emerald); color: var(--accent-emerald); background: rgba(104,211,145,0.08); }
-.quiz-option.wrong { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(252,129,129,0.08); }
-.quiz-letter {
-  width: 26px; height: 26px; border-radius: 6px; background: var(--bg-surface);
-  border: 1px solid var(--border-dim); display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-weight: 700; font-size: 12px; flex-shrink: 0;
-  transition: var(--transition);
-}
-.quiz-option.selected .quiz-letter { background: rgba(99,179,237,0.2); border-color: var(--accent-cyan); color: var(--accent-cyan); }
-.quiz-option.correct .quiz-letter { background: rgba(104,211,145,0.2); border-color: var(--accent-emerald); }
-.quiz-option.wrong .quiz-letter { background: rgba(252,129,129,0.2); border-color: var(--accent-rose); }
-
-.quiz-feedback {
-  display: none; margin-top: 14px; padding: 12px 16px;
-  border-radius: var(--radius-md); font-size: 13px; line-height: 1.6;
-}
-.quiz-feedback.show { display: block; animation: fadeIn 0.3s ease; }
-.quiz-feedback.correct-fb { background: rgba(104,211,145,0.08); border: 1px solid rgba(104,211,145,0.2); color: var(--accent-emerald); }
-.quiz-feedback.wrong-fb { background: rgba(252,129,129,0.08); border: 1px solid rgba(252,129,129,0.2); color: var(--accent-rose); }
-
-.quiz-submit-row { display: flex; align-items: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
-.quiz-submit-btn {
-  padding: 12px 28px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
-  border: none; border-radius: var(--radius-md);
-  font-family: var(--font-display); font-weight: 700; font-size: 14px;
-  color: var(--bg-void); cursor: pointer; transition: var(--transition);
-}
-.quiz-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(99,179,237,0.3); }
-.quiz-submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-.quiz-score-display {
-  display: none; font-family: var(--font-display); font-weight: 700;
-  font-size: 16px; color: var(--text-primary);
-}
-.quiz-score-display.show { display: block; animation: fadeIn 0.5s ease; }
-
-/* ── Level Content Visibility ────────────────────────────────── */
-.level-content { display: none; }
-.level-content.visible { display: block; animation: fadeIn 0.4s ease; }
-
-/* ── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 1100px) {
-  .stats-content-area { grid-template-columns: 1fr; }
-  .stats-side-col { border-top: 1px solid var(--border-dim); }
-  .stats-main-col { border-right: none; }
-}
-@media (max-width: 768px) {
-  .stats-hero, .stats-main-col, .quiz-section { padding-left: 24px; padding-right: 24px; }
-  .level-switcher-bar { margin: 24px; }
-  .utility-bar { padding: 12px 24px; }
-}
+  :root { --sec-accent:#5eb8f5; --sec-accent2:#a78bfa; --sec-glow:rgba(94,184,245,.1); }
+  .stats-page { font-family: var(--font-body); }
 </style>
-
-<!-- ═══ STATISTICS & PROBABILITY PAGE ══════════════════════════ -->
 <div class="stats-page">
 
-  <!-- Hero -->
-  <div class="stats-hero">
-    <div class="stats-hero-bg"></div>
-    <div class="stats-hero-grid"></div>
-    <div class="stats-hero-content">
-      <div class="stats-breadcrumb">
-        <span onclick="App.showSection('home')" style="cursor:pointer">Home</span>
-        <span class="stats-breadcrumb-sep">›</span>
-        <span>Statistics & Probability</span>
+<!-- Hero -->
+<div class="sec-hero reveal">
+  <div class="sec-hero-bg"></div>
+  <div class="sec-hero-grid"></div>
+  <div class="sec-hero-content">
+    <div class="sec-breadcrumb">
+      <span>Home</span><span class="sec-breadcrumb-sep">›</span>
+      <span class="sec-breadcrumb-cur">Statistics &amp; Probability</span>
+    </div>
+    <div class="sec-tag"><div class="sec-tag-dot"></div>Module 01 · Foundation</div>
+    <h1 class="sec-title">Statistics &amp;<br><span class="sec-grad">Probability</span></h1>
+    <p class="sec-desc">The language of uncertainty. Master probability, distributions, Bayes' theorem, and expectation — the bedrock of every machine learning model.</p>
+    <div class="sec-meta-row">
+      <span class="sec-pill">📊 4 Concepts</span>
+      <span class="sec-pill">🔬 2 Visualisers</span>
+      <span class="sec-pill">🧩 1 Proof Walker</span>
+      <span class="sec-xp-badge">⚡ +150 XP</span>
+    </div>
+  </div>
+</div>
+
+<div class="sec-body">
+
+  <!-- Concepts -->
+  <div class="sec-section-header reveal">
+    <div><div class="sec-section-title">Core Concepts</div><div class="sec-section-sub">Four ideas that underpin all of data science</div></div>
+    <div class="sec-tag-sm">4 of 4</div>
+  </div>
+  <div class="concepts-grid">
+
+    <div class="concept-card tilt-card reveal">
+      <div class="concept-header">
+        <div class="concept-icon">🎲</div>
+        <div><div class="concept-num">Concept 01</div><div class="concept-name">Probability Axioms</div></div>
       </div>
-      <div class="stats-hero-top">
-        <div class="stats-hero-left">
-          <div class="stats-section-tag">Topic&nbsp;&nbsp;·&nbsp;&nbsp;Statistics & Probability</div>
-          <h1 class="stats-hero-title">The <em>Language</em><br>of Uncertainty</h1>
-          <p class="stats-hero-desc">
-            Before any data scientist touches a model, they need to understand randomness, distributions,
-            and inference. This is the mathematical foundation everything else rests on.
-          </p>
-          <div class="stats-why-ds">
-            <div class="stats-why-label">Why does a data scientist need this?</div>
-            <div class="stats-why-text">
-              Every ML model makes probabilistic predictions. Loss functions are expectations over distributions.
-              Train/test splits assume i.i.d. samples. Confidence intervals, p-values, and Bayesian inference
-              are the daily vocabulary of a practising data scientist. Without this, you're just turning knobs blindly.
-            </div>
-          </div>
-        </div>
-        <div class="stats-hero-meta">
-          <div class="meta-chip"><span class="meta-chip-icon">⏱️</span>~3 hours to complete</div>
-          <div class="meta-chip"><span class="meta-chip-icon">🎯</span>3 depth levels</div>
-          <div class="meta-chip"><span class="meta-chip-icon">📊</span>2 live visualizations</div>
-          <div class="meta-chip"><span class="meta-chip-icon">⭐</span>+150 XP available</div>
-        </div>
+      <div class="concept-body">
+        <div class="concept-desc">Probability formalises uncertainty. The three Kolmogorov axioms define the rules every probability model must follow.</div>
+        <div class="concept-formula">$$P(A) \in [0,1], \quad P(\Omega) = 1, \quad P(A \cup B) = P(A)+P(B)$$</div>
+        <div class="concept-tags-row"><span class="concept-chip">Axioms</span><span class="concept-chip">Sample Space</span><span class="concept-chip">Events</span></div>
+      </div>
+    </div>
+
+    <div class="concept-card tilt-card reveal reveal-delay-1">
+      <div class="concept-header">
+        <div class="concept-icon">🔔</div>
+        <div><div class="concept-num">Concept 02</div><div class="concept-name">Normal Distribution</div></div>
+      </div>
+      <div class="concept-body">
+        <div class="concept-desc">The bell curve appears everywhere in nature and statistics. Defined by mean μ and variance σ², it's central to the CLT.</div>
+        <div class="concept-formula">$$f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$</div>
+        <div class="concept-tags-row"><span class="concept-chip">Gaussian</span><span class="concept-chip">CLT</span><span class="concept-chip">PDF</span></div>
+      </div>
+    </div>
+
+    <div class="concept-card tilt-card reveal reveal-delay-2">
+      <div class="concept-header">
+        <div class="concept-icon">🔄</div>
+        <div><div class="concept-num">Concept 03</div><div class="concept-name">Bayes' Theorem</div></div>
+      </div>
+      <div class="concept-body">
+        <div class="concept-desc">Updating beliefs with evidence. The foundation of Bayesian inference, spam filters, medical diagnosis, and much more.</div>
+        <div class="concept-formula">$$P(A|B) = \frac{P(B|A)\,P(A)}{P(B)}$$</div>
+        <div class="concept-tags-row"><span class="concept-chip">Posterior</span><span class="concept-chip">Likelihood</span><span class="concept-chip">Prior</span></div>
+      </div>
+    </div>
+
+    <div class="concept-card tilt-card reveal reveal-delay-1">
+      <div class="concept-header">
+        <div class="concept-icon">📐</div>
+        <div><div class="concept-num">Concept 04</div><div class="concept-name">Expectation &amp; Variance</div></div>
+      </div>
+      <div class="concept-body">
+        <div class="concept-desc">Expectation is the weighted average; variance measures spread. Together they fully characterise a distribution's shape.</div>
+        <div class="concept-formula">$$E[X]=\sum x\,p(x), \quad \text{Var}(X)=E[(X-\mu)^2]$$</div>
+        <div class="concept-tags-row"><span class="concept-chip">Mean</span><span class="concept-chip">Variance</span><span class="concept-chip">Moments</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Visualiser 1: Normal Distribution -->
+  <div class="sec-section-header reveal">
+    <div><div class="sec-section-title">Interactive Visualiser</div><div class="sec-section-sub">Drag the sliders to reshape the curve</div></div>
+    <div class="sec-tag-sm">Normal Distribution</div>
+  </div>
+  <div class="viz-frame reveal">
+    <div class="viz-toolbar">
+      <div class="viz-traffic"><div class="viz-dot viz-dot-r"></div><div class="viz-dot viz-dot-y"></div><div class="viz-dot viz-dot-g"></div></div>
+      <div class="viz-title">Normal Distribution · PDF Explorer</div>
+    </div>
+    <div class="viz-inner">
+      <svg id="stats-normal-svg" style="width:100%;height:260px;display:block"></svg>
+      <div class="slider-row">
+        <span class="slider-label">Mean μ</span>
+        <input type="range" id="stats-mu" min="-3" max="3" step="0.1" value="0">
+        <span class="slider-val" id="stats-mu-val">0.0</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">Std Dev σ</span>
+        <input type="range" id="stats-sigma" min="0.3" max="2.5" step="0.1" value="1">
+        <span class="slider-val" id="stats-sigma-val">1.0</span>
       </div>
     </div>
   </div>
 
-  <!-- Level Switcher -->
-  <div class="level-switcher-bar">
-    <button class="level-btn beginner active" onclick="StatsSection.setLevel('beginner',this)">
-      <span class="level-dot"></span> Beginner
-    </button>
-    <button class="level-btn intermediate" onclick="StatsSection.setLevel('intermediate',this)">
-      <span class="level-dot"></span> Intermediate
-    </button>
-    <button class="level-btn pro" onclick="StatsSection.setLevel('pro',this)">
-      <span class="level-dot"></span> Pro
-    </button>
+  <!-- Proof Walker: Bayes' Theorem -->
+  <div class="sec-section-header reveal">
+    <div><div class="sec-section-title">Proof Walker</div><div class="sec-section-sub">Step through the derivation of Bayes' Theorem</div></div>
+  </div>
+  <div class="proof-walker reveal" id="stats-proof">
+    <div class="proof-header">
+      <div class="proof-title">🧩 Deriving Bayes' Theorem</div>
+      <div class="proof-counter" id="stats-proof-counter">Step 1 / 5</div>
+    </div>
+    <div class="proof-body">
+      <ol class="proof-steps" id="stats-proof-steps">
+        <li class="proof-step active" data-step="0">
+          <div class="proof-step-num">1</div>
+          <div class="proof-step-content">
+            <div class="proof-step-label">Joint Probability</div>
+            <div class="proof-step-text">The probability of both A and B occurring is the joint probability P(A∩B).</div>
+            <div class="proof-step-formula">$$P(A \cap B) = P(A,B)$$</div>
+          </div>
+        </li>
+        <li class="proof-step" data-step="1">
+          <div class="proof-step-num">2</div>
+          <div class="proof-step-content">
+            <div class="proof-step-label">Chain Rule (two ways)</div>
+            <div class="proof-step-text">We can factor the joint probability using conditional probability in two different orderings.</div>
+            <div class="proof-step-formula">$$P(A,B) = P(A|B)\,P(B) = P(B|A)\,P(A)$$</div>
+          </div>
+        </li>
+        <li class="proof-step" data-step="2">
+          <div class="proof-step-num">3</div>
+          <div class="proof-step-content">
+            <div class="proof-step-label">Set Equal</div>
+            <div class="proof-step-text">Since both expressions equal P(A,B), we can set them equal to each other.</div>
+            <div class="proof-step-formula">$$P(A|B)\,P(B) = P(B|A)\,P(A)$$</div>
+          </div>
+        </li>
+        <li class="proof-step" data-step="3">
+          <div class="proof-step-num">4</div>
+          <div class="proof-step-content">
+            <div class="proof-step-label">Solve for P(A|B)</div>
+            <div class="proof-step-text">Divide both sides by P(B), assuming P(B) > 0, to isolate the posterior.</div>
+            <div class="proof-step-formula">$$P(A|B) = \frac{P(B|A)\,P(A)}{P(B)}$$</div>
+          </div>
+        </li>
+        <li class="proof-step" data-step="4">
+          <div class="proof-step-num">5</div>
+          <div class="proof-step-content">
+            <div class="proof-step-label">Named Components</div>
+            <div class="proof-step-text">This is Bayes' Theorem. P(A|B) is the posterior, P(B|A) the likelihood, P(A) the prior, and P(B) the evidence.</div>
+            <div class="proof-step-formula">$$\underbrace{P(A|B)}_{\text{posterior}} = \frac{\overbrace{P(B|A)}^{\text{likelihood}}\;\overbrace{P(A)}^{\text{prior}}}{\underbrace{P(B)}_{\text{evidence}}}$$</div>
+          </div>
+        </li>
+      </ol>
+    </div>
+    <div class="proof-nav">
+      <button class="proof-btn" id="stats-proof-prev" onclick="StatsProof.prev()" disabled>← Prev</button>
+      <div class="proof-progress-bar"><div class="proof-progress-fill" id="stats-proof-prog" style="width:20%"></div></div>
+      <button class="proof-btn primary" id="stats-proof-next" onclick="StatsProof.next()">Next →</button>
+    </div>
   </div>
 
-  <!-- Utility Bar -->
-  <div class="utility-bar">
-    <button class="util-btn" id="notes-toggle-btn" onclick="StatsSection.toggleNotes()">✏️ My Notes</button>
-    <button class="util-btn" id="cheat-toggle-btn" onclick="StatsSection.toggleCheatSheet()">📋 Cheat Sheet</button>
-    <div class="util-sep"></div>
-    <button class="util-btn" onclick="StatsSection.scrollToQuiz()">🧪 Jump to Quiz</button>
-    <button class="util-btn" onclick="StatsSection.markAllRead()">✅ Mark Complete</button>
+  <!-- Visualiser 2: Bayes Slider -->
+  <div class="viz-frame reveal">
+    <div class="viz-toolbar">
+      <div class="viz-traffic"><div class="viz-dot viz-dot-r"></div><div class="viz-dot viz-dot-y"></div><div class="viz-dot viz-dot-g"></div></div>
+      <div class="viz-title">Bayes' Theorem · Posterior Calculator</div>
+    </div>
+    <div class="viz-inner">
+      <svg id="stats-bayes-svg" style="width:100%;height:200px;display:block"></svg>
+      <div class="slider-row">
+        <span class="slider-label">Prior P(A)</span>
+        <input type="range" id="stats-prior" min="0.01" max="0.99" step="0.01" value="0.3">
+        <span class="slider-val" id="stats-prior-val">0.30</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">Likelihood P(B|A)</span>
+        <input type="range" id="stats-likelihood" min="0.01" max="0.99" step="0.01" value="0.8">
+        <span class="slider-val" id="stats-likelihood-val">0.80</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">P(B|¬A)</span>
+        <input type="range" id="stats-likelihood-n" min="0.01" max="0.99" step="0.01" value="0.2">
+        <span class="slider-val" id="stats-lhn-val">0.20</span>
+      </div>
+      <div style="margin-top:16px;padding:14px;background:rgba(94,184,245,.08);border:1px solid rgba(94,184,245,.2);border-radius:12px;font-family:var(--font-mono);font-size:13px;color:var(--accent-cyan)">
+        Posterior P(A|B) = <span id="stats-posterior-val" style="font-size:20px;font-weight:700">0.63</span>
+      </div>
+    </div>
   </div>
 
-  <!-- Content Area -->
-  <div class="stats-content-area">
+  <!-- Cheat Sheet -->
+  <div class="sec-section-header reveal">
+    <div><div class="sec-section-title">Formula Cheat Sheet</div></div>
+  </div>
+  <div class="cheat-sheet reveal">
+    <div class="cheat-title">📐 Statistics &amp; Probability Reference</div>
+    <div class="cheat-grid">
+      <div class="cheat-item"><div class="cheat-item-label">Conditional Probability</div><div class="cheat-item-formula">$P(A|B) = P(A \cap B) / P(B)$</div></div>
+      <div class="cheat-item"><div class="cheat-item-label">Law of Total Probability</div><div class="cheat-item-formula">$P(B) = \sum_i P(B|A_i)P(A_i)$</div></div>
+      <div class="cheat-item"><div class="cheat-item-label">Expectation (discrete)</div><div class="cheat-item-formula">$E[X] = \sum_x x \cdot p(x)$</div></div>
+      <div class="cheat-item"><div class="cheat-item-label">Variance</div><div class="cheat-item-formula">$\text{Var}(X) = E[X^2] - (E[X])^2$</div></div>
+      <div class="cheat-item"><div class="cheat-item-label">Normal PDF</div><div class="cheat-item-formula">$f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$</div></div>
+      <div class="cheat-item"><div class="cheat-item-label">Standard Score</div><div class="cheat-item-formula">$z = (x - \mu) / \sigma$</div></div>
+    </div>
+  </div>
 
-    <!-- Main Column -->
-    <div class="stats-main-col">
-
-      <!-- ══ CONCEPT 1: What is Probability? ══════════════════ -->
-      <div class="concept-block" id="concept-probability">
-        <div class="concept-num">Concept 01 / 04</div>
-        <div class="concept-title">
-          <span class="concept-title-icon">🎲</span>
-          What is Probability?
-        </div>
-
-        <!-- BEGINNER -->
-        <div class="level-content visible" data-level="beginner">
-          <div class="concept-body">
-            <p>Probability is just a number between <strong>0 and 1</strong> that measures how likely something is to happen. Zero means impossible. One means certain. Everything else falls in between.</p>
-            <p>Think of flipping a fair coin. You can't know in advance whether it'll land heads or tails — but over many flips, heads will come up roughly <strong>half the time</strong>. That "half" is the probability: 0.5.</p>
-          </div>
-          <div class="intuition-box">
-            <div class="intuition-label">💡 Intuition First</div>
-            <div class="intuition-text">Probability is nature's way of being honest about what it doesn't know yet. It's not a flaw in our knowledge — it's a precise mathematical language for describing uncertainty.</div>
-          </div>
-          <div class="ds-box">
-            <div class="ds-box-label">🤖 In Data Science</div>
-            <div class="concept-body">A logistic regression classifier doesn't just say "this email is spam" — it says "this email is spam with probability 0.94." That number is a probability, and knowing how to interpret and calibrate it is fundamental.</div>
-          </div>
-          <button class="math-toggle-btn" onclick="StatsSection.toggleMath(this)">∑ Show me the math</button>
-          <div class="math-reveal">
-            <div class="math-box">
-              <div class="math-box-label">📐 Formal Definition</div>
-              <div class="cheat-eq">$$P(A) = \frac{\text{Number of favourable outcomes}}{\text{Total number of outcomes}}$$</div>
-              <p style="font-size:12px;color:var(--text-secondary);margin-top:10px;">For continuous events, we use integrals: $P(a \leq X \leq b) = \int_a^b f(x)\,dx$ where $f(x)$ is the probability density function.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- INTERMEDIATE -->
-        <div class="level-content" data-level="intermediate">
-          <div class="concept-body">
-            <p>Probability theory is built on three axioms (Kolmogorov, 1933): <strong>non-negativity</strong> $P(A) \geq 0$, <strong>normalisation</strong> $P(\Omega) = 1$, and <strong>additivity</strong> $P(A \cup B) = P(A) + P(B)$ when A and B are mutually exclusive.</p>
-            <p>From these, everything else is derived. <strong>Conditional probability</strong> $P(A|B) = P(A \cap B) / P(B)$ measures the probability of A given we know B has occurred.</p>
-            <p><strong>Independence</strong> means knowing B tells you nothing about A: $P(A|B) = P(A)$, equivalently $P(A \cap B) = P(A)P(B)$. The i.i.d. (independent, identically distributed) assumption in ML relies directly on this.</p>
-          </div>
-          <div class="intuition-box">
-            <div class="intuition-label">💡 Key Insight</div>
-            <div class="intuition-text">Conditional probability is the workhorse of ML. Every time a neural network conditions on input X to predict Y, it's computing P(Y|X). The entire field is essentially learning the best approximation of this conditional distribution.</div>
-          </div>
-          <div class="math-box">
-            <div class="math-box-label">📐 Kolmogorov Axioms</div>
-            <div class="cheat-eq">$$P(A) \geq 0 \quad P(\Omega) = 1 \quad P\!\left(\bigcup_{i} A_i\right) = \sum_i P(A_i)$$</div>
-          </div>
-        </div>
-
-        <!-- PRO -->
-        <div class="level-content" data-level="pro">
-          <div class="concept-body">
-            <p>At the pro level, probability theory becomes measure theory. A <strong>probability space</strong> $(\Omega, \mathcal{F}, P)$ consists of a sample space $\Omega$, a sigma-algebra $\mathcal{F}$ of measurable events, and a probability measure $P: \mathcal{F} \to [0,1]$.</p>
-            <p>The <strong>Radon-Nikodym theorem</strong> formalises the notion of density: if $P \ll \mu$ (P is absolutely continuous w.r.t. $\mu$), there exists an almost-everywhere unique measurable function $f = dP/d\mu$ called the Radon-Nikodym derivative, which generalises the notion of PDF.</p>
-            <p>In deep learning, this underpins <strong>variational inference</strong> — we approximate an intractable posterior $p(z|x)$ by minimising KL divergence, which itself is defined in terms of Radon-Nikodym derivatives.</p>
-          </div>
-          <div class="math-box">
-            <div class="math-box-label">📐 Measure-Theoretic Probability</div>
-            <div class="cheat-eq">$$\text{Probability Space: } (\Omega, \mathcal{F}, P) \quad \text{where } P: \mathcal{F} \to [0,1]$$</div>
-            <div class="cheat-eq" style="margin-top:10px;">$$\text{Radon-Nikodym: } \frac{dP}{d\mu}(x) = f(x) \implies P(A) = \int_A f(x)\,d\mu(x)$$</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ CONCEPT 2: Normal Distribution (with viz) ════════ -->
-      <div class="concept-block" id="concept-normal">
-        <div class="concept-num">Concept 02 / 04</div>
-        <div class="concept-title">
-          <span class="concept-title-icon">📈</span>
-          The Normal Distribution
-        </div>
-
-        <!-- BEGINNER -->
-        <div class="level-content visible" data-level="beginner">
-          <div class="concept-body">
-            <p>The normal distribution — also called the <strong>Gaussian</strong> or "bell curve" — is the single most important distribution in all of statistics. It describes the distribution of countless real-world phenomena: heights, test scores, measurement errors, and most averages you'll ever compute.</p>
-            <p>It's completely described by just two numbers: <strong>μ (mean)</strong> — where the centre of the bell sits — and <strong>σ (standard deviation)</strong> — how wide or narrow the bell is.</p>
-          </div>
-          <div class="intuition-box">
-            <div class="intuition-label">💡 Intuition</div>
-            <div class="intuition-text">Drag the sliders below. Notice how μ slides the whole curve left and right, while σ stretches or squishes it. A small σ means values cluster tightly around the mean. A large σ means high spread — more uncertainty.</div>
-          </div>
-
-          <!-- NORMAL DISTRIBUTION VISUALIZATION -->
-          <div class="viz-container">
-            <div class="viz-header">
-              <div class="viz-title">📈 Normal Distribution — Live</div>
-              <div class="viz-badge">Interactive</div>
-            </div>
-            <svg id="normal-dist-svg" class="viz-canvas" height="240"></svg>
-            <div class="viz-controls">
-              <div class="slider-row">
-                <div class="slider-label">Mean (μ) <span id="mu-val">0</span></div>
-                <input type="range" id="mu-slider" min="-3" max="3" step="0.1" value="0" oninput="NormalViz.update()">
-              </div>
-              <div class="slider-row">
-                <div class="slider-label">Std Dev (σ) <span id="sigma-val">1.0</span></div>
-                <input type="range" id="sigma-slider" min="0.3" max="3" step="0.1" value="1" oninput="NormalViz.update()">
-              </div>
-              <div id="normal-stats" style="display:flex;gap:24px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-top:8px;"></div>
-            </div>
-          </div>
-
-          <div class="ds-box">
-            <div class="ds-box-label">🤖 In Data Science</div>
-            <div class="concept-body">Features are often assumed Gaussian (Gaussian Naive Bayes, LDA). Residuals in linear regression should be approximately normal. Weight initialisations in neural networks often use $\mathcal{N}(0, \sigma^2)$. The normal distribution is everywhere.</div>
-          </div>
-          <button class="math-toggle-btn" onclick="StatsSection.toggleMath(this)">∑ Show me the math</button>
-          <div class="math-reveal">
-            <div class="math-box">
-              <div class="math-box-label">📐 Normal PDF</div>
-              <div class="cheat-eq">$$f(x;\mu,\sigma) = \frac{1}{\sigma\sqrt{2\pi}}\,e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$</div>
-              <p style="font-size:12px;color:var(--text-secondary);margin-top:10px;">The 68-95-99.7 rule: $P(\mu - \sigma \leq X \leq \mu + \sigma) \approx 0.6827$, etc.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- INTERMEDIATE -->
-        <div class="level-content" data-level="intermediate">
-          <div class="concept-body">
-            <p>The <strong>Central Limit Theorem (CLT)</strong> explains why the normal distribution is so ubiquitous: given i.i.d. random variables $X_1, \ldots, X_n$ with mean $\mu$ and variance $\sigma^2$, the standardised sample mean converges in distribution to $\mathcal{N}(0,1)$ as $n \to \infty$.</p>
-            <p>This is remarkable: it doesn't matter what distribution the individual $X_i$'s come from. Averages of many independent quantities are always approximately normal. This justifies using normal-distribution-based tests even on non-normal data, provided the sample size is large enough.</p>
-          </div>
-          <div class="math-box">
-            <div class="math-box-label">📐 Central Limit Theorem</div>
-            <div class="cheat-eq">$$\sqrt{n}\,\frac{\bar{X}_n - \mu}{\sigma} \xrightarrow{d} \mathcal{N}(0,1) \quad \text{as } n \to \infty$$</div>
-          </div>
-          <div class="ds-box">
-            <div class="ds-box-label">🤖 In Data Science</div>
-            <div class="concept-body">The CLT justifies why confidence intervals for model performance metrics (accuracy, AUC) are approximately normally distributed — even when individual predictions are Bernoulli (0 or 1). This underpins statistical hypothesis testing for A/B tests in industry.</div>
-          </div>
-          <div class="viz-container">
-            <div class="viz-header"><div class="viz-title">📈 Normal Distribution — Live</div><div class="viz-badge">Interactive</div></div>
-            <svg id="normal-dist-svg-int" class="viz-canvas" height="240"></svg>
-            <div class="viz-controls">
-              <div class="slider-row"><div class="slider-label">Mean (μ) <span id="mu-val-int">0</span></div>
-                <input type="range" id="mu-slider-int" min="-3" max="3" step="0.1" value="0" oninput="NormalViz.updateById('normal-dist-svg-int','mu-slider-int','sigma-slider-int','mu-val-int','sigma-val-int','normal-stats-int')"></div>
-              <div class="slider-row"><div class="slider-label">Std Dev (σ) <span id="sigma-val-int">1.0</span></div>
-                <input type="range" id="sigma-slider-int" min="0.3" max="3" step="0.1" value="1" oninput="NormalViz.updateById('normal-dist-svg-int','mu-slider-int','sigma-slider-int','mu-val-int','sigma-val-int','normal-stats-int')"></div>
-              <div id="normal-stats-int" style="display:flex;gap:24px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-top:8px;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PRO -->
-        <div class="level-content" data-level="pro">
-          <div class="concept-body">
-            <p>The multivariate normal $\mathbf{x} \sim \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})$ generalises to $d$ dimensions. The covariance matrix $\boldsymbol{\Sigma}$ encodes pairwise linear dependencies. Its eigendecomposition $\boldsymbol{\Sigma} = Q\Lambda Q^T$ reveals the principal axes of the distribution — which is precisely what PCA computes.</p>
-            <p>The <strong>moment generating function</strong> $M_X(t) = \mathbb{E}[e^{tX}] = e^{\mu t + \sigma^2 t^2/2}$ uniquely characterises the normal and makes computing moments trivial via differentiation.</p>
-          </div>
-          <div class="math-box">
-            <div class="math-box-label">📐 Multivariate Normal</div>
-            <div class="cheat-eq">$$f(\mathbf{x}) = \frac{1}{(2\pi)^{d/2}|\boldsymbol{\Sigma}|^{1/2}} \exp\!\left(-\tfrac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^T\boldsymbol{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu})\right)$$</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ CONCEPT 3: Bayes' Theorem (with proof walker) ════ -->
-      <div class="concept-block" id="concept-bayes">
-        <div class="concept-num">Concept 03 / 04</div>
-        <div class="concept-title">
-          <span class="concept-title-icon">🎯</span>
-          Bayes' Theorem
-        </div>
-
-        <div class="level-content visible" data-level="beginner">
-          <div class="concept-body">
-            <p>Bayes' theorem is the most powerful idea in statistics. It tells you how to <strong>update your beliefs</strong> when you see new evidence. You start with a "prior" belief, see some data, and compute an updated "posterior" belief.</p>
-            <p>A classic example: a medical test is 99% accurate. You test positive. What are the chances you're actually sick? Gut feeling says "99%." Bayes says it depends heavily on how rare the disease is — the <strong>prior probability</strong>. If only 1 in 1000 people have the disease, even a positive test likely means you're fine.</p>
-          </div>
-          <div class="intuition-box">
-            <div class="intuition-label">💡 The Formula in Plain English</div>
-            <div class="intuition-text">Posterior = (How likely the evidence if hypothesis is true) × (Prior belief) ÷ (How likely the evidence overall)</div>
-          </div>
-
-          <!-- PROOF WALKER: Bayes Derivation -->
-          <div class="proof-walker">
-            <div class="proof-title">🧩 Proof Walker: Deriving Bayes' Theorem</div>
-            <div class="proof-steps-track">
-              <div class="proof-step active" data-step="0">
-                <div class="proof-step-num">Step 1 of 4</div>
-                <div class="proof-step-title">Start with the definition of conditional probability</div>
-                <div class="proof-step-body">We know how to write the conditional probability of A given B has occurred:</div>
-                <div class="proof-step-eq">$$P(A|B) = \frac{P(A \cap B)}{P(B)}$$</div>
-                <div class="proof-step-body" style="font-size:12px;color:var(--text-muted);">This is our starting point. It simply says: the probability of A given B is the fraction of B's probability that overlaps with A.</div>
-              </div>
-              <div class="proof-step" data-step="1">
-                <div class="proof-step-num">Step 2 of 4</div>
-                <div class="proof-step-title">Write the same for the reverse direction</div>
-                <div class="proof-step-body">By the exact same logic, we can write P(B|A):</div>
-                <div class="proof-step-eq">$$P(B|A) = \frac{P(A \cap B)}{P(A)}$$</div>
-                <div class="proof-step-body" style="font-size:12px;color:var(--text-muted);">Notice that $P(A \cap B)$ appears in both — the intersection of A and B is the same regardless of which way we look at it. This is the key link.</div>
-              </div>
-              <div class="proof-step" data-step="2">
-                <div class="proof-step-num">Step 3 of 4</div>
-                <div class="proof-step-title">Solve for the shared term P(A ∩ B)</div>
-                <div class="proof-step-body">Rearrange both equations to isolate $P(A \cap B)$:</div>
-                <div class="proof-step-eq">$$P(A \cap B) = P(A|B)\cdot P(B) = P(B|A)\cdot P(A)$$</div>
-                <div class="proof-step-body" style="font-size:12px;color:var(--text-muted);">Setting these equal gives us the core relationship. We're almost there.</div>
-              </div>
-              <div class="proof-step" data-step="3">
-                <div class="proof-step-num">Step 4 of 4 ✓</div>
-                <div class="proof-step-title">Rearrange to get Bayes' Theorem</div>
-                <div class="proof-step-body">Divide both sides by P(B) to isolate P(A|B):</div>
-                <div class="proof-step-eq">$$\boxed{P(A|B) = \frac{P(B|A)\cdot P(A)}{P(B)}}$$</div>
-                <div class="proof-step-body" style="font-size:12px;color:var(--text-muted);">Done! In ML terms: <strong>Posterior = Likelihood × Prior / Evidence</strong>. This is the entire foundation of Bayesian inference.</div>
-              </div>
-            </div>
-            <div class="proof-nav">
-              <button class="proof-nav-btn" id="proof-prev" onclick="StatsSection.proofStep(-1)" disabled>← Back</button>
-              <button class="proof-nav-btn" id="proof-next" onclick="StatsSection.proofStep(1)">Next →</button>
-              <div class="proof-progress-dots" id="proof-dots">
-                <div class="proof-dot active" onclick="StatsSection.proofGoTo(0)"></div>
-                <div class="proof-dot" onclick="StatsSection.proofGoTo(1)"></div>
-                <div class="proof-dot" onclick="StatsSection.proofGoTo(2)"></div>
-                <div class="proof-dot" onclick="StatsSection.proofGoTo(3)"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- BAYES VISUALIZER -->
-          <div class="viz-container">
-            <div class="viz-header">
-              <div class="viz-title">🎯 Bayes' Theorem — Disease Test Visualizer</div>
-              <div class="viz-badge">Interactive</div>
-            </div>
-            <svg id="bayes-svg" class="viz-canvas" height="200"></svg>
-            <div class="viz-controls">
-              <div class="slider-row">
-                <div class="slider-label">Disease Prevalence (Prior) <span id="prev-val">1%</span></div>
-                <input type="range" id="prev-slider" min="0.1" max="30" step="0.1" value="1" oninput="BayesViz.update()">
-              </div>
-              <div class="slider-row">
-                <div class="slider-label">Test Sensitivity (True Positive Rate) <span id="sens-val">99%</span></div>
-                <input type="range" id="sens-slider" min="50" max="99.9" step="0.1" value="99" oninput="BayesViz.update()">
-              </div>
-              <div id="bayes-result" style="margin-top:14px;padding:14px;background:var(--bg-raised);border-radius:10px;font-size:13px;color:var(--text-secondary);"></div>
-            </div>
-          </div>
-
-          <div class="ds-box">
-            <div class="ds-box-label">🤖 In Data Science</div>
-            <div class="concept-body">Naive Bayes classifiers, Bayesian hyperparameter optimisation, Gaussian processes, and variational autoencoders all build directly on Bayes' theorem. The entire field of Bayesian deep learning uses it to quantify model uncertainty — essential for real-world deployment.</div>
-          </div>
-        </div>
-
-        <!-- INTERMEDIATE -->
-        <div class="level-content" data-level="intermediate">
-          <div class="concept-body">
-            <p><strong>Bayesian inference</strong> treats model parameters $\theta$ as random variables. We start with a prior $p(\theta)$, observe data $\mathcal{D}$, and update using the likelihood $p(\mathcal{D}|\theta)$:</p>
-          </div>
-          <div class="math-box">
-            <div class="math-box-label">📐 Bayesian Inference</div>
-            <div class="cheat-eq">$$p(\theta|\mathcal{D}) = \frac{p(\mathcal{D}|\theta)\,p(\theta)}{p(\mathcal{D})} \propto p(\mathcal{D}|\theta)\,p(\theta)$$</div>
-          </div>
-          <div class="concept-body">
-            <p>The denominator $p(\mathcal{D}) = \int p(\mathcal{D}|\theta)p(\theta)d\theta$ is the marginal likelihood or "evidence" — often intractable for complex models. This is why variational inference (ELBO) and MCMC sampling exist.</p>
-          </div>
-          <div class="intuition-box">
-            <div class="intuition-label">💡 Conjugate Priors</div>
-            <div class="intuition-text">When prior and posterior have the same functional form, the prior is called "conjugate." E.g., Beta prior + Bernoulli likelihood = Beta posterior. This gives closed-form updates — no integration needed. Used extensively in online learning and Thompson sampling for bandit algorithms.</div>
-          </div>
-        </div>
-
-        <!-- PRO -->
-        <div class="level-content" data-level="pro">
-          <div class="concept-body">
-            <p><strong>Variational Bayes</strong> approximates the intractable posterior $p(\theta|\mathcal{D})$ by finding a distribution $q(\theta) \in \mathcal{Q}$ minimising $\text{KL}(q\|p)$. This is equivalent to maximising the Evidence Lower Bound (ELBO):</p>
-          </div>
-          <div class="math-box">
-            <div class="math-box-label">📐 ELBO Derivation</div>
-            <div class="cheat-eq">$$\log p(\mathcal{D}) = \mathbb{E}_q[\log p(\mathcal{D},\theta)] - \mathbb{E}_q[\log q(\theta)] + \text{KL}(q\|p)$$</div>
-            <div class="cheat-eq" style="margin-top:10px;">$$\mathcal{L}(q) = \underbrace{\mathbb{E}_q[\log p(\mathcal{D}|\theta)]}_{\text{reconstruction}} - \underbrace{\text{KL}(q(\theta)\|p(\theta))}_{\text{regularisation}}$$</div>
-          </div>
-          <div class="concept-body"><p>This is the VAE objective. The reparameterisation trick $\theta = \mu + \sigma\epsilon$, $\epsilon \sim \mathcal{N}(0,I)$ makes it differentiable w.r.t. $\mu, \sigma$, enabling backpropagation through the stochastic latent variable.</p></div>
-        </div>
-      </div>
-
-      <!-- ══ CONCEPT 4: Expectation & Variance ════════════════ -->
-      <div class="concept-block" id="concept-ev">
-        <div class="concept-num">Concept 04 / 04</div>
-        <div class="concept-title">
-          <span class="concept-title-icon">⚖️</span>
-          Expectation & Variance
-        </div>
-
-        <div class="level-content visible" data-level="beginner">
-          <div class="concept-body">
-            <p>The <strong>expected value</strong> (or mean) $\mathbb{E}[X]$ is the long-run average of a random variable. If you repeat an experiment infinitely many times, the average outcome converges to the expectation.</p>
-            <p>The <strong>variance</strong> $\text{Var}(X)$ measures spread — how far values typically deviate from the mean. Its square root is the standard deviation σ, which is in the same units as X.</p>
-          </div>
-          <div class="intuition-box">
-            <div class="intuition-label">💡 Intuition</div>
-            <div class="intuition-text">Two data scientists both predict a test score of 75. One always predicts exactly 75 (zero variance). The other's predictions vary wildly between 50 and 100. Same expectation, wildly different variance — and wildly different reliability.</div>
-          </div>
-          <button class="math-toggle-btn" onclick="StatsSection.toggleMath(this)">∑ Show me the math</button>
-          <div class="math-reveal">
-            <div class="math-box">
-              <div class="math-box-label">📐 Expectation & Variance</div>
-              <div class="cheat-eq">$$\mathbb{E}[X] = \sum_x x\,P(X=x) \quad \text{(discrete)}$$</div>
-              <div class="cheat-eq" style="margin-top:10px;">$$\mathbb{E}[X] = \int_{-\infty}^{\infty} x\,f(x)\,dx \quad \text{(continuous)}$$</div>
-              <div class="cheat-eq" style="margin-top:10px;">$$\text{Var}(X) = \mathbb{E}[(X-\mu)^2] = \mathbb{E}[X^2] - (\mathbb{E}[X])^2$$</div>
-            </div>
-          </div>
-          <div class="ds-box">
-            <div class="ds-box-label">🤖 In Data Science</div>
-            <div class="concept-body">The mean squared error loss is $\mathbb{E}[(y - \hat{y})^2]$. Batch normalisation normalises activations by their mean and variance. The bias-variance tradeoff describes the tension between $\mathbb{E}[\hat{f}(x)]$ and $\text{Var}(\hat{f}(x))$ — two quantities that determine your model's generalisation error.</div>
-          </div>
-        </div>
-
-        <!-- INTERMEDIATE -->
-        <div class="level-content" data-level="intermediate">
-          <div class="concept-body">
-            <p><strong>Linearity of expectation</strong>: $\mathbb{E}[aX + bY] = a\mathbb{E}[X] + b\mathbb{E}[Y]$ — even if X and Y are dependent. This is one of the most useful facts in probability.</p>
-            <p>For variance: $\text{Var}(aX + bY) = a^2\text{Var}(X) + b^2\text{Var}(Y) + 2ab\,\text{Cov}(X,Y)$. The covariance term disappears only when X and Y are uncorrelated.</p>
-            <p>The <strong>bias-variance decomposition</strong> splits expected prediction error into irreducible noise, squared bias, and variance — formalising the tradeoff between underfitting and overfitting.</p>
-          </div>
-          <div class="math-box">
-            <div class="math-box-label">📐 Bias-Variance Decomposition</div>
-            <div class="cheat-eq">$$\mathbb{E}[(y - \hat{f})^2] = \underbrace{\text{Bias}^2(\hat{f})}_{\text{underfitting}} + \underbrace{\text{Var}(\hat{f})}_{\text{overfitting}} + \underbrace{\sigma^2_\epsilon}_{\text{irreducible}}$$</div>
-          </div>
-        </div>
-
-        <!-- PRO -->
-        <div class="level-content" data-level="pro">
-          <div class="concept-body">
-            <p><strong>Concentration inequalities</strong> bound how far a random variable can deviate from its expectation with high probability. Markov's inequality gives a loose bound; Chebyshev tightens it using variance; Hoeffding (for bounded RVs) and Chernoff (for exponential moments) give exponentially tight bounds.</p>
-            <p>These are the backbone of PAC learning theory — they bound generalisation error as a function of sample size $n$ and hypothesis class complexity (VC dimension, Rademacher complexity).</p>
-          </div>
-          <div class="math-box">
-            <div class="math-box-label">📐 Hoeffding's Inequality</div>
-            <div class="cheat-eq">$$P\!\left(\bar{X} - \mu \geq t\right) \leq \exp\!\left(-\frac{2n^2t^2}{\sum_{i=1}^n(b_i-a_i)^2}\right)$$</div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /stats-main-col -->
-
-    <!-- Sidebar -->
-    <div class="stats-side-col">
-
-      <!-- Section Progress -->
-      <div class="side-panel">
-        <div class="side-panel-title" style="--before-content:'📍'">Section Progress</div>
-        <div class="concept-progress-list">
-          <div class="concept-progress-item" id="prog-1" onclick="document.getElementById('concept-probability').scrollIntoView({behavior:'smooth'})">
-            <div class="concept-check" id="check-1">1</div>
-            <span>What is Probability?</span>
-          </div>
-          <div class="concept-progress-item" id="prog-2" onclick="document.getElementById('concept-normal').scrollIntoView({behavior:'smooth'})">
-            <div class="concept-check" id="check-2">2</div>
-            <span>Normal Distribution</span>
-          </div>
-          <div class="concept-progress-item" id="prog-3" onclick="document.getElementById('concept-bayes').scrollIntoView({behavior:'smooth'})">
-            <div class="concept-check" id="check-3">3</div>
-            <span>Bayes' Theorem</span>
-          </div>
-          <div class="concept-progress-item" id="prog-4" onclick="document.getElementById('concept-ev').scrollIntoView({behavior:'smooth'})">
-            <div class="concept-check" id="check-4">4</div>
-            <span>Expectation & Variance</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Cheat Sheet (hidden by default) -->
-      <div class="side-panel" id="cheatsheet-panel" style="display:none">
-        <div class="side-panel-title">📋 Formula Cheat Sheet</div>
-        <div class="cheatsheet-panel">
-          <div class="cheat-formula">
-            <div class="cheat-name">Probability</div>
-            <div class="cheat-eq">$P(A) = \frac{|A|}{|\Omega|}$</div>
-          </div>
-          <div class="cheat-formula">
-            <div class="cheat-name">Conditional Prob</div>
-            <div class="cheat-eq">$P(A|B) = \frac{P(A \cap B)}{P(B)}$</div>
-          </div>
-          <div class="cheat-formula">
-            <div class="cheat-name">Bayes' Theorem</div>
-            <div class="cheat-eq">$P(A|B) = \frac{P(B|A)P(A)}{P(B)}$</div>
-          </div>
-          <div class="cheat-formula">
-            <div class="cheat-name">Normal PDF</div>
-            <div class="cheat-eq">$\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}$</div>
-          </div>
-          <div class="cheat-formula">
-            <div class="cheat-name">Expectation</div>
-            <div class="cheat-eq">$\mathbb{E}[X] = \int x\,f(x)\,dx$</div>
-          </div>
-          <div class="cheat-formula">
-            <div class="cheat-name">Variance</div>
-            <div class="cheat-eq">$\mathbb{E}[X^2] - (\mathbb{E}[X])^2$</div>
-          </div>
-          <div class="cheat-formula">
-            <div class="cheat-name">CLT</div>
-            <div class="cheat-eq">$\sqrt{n}\frac{\bar{X}-\mu}{\sigma} \to \mathcal{N}(0,1)$</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Notes -->
-      <div class="side-panel" id="notes-panel" style="display:none">
-        <div class="side-panel-title">✏️ My Notes</div>
-        <textarea class="notes-textarea" id="stats-notes" placeholder="Jot your notes here... They're saved automatically."></textarea>
-        <button class="notes-save-btn" onclick="StatsSection.saveNote()">💾 Save Note</button>
-        <div id="notes-saved-msg" style="font-size:11px;color:var(--accent-emerald);margin-top:6px;display:none;">✓ Saved!</div>
-      </div>
-
-      <!-- Key Terms -->
-      <div class="side-panel" style="margin-top:8px;">
-        <div class="side-panel-title">🔑 Key Terms</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="background:var(--bg-surface);border:1px solid var(--border-dim);border-radius:8px;padding:10px 12px;">
-            <div style="font-size:11px;color:var(--accent-cyan);font-family:var(--font-display);font-weight:700;margin-bottom:3px;">i.i.d.</div>
-            <div style="font-size:11px;color:var(--text-muted);">Independent and identically distributed — the core assumption behind most ML models.</div>
-          </div>
-          <div style="background:var(--bg-surface);border:1px solid var(--border-dim);border-radius:8px;padding:10px 12px;">
-            <div style="font-size:11px;color:var(--accent-violet);font-family:var(--font-display);font-weight:700;margin-bottom:3px;">Posterior</div>
-            <div style="font-size:11px;color:var(--text-muted);">Updated belief after seeing evidence. The goal of Bayesian inference.</div>
-          </div>
-          <div style="background:var(--bg-surface);border:1px solid var(--border-dim);border-radius:8px;padding:10px 12px;">
-            <div style="font-size:11px;color:var(--accent-emerald);font-family:var(--font-display);font-weight:700;margin-bottom:3px;">Likelihood</div>
-            <div style="font-size:11px;color:var(--text-muted);">$P(\text{data}|\theta)$ — how probable the data is given a model parameter.</div>
-          </div>
-          <div style="background:var(--bg-surface);border:1px solid var(--border-dim);border-radius:8px;padding:10px 12px;">
-            <div style="font-size:11px;color:var(--accent-amber);font-family:var(--font-display);font-weight:700;margin-bottom:3px;">CLT</div>
-            <div style="font-size:11px;color:var(--text-muted);">Central Limit Theorem — sample means are approximately normal for large n.</div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /stats-side-col -->
-  </div><!-- /stats-content-area -->
-
-  <!-- ═══ QUIZ ════════════════════════════════════════════════ -->
-  <div class="quiz-section" id="stats-quiz-section">
+  <!-- Quiz -->
+  <div class="sec-section-header reveal">
+    <div><div class="sec-section-title">Knowledge Check</div><div class="sec-section-sub">Score ≥ 3/5 to unlock Linear Algebra</div></div>
+  </div>
+  <div class="quiz-panel reveal" id="stats-quiz">
     <div class="quiz-header">
-      <div class="quiz-eyebrow">Knowledge Check</div>
-      <div class="quiz-title">Statistics & Probability Quiz</div>
-      <div class="quiz-subtitle">5 questions · Complete to earn +150 XP and unlock Linear Algebra</div>
+      <div class="quiz-title">📝 Statistics Quiz</div>
+      <div class="quiz-badge">+150 XP</div>
     </div>
-
-    <!-- Q1 -->
-    <div class="quiz-card" id="qcard-1">
-      <div class="quiz-q-num">Question 1 of 5</div>
-      <div class="quiz-q-text">A model predicts "90% chance of rain." This prediction is an example of what mathematical concept?</div>
-      <div class="quiz-options">
-        <div class="quiz-option" onclick="Quiz.select(1,this,'A')"><div class="quiz-letter">A</div>Deterministic output</div>
-        <div class="quiz-option" onclick="Quiz.select(1,this,'B')"><div class="quiz-letter">B</div>A probability estimate — a number between 0 and 1 representing likelihood</div>
-        <div class="quiz-option" onclick="Quiz.select(1,this,'C')"><div class="quiz-letter">C</div>A percentage with no mathematical meaning</div>
-        <div class="quiz-option" onclick="Quiz.select(1,this,'D')"><div class="quiz-letter">D</div>The variance of the weather distribution</div>
+    <div class="quiz-body" id="stats-quiz-body">
+      <div class="quiz-q-counter" id="stats-qcounter">Question 1 of 5</div>
+      <div class="quiz-question" id="stats-question">What does P(Ω) equal by Kolmogorov's axioms?</div>
+      <div class="quiz-options" id="stats-options">
+        <button class="quiz-opt" onclick="StatsQuiz.select(this,0)"><span class="quiz-opt-letter">A</span>0</button>
+        <button class="quiz-opt" onclick="StatsQuiz.select(this,1)"><span class="quiz-opt-letter">B</span>0.5</button>
+        <button class="quiz-opt" onclick="StatsQuiz.select(this,2)"><span class="quiz-opt-letter">C</span>1</button>
+        <button class="quiz-opt" onclick="StatsQuiz.select(this,3)"><span class="quiz-opt-letter">D</span>∞</button>
       </div>
-      <div class="quiz-feedback correct-fb" id="qfb-1">✅ Correct! The model is outputting a probability — a calibrated measure of uncertainty about a future event.</div>
-      <div class="quiz-feedback wrong-fb" id="qfb-1w" style="display:none;">❌ Not quite. The prediction is a probability (B) — a precise mathematical measure of how likely an event is, ranging from 0 (impossible) to 1 (certain).</div>
-    </div>
-
-    <!-- Q2 -->
-    <div class="quiz-card" id="qcard-2">
-      <div class="quiz-q-num">Question 2 of 5</div>
-      <div class="quiz-q-text">You have a normal distribution with μ=0 and σ=2. Roughly what percentage of values fall between -2 and +2?</div>
-      <div class="quiz-options">
-        <div class="quiz-option" onclick="Quiz.select(2,this,'A')"><div class="quiz-letter">A</div>~50%</div>
-        <div class="quiz-option" onclick="Quiz.select(2,this,'B')"><div class="quiz-letter">B</div>~68%</div>
-        <div class="quiz-option" onclick="Quiz.select(2,this,'C')"><div class="quiz-letter">C</div>~95%</div>
-        <div class="quiz-option" onclick="Quiz.select(2,this,'D')"><div class="quiz-letter">D</div>~99.7%</div>
+      <div class="quiz-feedback" id="stats-feedback"></div>
+      <div class="quiz-footer">
+        <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="stats-quiz-prog" style="width:20%"></div></div>
+        <button class="quiz-nav-btn" id="stats-quiz-next" onclick="StatsQuiz.next()" style="display:none">Next →</button>
       </div>
-      <div class="quiz-feedback correct-fb" id="qfb-2">✅ Correct! Since σ=2, the range [-2, +2] is exactly ±1σ from the mean. By the 68-95-99.7 rule, ~68% of data falls within 1 standard deviation.</div>
-      <div class="quiz-feedback wrong-fb" id="qfb-2w" style="display:none;">❌ Not quite. Since σ=2, the range [-2, +2] spans ±1σ. By the empirical rule, ~68% of values lie within ±1 standard deviation of the mean.</div>
-    </div>
-
-    <!-- Q3 -->
-    <div class="quiz-card" id="qcard-3">
-      <div class="quiz-q-num">Question 3 of 5</div>
-      <div class="quiz-q-text">In Bayes' Theorem P(A|B) = P(B|A)·P(A)/P(B), what is P(A) called?</div>
-      <div class="quiz-options">
-        <div class="quiz-option" onclick="Quiz.select(3,this,'A')"><div class="quiz-letter">A</div>The posterior probability</div>
-        <div class="quiz-option" onclick="Quiz.select(3,this,'B')"><div class="quiz-letter">B</div>The likelihood</div>
-        <div class="quiz-option" onclick="Quiz.select(3,this,'C')"><div class="quiz-letter">C</div>The prior probability</div>
-        <div class="quiz-option" onclick="Quiz.select(3,this,'D')"><div class="quiz-letter">D</div>The evidence</div>
-      </div>
-      <div class="quiz-feedback correct-fb" id="qfb-3">✅ Correct! P(A) is the prior — our belief about A before observing any evidence B. It represents what we knew before.</div>
-      <div class="quiz-feedback wrong-fb" id="qfb-3w" style="display:none;">❌ Close! P(A) is the prior (C) — our initial belief before seeing evidence. P(A|B) is the posterior, P(B|A) is the likelihood, and P(B) is the evidence (normalising constant).</div>
-    </div>
-
-    <!-- Q4 -->
-    <div class="quiz-card" id="qcard-4">
-      <div class="quiz-q-num">Question 4 of 5</div>
-      <div class="quiz-q-text">The Central Limit Theorem says that as sample size n increases, the distribution of sample means approaches which distribution?</div>
-      <div class="quiz-options">
-        <div class="quiz-option" onclick="Quiz.select(4,this,'A')"><div class="quiz-letter">A</div>The same distribution as the underlying data</div>
-        <div class="quiz-option" onclick="Quiz.select(4,this,'B')"><div class="quiz-letter">B</div>A uniform distribution</div>
-        <div class="quiz-option" onclick="Quiz.select(4,this,'C')"><div class="quiz-letter">C</div>A normal (Gaussian) distribution</div>
-        <div class="quiz-option" onclick="Quiz.select(4,this,'D')"><div class="quiz-letter">D</div>An exponential distribution</div>
-      </div>
-      <div class="quiz-feedback correct-fb" id="qfb-4">✅ Exactly right! The CLT is remarkable: regardless of the original distribution, sample means always converge to a normal distribution. This is why Gaussian assumptions work so broadly.</div>
-      <div class="quiz-feedback wrong-fb" id="qfb-4w" style="display:none;">❌ The correct answer is (C). The CLT states that sample means converge to a normal distribution as n grows — regardless of the original data's distribution. This is one of the most powerful results in statistics.</div>
-    </div>
-
-    <!-- Q5 -->
-    <div class="quiz-card" id="qcard-5">
-      <div class="quiz-q-num">Question 5 of 5</div>
-      <div class="quiz-q-text">A model has high bias and low variance. Which of the following best describes it?</div>
-      <div class="quiz-options">
-        <div class="quiz-option" onclick="Quiz.select(5,this,'A')"><div class="quiz-letter">A</div>Overfitting — it memorised the training data</div>
-        <div class="quiz-option" onclick="Quiz.select(5,this,'B')"><div class="quiz-letter">B</div>Underfitting — it's too simple to capture the underlying pattern</div>
-        <div class="quiz-option" onclick="Quiz.select(5,this,'C')"><div class="quiz-letter">C</div>Perfectly calibrated — high bias always means good performance</div>
-        <div class="quiz-option" onclick="Quiz.select(5,this,'D')"><div class="quiz-letter">D</div>A Bayesian model — prior probability is high</div>
-      </div>
-      <div class="quiz-feedback correct-fb" id="qfb-5">✅ Perfect! High bias = the model is systematically wrong (underfitting). Low variance = it's consistent, just consistently wrong. A linear model on highly nonlinear data is the classic example.</div>
-      <div class="quiz-feedback wrong-fb" id="qfb-5w" style="display:none;">❌ High bias means the model is systematically missing patterns in the data — underfitting (B). Overfitting would be high variance, low bias. The bias-variance tradeoff is central to ML generalisation theory.</div>
-    </div>
-
-    <div class="quiz-submit-row">
-      <button class="quiz-submit-btn" id="quiz-submit-btn" onclick="Quiz.submit()" disabled>Check Answers</button>
-      <div class="quiz-score-display" id="quiz-score"></div>
     </div>
   </div>
 
+  <!-- Notes -->
+  <div class="notes-panel reveal">
+    <div class="notes-header">
+      <div class="notes-title">📝 My Notes</div>
+      <span class="notes-saved" id="stats-notes-saved">Saved ✓</span>
+      <button class="notes-save-btn" onclick="StatsNotes.save()">Save</button>
+    </div>
+    <textarea class="notes-ta" id="stats-notes-ta" placeholder="Write your notes, questions, or key insights here…"></textarea>
+  </div>
+
+  <!-- Nav -->
+  <div class="sec-nav-row reveal">
+    <a class="sec-nav-btn next" onclick="App.showSection('linear-algebra')" href="#">
+      <div class="sec-nav-arrow">→</div>
+      <div><div class="sec-nav-label">Next Module</div><div class="sec-nav-name">Linear Algebra</div></div>
+    </a>
+  </div>
+
+</div><!-- /sec-body -->
 </div><!-- /stats-page -->
 
-<!-- ═══ JAVASCRIPT FOR THIS SECTION ════════════════════════════ -->
 <script>
-// ── Stats Section Controller ──────────────────────────────────
-const StatsSection = {
-  currentLevel: 'beginner',
-  proofCurrentStep: 0,
-  proofTotalSteps: 4,
-  notesOpen: false,
-  cheatOpen: false,
+// ── Normal Distribution Visualiser ───────────────────────────
+(function() {
+  const svg = d3.select('#stats-normal-svg');
+  const W = () => document.getElementById('stats-normal-svg').clientWidth || 600;
+  const H = 260, M = {t:20,r:20,b:40,l:44};
+  let mu = 0, sigma = 1;
 
-  setLevel(level, btn) {
-    this.currentLevel = level;
-    // Update button states
-    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    // Show/hide content
-    document.querySelectorAll('.level-content').forEach(el => {
-      el.classList.remove('visible');
-      if (el.dataset.level === level) el.classList.add('visible');
-    });
-    // Re-render math
-    if (typeof renderMathInElement !== 'undefined') {
-      setTimeout(() => renderMathInElement(document.getElementById('section-statistics'), {
-        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
-      }), 100);
-    }
-    // Re-render vizzes
-    setTimeout(() => {
-      NormalViz.init();
-      BayesViz.init();
-    }, 150);
-  },
+  function normal(x, m, s) { return Math.exp(-0.5*((x-m)/s)**2) / (s*Math.sqrt(2*Math.PI)); }
 
-  toggleMath(btn) {
-    const reveal = btn.nextElementSibling;
-    reveal.classList.toggle('visible');
-    btn.textContent = reveal.classList.contains('visible') ? '∑ Hide math' : '∑ Show me the math';
-    if (reveal.classList.contains('visible') && typeof renderMathInElement !== 'undefined') {
-      setTimeout(() => renderMathInElement(reveal, {
-        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
-      }), 50);
-    }
-  },
-
-  proofStep(dir) {
-    const next = this.proofCurrentStep + dir;
-    if (next < 0 || next >= this.proofTotalSteps) return;
-    this.proofGoTo(next);
-  },
-
-  proofGoTo(idx) {
-    // Hide all steps
-    document.querySelectorAll('.proof-step').forEach(s => s.classList.remove('active'));
-    // Show target
-    const steps = document.querySelectorAll('.proof-step');
-    if (steps[idx]) steps[idx].classList.add('active');
-    this.proofCurrentStep = idx;
-    // Update dots
-    const dots = document.querySelectorAll('.proof-dot');
-    dots.forEach((d, i) => {
-      d.classList.remove('active', 'done');
-      if (i === idx) d.classList.add('active');
-      else if (i < idx) d.classList.add('done');
-    });
-    // Update buttons
-    const prev = document.getElementById('proof-prev');
-    const next = document.getElementById('proof-next');
-    if (prev) prev.disabled = idx === 0;
-    if (next) {
-      next.disabled = idx >= this.proofTotalSteps - 1;
-      next.textContent = idx >= this.proofTotalSteps - 1 ? '✓ Done!' : 'Next →';
-    }
-    // Render KaTeX in the step
-    if (typeof renderMathInElement !== 'undefined') {
-      setTimeout(() => renderMathInElement(steps[idx], {
-        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
-      }), 50);
-    }
-  },
-
-  toggleNotes() {
-    this.notesOpen = !this.notesOpen;
-    const panel = document.getElementById('notes-panel');
-    const btn = document.getElementById('notes-toggle-btn');
-    if (panel) panel.style.display = this.notesOpen ? 'block' : 'none';
-    if (btn) btn.classList.toggle('active', this.notesOpen);
-    // Load saved note
-    if (this.notesOpen) {
-      const saved = localStorage.getItem('stats-notes');
-      const ta = document.getElementById('stats-notes');
-      if (saved && ta) ta.value = saved;
-    }
-  },
-
-  toggleCheatSheet() {
-    this.cheatOpen = !this.cheatOpen;
-    const panel = document.getElementById('cheatsheet-panel');
-    const btn = document.getElementById('cheat-toggle-btn');
-    if (panel) panel.style.display = this.cheatOpen ? 'block' : 'none';
-    if (btn) btn.classList.toggle('active', this.cheatOpen);
-    if (this.cheatOpen && typeof renderMathInElement !== 'undefined') {
-      setTimeout(() => renderMathInElement(panel, {
-        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
-      }), 50);
-    }
-  },
-
-  saveNote() {
-    const ta = document.getElementById('stats-notes');
-    if (ta) {
-      if(typeof Persistence!=='undefined')Persistence.saveNote('statistics',ta.value);else localStorage.setItem('stats-notes',ta.value);
-      const msg = document.getElementById('notes-saved-msg');
-      if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 2000); }
-    }
-  },
-
-  scrollToQuiz() {
-    const q = document.getElementById('stats-quiz-section');
-    if (q) q.scrollIntoView({ behavior: 'smooth' });
-  },
-
-  markAllRead() {
-    [1,2,3,4].forEach(i => {
-      const check = document.getElementById('check-' + i);
-      const prog  = document.getElementById('prog-' + i);
-      if (check) { check.classList.add('done'); check.textContent = '✓'; }
-      if (prog)  prog.classList.add('done');
-    });
-    if (typeof App !== 'undefined') App.showToast('✅ All concepts marked complete!');
-    if (typeof Persistence !== 'undefined') Persistence.markCompleted('statistics');
-  }
-};
-
-// ── Normal Distribution Visualizer ───────────────────────────
-const NormalViz = {
-  init() {
-    this.updateById('normal-dist-svg','mu-slider','sigma-slider','mu-val','sigma-val','normal-stats');
-    this.updateById('normal-dist-svg-int','mu-slider-int','sigma-slider-int','mu-val-int','sigma-val-int','normal-stats-int');
-  },
-
-  updateById(svgId, muId, sigId, muValId, sigValId, statsId) {
-    const svgEl  = document.getElementById(svgId);
-    if (!svgEl || typeof d3 === 'undefined') return;
-
-    const muSlider  = document.getElementById(muId);
-    const sigSlider = document.getElementById(sigId);
-    if (!muSlider || !sigSlider) return;
-
-    const mu    = parseFloat(muSlider.value);
-    const sigma = parseFloat(sigSlider.value);
-
-    const muValEl  = document.getElementById(muValId);
-    const sigValEl = document.getElementById(sigValId);
-    if (muValEl)  muValEl.textContent  = mu.toFixed(1);
-    if (sigValEl) sigValEl.textContent = sigma.toFixed(1);
-
-    const W  = svgEl.parentElement.clientWidth || 600;
-    const H  = 240;
-    const mg = { top: 20, right: 24, bottom: 36, left: 44 };
-    const iW = W - mg.left - mg.right;
-    const iH = H - mg.top - mg.bottom;
-
-    const svg = d3.select('#' + svgId);
+  function draw() {
+    const w = W(); svg.attr('width', w).attr('height', H);
     svg.selectAll('*').remove();
-    svg.attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
+    const iW = w - M.l - M.r, iH = H - M.t - M.b;
+    const xDom = [mu-4*Math.max(sigma,0.5), mu+4*Math.max(sigma,0.5)];
+    const xS = d3.scaleLinear().domain(xDom).range([0, iW]);
+    const data = d3.range(xDom[0], xDom[1], (xDom[1]-xDom[0])/300).map(x => ({x, y: normal(x, mu, sigma)}));
+    const yS = d3.scaleLinear().domain([0, d3.max(data, d => d.y)*1.15]).range([iH, 0]);
+    const g = svg.append('g').attr('transform',`translate(${M.l},${M.t})`);
 
-    const g = svg.append('g').attr('transform', `translate(${mg.left},${mg.top})`);
+    // Grid
+    g.append('g').attr('class','grid').call(d3.axisLeft(yS).ticks(4).tickSize(-iW).tickFormat('')).call(g=>g.select('.domain').remove()).call(g=>g.selectAll('line').attr('stroke','rgba(255,255,255,0.04)'));
 
-    // Scales
-    const xRange = [mu - 4*sigma, mu + 4*sigma];
-    const xScale = d3.scaleLinear().domain(xRange).range([0, iW]);
-    const normalPDF = (x, m, s) => Math.exp(-0.5*((x-m)/s)**2) / (s * Math.sqrt(2*Math.PI));
-    const maxY = normalPDF(mu, mu, sigma) * 1.15;
-    const yScale = d3.scaleLinear().domain([0, maxY]).range([iH, 0]);
+    // Fill
+    const area = d3.area().x(d=>xS(d.x)).y0(iH).y1(d=>yS(d.y)).curve(d3.curveBasis);
+    g.append('path').datum(data).attr('d',area).attr('fill','rgba(94,184,245,0.12)');
 
-    // Data
-    const pts = d3.range(xRange[0], xRange[1], (xRange[1]-xRange[0])/300)
-      .map(x => ({ x, y: normalPDF(x, mu, sigma) }));
-
-    // Gradient fill
-    const defs = svg.append('defs');
-    const grad = defs.append('linearGradient').attr('id', `ng-${svgId}`).attr('x1','0%').attr('y1','0%').attr('x2','0%').attr('y2','100%');
-    grad.append('stop').attr('offset','0%').attr('stop-color','#63b3ed').attr('stop-opacity', 0.35);
-    grad.append('stop').attr('offset','100%').attr('stop-color','#63b3ed').attr('stop-opacity', 0.03);
-
-    // 1σ fill
-    const sigma1Pts = pts.filter(d => d.x >= mu - sigma && d.x <= mu + sigma);
-    const area1 = d3.area().x(d => xScale(d.x)).y0(iH).y1(d => yScale(d.y)).curve(d3.curveBasis);
-    g.append('path').datum(sigma1Pts).attr('fill', 'rgba(99,179,237,0.12)').attr('d', area1);
-
-    // Curve fill
-    const areaFn = d3.area().x(d => xScale(d.x)).y0(iH).y1(d => yScale(d.y)).curve(d3.curveBasis);
-    g.append('path').datum(pts).attr('fill', `url(#ng-${svgId})`).attr('d', areaFn);
-
-    // Curve line
-    const lineFn = d3.line().x(d => xScale(d.x)).y(d => yScale(d.y)).curve(d3.curveBasis);
-    const path = g.append('path').datum(pts).attr('fill','none')
-      .attr('stroke','#63b3ed').attr('stroke-width',2.5).attr('d', lineFn);
-    const totalLen = path.node().getTotalLength();
-    path.attr('stroke-dasharray', totalLen).attr('stroke-dashoffset', totalLen)
-      .transition().duration(700).ease(d3.easeQuadOut).attr('stroke-dashoffset', 0);
+    // Line
+    const line = d3.line().x(d=>xS(d.x)).y(d=>yS(d.y)).curve(d3.curveBasis);
+    g.append('path').datum(data).attr('d',line).attr('fill','none').attr('stroke','#5eb8f5').attr('stroke-width',2.5).attr('filter','drop-shadow(0 0 6px #5eb8f5)');
 
     // Mean line
-    g.append('line')
-      .attr('x1', xScale(mu)).attr('x2', xScale(mu))
-      .attr('y1', iH).attr('y2', yScale(normalPDF(mu,mu,sigma)))
-      .attr('stroke', '#f6ad55').attr('stroke-width', 1.5).attr('stroke-dasharray','4,3').attr('opacity', 0.7);
-    g.append('text')
-      .attr('x', xScale(mu)).attr('y', -6)
-      .attr('text-anchor','middle').attr('font-size','10px').attr('fill','#f6ad55').text(`μ=${mu.toFixed(1)}`);
+    g.append('line').attr('x1',xS(mu)).attr('x2',xS(mu)).attr('y1',0).attr('y2',iH).attr('stroke','rgba(94,184,245,0.5)').attr('stroke-dasharray','4,4').attr('stroke-width',1.5);
+    g.append('text').attr('x',xS(mu)+6).attr('y',16).attr('fill','#5eb8f5').attr('font-size',11).attr('font-family','JetBrains Mono,monospace').text(`μ=${mu.toFixed(1)}`);
 
     // Axes
-    const xAxis = d3.axisBottom(xScale).ticks(6).tickFormat(d3.format('.1f'));
-    g.append('g').attr('transform', `translate(0,${iH})`).call(xAxis)
-      .call(ax => { ax.select('.domain').attr('stroke','rgba(99,179,237,0.15)'); ax.selectAll('text').attr('fill','#4a5568').attr('font-size','10px'); ax.selectAll('line').attr('stroke','rgba(99,179,237,0.1)'); });
-    const yAxis = d3.axisLeft(yScale).ticks(4).tickFormat(d3.format('.2f'));
-    g.append('g').call(yAxis)
-      .call(ax => { ax.select('.domain').attr('stroke','rgba(99,179,237,0.15)'); ax.selectAll('text').attr('fill','#4a5568').attr('font-size','10px'); ax.selectAll('line').attr('stroke','rgba(99,179,237,0.1)'); });
-
-    // Stats display
-    const statsEl = document.getElementById(statsId);
-    if (statsEl) {
-      const prob68 = (0.6827 * 100).toFixed(1);
-      statsEl.innerHTML = `
-        <span style="color:var(--accent-cyan)">μ = ${mu.toFixed(2)}</span>
-        <span style="color:var(--text-muted)">σ = ${sigma.toFixed(2)}</span>
-        <span style="color:var(--text-muted)">σ² = ${(sigma*sigma).toFixed(2)}</span>
-        <span style="color:rgba(99,179,237,0.6)">P(μ±σ) ≈ 68.3%</span>
-      `;
-    }
-  },
-
-  update() {
-    this.updateById('normal-dist-svg','mu-slider','sigma-slider','mu-val','sigma-val','normal-stats');
-    this.updateById('normal-dist-svg-int','mu-slider-int','sigma-slider-int','mu-val-int','sigma-val-int','normal-stats-int');
+    g.append('g').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xS).ticks(6)).call(g=>g.select('.domain').attr('stroke','rgba(255,255,255,0.1)')).call(g=>g.selectAll('text').attr('fill','#7c8db5').attr('font-size',10));
+    g.append('g').call(d3.axisLeft(yS).ticks(4)).call(g=>g.select('.domain').attr('stroke','rgba(255,255,255,0.1)')).call(g=>g.selectAll('text').attr('fill','#7c8db5').attr('font-size',10));
   }
-};
 
-// ── Bayes Visualizer ──────────────────────────────────────────
-const BayesViz = {
-  init() { this.update(); },
+  draw();
+  window.addEventListener('resize', draw);
 
-  update() {
-    const prevSlider = document.getElementById('prev-slider');
-    const sensSlider = document.getElementById('sens-slider');
-    if (!prevSlider || !sensSlider) return;
-
-    const prevalence = parseFloat(prevSlider.value) / 100;
-    const sensitivity = parseFloat(sensSlider.value) / 100;
-    const specificity = 0.99; // fixed false positive rate
-    const fpr = 1 - specificity;
-
-    document.getElementById('prev-val').textContent = (prevalence*100).toFixed(1) + '%';
-    document.getElementById('sens-val').textContent = (sensitivity*100).toFixed(1) + '%';
-
-    // Bayes calculation
-    const pPositiveGivenSick  = sensitivity;
-    const pPositiveGivenWell  = fpr;
-    const pSick  = prevalence;
-    const pWell  = 1 - prevalence;
-    const pPositive = pPositiveGivenSick*pSick + pPositiveGivenWell*pWell;
-    const posterior = (pPositiveGivenSick * pSick) / pPositive;
-
-    // SVG: simple population grid
-    const svgEl = document.getElementById('bayes-svg');
-    if (!svgEl || typeof d3 === 'undefined') return;
-
-    const W = svgEl.parentElement.clientWidth || 600;
-    const H = 200;
-    const svg = d3.select('#bayes-svg');
-    svg.selectAll('*').remove();
-    svg.attr('viewBox', `0 0 ${W} ${H}`).attr('width','100%');
-
-    // Draw a population of 200 dots
-    const total = 200;
-    const rows = 10, cols = 20;
-    const dotR = Math.min((W/2 - 40) / (cols*2.4), 8);
-    const sick = Math.round(prevalence * total);
-    const truePos = Math.round(sick * sensitivity);
-    const falsePos = Math.round((total - sick) * fpr);
-
-    const dots = d3.range(total).map(i => ({
-      sick: i < sick,
-      row: Math.floor(i / cols),
-      col: i % cols,
-    }));
-
-    const gLeft = svg.append('g').attr('transform', `translate(20, 20)`);
-    const dotSpacing = dotR * 2.4;
-
-    dots.forEach((d, i) => {
-      const tested = d.sick ? i < truePos : (i - sick) < falsePos;
-      gLeft.append('circle')
-        .attr('cx', d.col * dotSpacing + dotR)
-        .attr('cy', d.row * dotSpacing + dotR)
-        .attr('r', dotR * 0.75)
-        .attr('fill', d.sick ? '#fc8181' : '#4a5568')
-        .attr('stroke', tested ? '#f6e05e' : 'none')
-        .attr('stroke-width', 1.5)
-        .attr('opacity', 0)
-        .transition().delay(i*4).duration(300).attr('opacity', 0.85);
-    });
-
-    // Legend
-    const lgx = W/2 + 20, lgy = 20;
-    const items = [
-      { col:'#fc8181', label:'Has disease' },
-      { col:'#4a5568', label:'Healthy' },
-      { col:'#f6e05e', label:'Tests positive (yellow ring)' },
-    ];
-    items.forEach((it, i) => {
-      svg.append('circle').attr('cx', lgx+8).attr('cy', lgy+i*22+6).attr('r', 6).attr('fill', it.col);
-      svg.append('text').attr('x', lgx+22).attr('y', lgy+i*22+11).attr('fill','#8899b0').attr('font-size','11px').text(it.label);
-    });
-
-    // Result
-    const color = posterior > 0.5 ? '#fc8181' : '#68d391';
-    const resultEl = document.getElementById('bayes-result');
-    if (resultEl) {
-      resultEl.innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center;">
-          <div>
-            <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Posterior Probability</div>
-            <div style="font-family:var(--font-display);font-weight:800;font-size:28px;color:${color};">${(posterior*100).toFixed(1)}%</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">chance of actually being sick<br>given a positive test</div>
-          </div>
-          <div style="font-size:12px;color:var(--text-muted);line-height:1.8;">
-            <div>Prior P(sick) = <strong style="color:var(--text-primary)">${(prevalence*100).toFixed(1)}%</strong></div>
-            <div>True positives = <strong style="color:#fc8181">${truePos}</strong></div>
-            <div>False positives = <strong style="color:#f6ad55">${falsePos}</strong></div>
-            <div>P(sick|positive) = <strong style="color:${color}">${(posterior*100).toFixed(1)}%</strong></div>
-          </div>
-        </div>
-        <div style="margin-top:10px;padding:8px 12px;background:rgba(246,173,85,0.07);border-radius:6px;font-size:11px;color:var(--text-muted);">
-          💡 Try setting prevalence to 0.1% and watch how even a 99% accurate test is mostly wrong — this is the <strong style="color:var(--accent-amber)">base rate fallacy</strong>, a classic reasoning error in medicine and ML.
-        </div>
-      `;
-    }
-  }
-};
-
-// ── Quiz Engine ───────────────────────────────────────────────
-const Quiz = {
-  answers: { 1:'B', 2:'B', 3:'C', 4:'C', 5:'B' },
-  selected: {},
-
-  select(qNum, el, letter) {
-    // Clear previous selection for this question
-    const card = document.getElementById('qcard-' + qNum);
-    card.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    this.selected[qNum] = letter;
-    // Enable submit if all answered
-    const btn = document.getElementById('quiz-submit-btn');
-    if (btn && Object.keys(this.selected).length === 5) btn.disabled = false;
-  },
-
-  submit() {
-    let score = 0;
-    for (let q = 1; q <= 5; q++) {
-      const userAns = this.selected[q];
-      const correct = this.answers[q];
-      const card = document.getElementById('qcard-' + q);
-      const options = card.querySelectorAll('.quiz-option');
-      const letters = ['A','B','C','D'];
-      options.forEach((opt, i) => {
-        if (letters[i] === correct) opt.classList.add('correct');
-        else if (letters[i] === userAns && userAns !== correct) opt.classList.add('wrong');
-      });
-      const fb    = document.getElementById('qfb-' + q);
-      const fbw   = document.getElementById('qfb-' + q + 'w');
-      if (userAns === correct) {
-        score++;
-        if (fb) fb.classList.add('show');
-      } else {
-        if (fbw) fbw.style.display = 'block';
-        if (fbw) fbw.classList.add('show');
-      }
-    }
-
-    // Show score
-    const scoreEl = document.getElementById('quiz-score');
-    const xpEarned = score * 30;
-    const pct = (score/5*100).toFixed(0);
-    const emoji = score === 5 ? '🏆' : score >= 3 ? '⭐' : '📚';
-    if (scoreEl) {
-      scoreEl.classList.add('show');
-      scoreEl.innerHTML = `${emoji} ${score}/5 correct — +${xpEarned} XP earned`;
-    }
-
-    // Disable submit
-    const btn = document.getElementById('quiz-submit-btn');
-    if (btn) btn.disabled = true;
-
-    // Award XP, unlock next
-    if (typeof App !== 'undefined') {
-      App.addXP(xpEarned);
-      if (score >= 3) {
-        if (typeof Persistence !== 'undefined') {
-          Persistence.saveQuizScore('statistics', score, 5);
-          Persistence.markCompleted('statistics');
-        }
-        setTimeout(() => {
-          App.showToast('🎉 Statistics complete! Linear Algebra unlocked!');
-          // Unlock linear algebra in nav
-          const laNav = document.querySelector('[data-nav="linear-algebra"]');
-          if (laNav) { laNav.classList.remove('locked'); const badge = laNav.querySelector('.nav-badge'); if (badge) { badge.textContent = 'NEW'; badge.classList.add('now'); } }
-          App.progress = 20;
-          App.initProgress();
-          if (typeof Persistence !== 'undefined') Persistence.saveProgress(20);
-        }, 1000);
-      }
-    }
-  }
-};
-
-// ── Init when section loads ───────────────────────────────────
-(function initStats() {
-  // Wait for D3 and KaTeX
-  const tryInit = () => {
-    if (typeof d3 === 'undefined') { setTimeout(tryInit, 200); return; }
-    NormalViz.init();
-    BayesViz.init();
-    // Render math
-    if (typeof renderMathInElement !== 'undefined') {
-      renderMathInElement(document.getElementById('section-statistics') || document.body, {
-        delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
-      });
-    }
-    // Load saved notes
-    const ta = document.getElementById('stats-notes');
-    if (ta) ta.value = (typeof Persistence !== 'undefined') ? Persistence.loadNote('statistics') : (localStorage.getItem('stats-notes') || '');
-  };
-  setTimeout(tryInit, 300);
+  document.getElementById('stats-mu').addEventListener('input', function() {
+    mu = +this.value; document.getElementById('stats-mu-val').textContent = mu.toFixed(1); draw();
+  });
+  document.getElementById('stats-sigma').addEventListener('input', function() {
+    sigma = +this.value; document.getElementById('stats-sigma-val').textContent = sigma.toFixed(1); draw();
+  });
 })();
+
+// ── Bayes Visualiser ─────────────────────────────────────────
+(function() {
+  function updateBayes() {
+    const prior = +document.getElementById('stats-prior').value;
+    const lk    = +document.getElementById('stats-likelihood').value;
+    const lkn   = +document.getElementById('stats-likelihood-n').value;
+    document.getElementById('stats-prior-val').textContent = prior.toFixed(2);
+    document.getElementById('stats-likelihood-val').textContent = lk.toFixed(2);
+    document.getElementById('stats-lhn-val').textContent = lkn.toFixed(2);
+    const pb = lk*prior + lkn*(1-prior);
+    const post = (lk * prior) / pb;
+    document.getElementById('stats-posterior-val').textContent = post.toFixed(3);
+    drawBayes(prior, post, pb);
+  }
+
+  function drawBayes(prior, post, pb) {
+    const svg = d3.select('#stats-bayes-svg');
+    const W = document.getElementById('stats-bayes-svg').clientWidth || 600;
+    const H = 200; svg.attr('width',W).attr('height',H);
+    svg.selectAll('*').remove();
+    const g = svg.append('g').attr('transform','translate(40,20)');
+    const iW = W-80, iH = 140;
+    const bars = [
+      {label:'Prior P(A)', val: prior, col:'#a78bfa'},
+      {label:'Evidence P(B)', val: pb,    col:'#5eb8f5'},
+      {label:'Posterior P(A|B)', val: post,  col:'#34d399'},
+    ];
+    const xS = d3.scaleBand().domain(bars.map(b=>b.label)).range([0,iW]).padding(0.35);
+    const yS = d3.scaleLinear().domain([0,1]).range([iH,0]);
+    bars.forEach(b => {
+      g.append('rect').attr('x',xS(b.label)).attr('y',yS(b.val)).attr('width',xS.bandwidth()).attr('height',iH-yS(b.val)).attr('fill',b.col).attr('opacity',0.7).attr('rx',6);
+      g.append('text').attr('x',xS(b.label)+xS.bandwidth()/2).attr('y',yS(b.val)-6).attr('text-anchor','middle').attr('fill',b.col).attr('font-size',12).attr('font-family','JetBrains Mono,monospace').text(b.val.toFixed(2));
+      g.append('text').attr('x',xS(b.label)+xS.bandwidth()/2).attr('y',iH+16).attr('text-anchor','middle').attr('fill','#7c8db5').attr('font-size',10).text(b.label);
+    });
+  }
+
+  ['stats-prior','stats-likelihood','stats-likelihood-n'].forEach(id => document.getElementById(id).addEventListener('input', updateBayes));
+  updateBayes();
+})();
+
+// ── Proof Walker ─────────────────────────────────────────────
+const StatsProof = {
+  step: 0, total: 5,
+  steps: document.querySelectorAll('#stats-proof-steps .proof-step'),
+  next() {
+    if (this.step < this.total-1) {
+      this.steps[this.step].classList.remove('active');
+      this.steps[this.step].classList.add('done');
+      this.step++;
+      this.steps[this.step].classList.add('active');
+      this.render();
+    }
+  },
+  prev() {
+    if (this.step > 0) {
+      this.steps[this.step].classList.remove('active');
+      this.step--;
+      this.steps[this.step].classList.remove('done');
+      this.steps[this.step].classList.add('active');
+      this.render();
+    }
+  },
+  render() {
+    document.getElementById('stats-proof-counter').textContent = `Step ${this.step+1} / ${this.total}`;
+    document.getElementById('stats-proof-prog').style.width = ((this.step+1)/this.total*100)+'%';
+    document.getElementById('stats-proof-prev').disabled = this.step === 0;
+    const nxt = document.getElementById('stats-proof-next');
+    nxt.disabled = this.step === this.total-1;
+    nxt.textContent = this.step === this.total-2 ? 'Finish ✓' : 'Next →';
+    if (window.renderMathInElement) renderMathInElement(document.getElementById('stats-proof'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+  }
+};
+
+// ── Quiz ─────────────────────────────────────────────────────
+const StatsQuiz = {
+  qi: 0,
+  score: 0,
+  selected: null,
+  answered: false,
+  qs: [
+    { q:'What does P(Ω) equal by Kolmogorov\'s axioms?', opts:['0','0.5','1','∞'], ans:2, exp:'P(Ω)=1 is the normalisation axiom — the probability of the entire sample space is 1.' },
+    { q:'In Bayes\' theorem, P(A|B) is called the:', opts:['Prior','Likelihood','Posterior','Evidence'], ans:2, exp:'P(A|B) is the posterior — our updated belief about A after observing B.' },
+    { q:'If X ~ N(0,1), what is E[X]?', opts:['0','1','-1','Undefined'], ans:0, exp:'The standard normal has mean μ=0 by definition.' },
+    { q:'Var(X) = E[X²] − (E[X])². This is known as:', opts:['Bayes\' rule','König\'s identity','The CLT','Kolmogorov axiom'], ans:1, exp:'König\'s identity (or the computational formula for variance) states Var(X) = E[X²] − μ².' },
+    { q:'The 68-95-99.7 rule says ≈68% of data lies within:', opts:['1σ','2σ','3σ','0.5σ'], ans:0, exp:'~68% of normally distributed data falls within 1 standard deviation of the mean.' },
+  ],
+
+  select(btn, i) {
+    if (this.answered) return;
+    this.selected = i;
+    document.querySelectorAll('#stats-options .quiz-opt').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    this.answered = true;
+    const q = this.qs[this.qi];
+    const fb = document.getElementById('stats-feedback');
+    if (i === q.ans) {
+      this.score++;
+      btn.classList.add('correct');
+      fb.textContent = '✅ Correct! ' + q.exp;
+      fb.className = 'quiz-feedback show correct';
+    } else {
+      btn.classList.add('wrong');
+      document.querySelectorAll('#stats-options .quiz-opt')[q.ans].classList.add('correct');
+      fb.textContent = '❌ Not quite. ' + q.exp;
+      fb.className = 'quiz-feedback show wrong';
+    }
+    document.getElementById('stats-quiz-next').style.display = 'block';
+    if (window.renderMathInElement) renderMathInElement(fb, {delimiters:[{left:'$',right:'$',display:false}]});
+  },
+
+  next() {
+    this.qi++;
+    if (this.qi >= this.qs.length) { this.finish(); return; }
+    this.answered = false; this.selected = null;
+    const q = this.qs[this.qi];
+    document.getElementById('stats-question').textContent = q.q;
+    document.getElementById('stats-qcounter').textContent = `Question ${this.qi+1} of ${this.qs.length}`;
+    document.getElementById('stats-quiz-prog').style.width = ((this.qi+1)/this.qs.length*100)+'%';
+    const letters = ['A','B','C','D'];
+    const optsEl = document.getElementById('stats-options');
+    optsEl.innerHTML = q.opts.map((o,i) => `<button class="quiz-opt" onclick="StatsQuiz.select(this,${i})"><span class="quiz-opt-letter">${letters[i]}</span>${o}</button>`).join('');
+    document.getElementById('stats-feedback').className = 'quiz-feedback';
+    document.getElementById('stats-quiz-next').style.display = 'none';
+  },
+
+  finish() {
+    Persistence.saveQuizScore('statistics', this.score, this.qs.length);
+    const pct = Math.round(this.score/this.qs.length*100);
+    const passed = this.score >= 3;
+    if (passed) {
+      App.unlockSection('statistics');
+      App.setProgress(20);
+      App.addXP(150, null, 300);
+    }
+    document.getElementById('stats-quiz-body').innerHTML = `
+      <div class="quiz-result">
+        <div class="quiz-result-score" style="color:${passed?'var(--accent-emerald)':'var(--accent-rose)'}">${this.score}/${this.qs.length}</div>
+        <div class="quiz-result-label">${pct}% · ${passed?'Passed! 🎉':'Keep studying and try again'}</div>
+        ${passed?`<div class="quiz-result-unlock">🔓 Linear Algebra has been unlocked!</div>`:''}
+        <button class="quiz-nav-btn" style="margin-top:20px" onclick="location.reload()">Retry Quiz</button>
+      </div>`;
+  },
+
+  init() {
+    const saved = Persistence.loadQuizScores();
+    if (saved['statistics'] && saved['statistics'].score >= 3) {
+      document.getElementById('stats-quiz-body').innerHTML = `<div class="quiz-result"><div class="quiz-result-score" style="color:var(--accent-emerald)">${saved['statistics'].score}/${saved['statistics'].total}</div><div class="quiz-result-label">Already completed ✅</div><button class="quiz-nav-btn" style="margin-top:20px" onclick="location.reload()">Retake</button></div>`;
+    }
+  }
+};
+StatsQuiz.init();
+
+// ── Notes ─────────────────────────────────────────────────────
+const StatsNotes = {
+  save() {
+    const txt = document.getElementById('stats-notes-ta').value;
+    Persistence.saveNote('statistics', txt);
+    const s = document.getElementById('stats-notes-saved');
+    s.classList.add('show');
+    setTimeout(() => s.classList.remove('show'), 1800);
+  },
+  load() {
+    const n = Persistence.loadNote('statistics');
+    if (n) document.getElementById('stats-notes-ta').value = n;
+  }
+};
+StatsNotes.load();
+
+// Re-init tilt cards in this section
+setTimeout(() => { if (typeof Tilt !== 'undefined') Tilt.init(); if (typeof ScrollReveal !== 'undefined') ScrollReveal.refresh(); }, 200);
 </script>

@@ -3,557 +3,257 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DS Math — Mohit's Learning Universe</title>
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/sections.css">
-
-  <!-- KaTeX -->
+  <title>DS Math — Deep Space Observatory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
-    onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
-
-  <!-- D3 -->
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-
-
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sections.css">
   <style>
-    /* Roadmap node spin animations */
-    @keyframes spin-cw  { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
-    @keyframes spin-ccw { from { transform: rotate(0deg); }   to { transform: rotate(-360deg); } }
-    @keyframes dash { to { stroke-dashoffset: 0; } }
-
-    /* Feature cards */
-    .feature-strip {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 16px;
-      padding: 0 60px 60px;
-    }
-    .feature-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-dim);
-      border-radius: var(--radius-md);
-      padding: 22px;
-      transition: var(--transition);
-    }
-    .feature-card:hover {
-      border-color: var(--border-soft);
-      transform: translateY(-2px);
-    }
-    .feature-icon { font-size: 24px; margin-bottom: 12px; display: block; }
-    .feature-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 6px; color: var(--text-primary); }
-    .feature-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
-
-    /* Topic cards */
-    .topics-section { padding: 0 60px 60px; }
-    .topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-
-    .topic-card { --card-color: var(--accent-cyan); }
-    .topic-card-1 { --card-color: #63b3ed; }
-    .topic-card-2 { --card-color: #9f7aea; }
-    .topic-card-3 { --card-color: #68d391; }
-    .topic-card-4 { --card-color: #f6ad55; }
-    .topic-card-5 { --card-color: #fc8181; }
-
-    .topic-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-dim);
-      border-radius: var(--radius-lg);
-      padding: 28px;
-      cursor: pointer;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
-    }
-    .topic-card::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, var(--card-color), transparent 60%);
-      opacity: 0.05; transition: var(--transition);
-    }
-    .topic-card:hover { border-color: var(--card-color); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-    .topic-card:hover::before { opacity: 0.1; }
-    .topic-card.is-locked { opacity: 0.5; cursor: not-allowed; }
-    .topic-card.is-locked:hover { transform: none; box-shadow: none; }
-
-    .topic-icon { font-size: 34px; margin-bottom: 16px; display: block; }
-    .topic-num { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-    .topic-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; color: var(--text-primary); margin-bottom: 10px; }
-    .topic-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
-    .topic-footer { display: flex; align-items: center; justify-content: space-between; }
-    .topic-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-    .pill { font-size: 10px; padding: 3px 8px; border-radius: 10px; background: var(--bg-raised); color: var(--text-muted); }
-    .topic-status { font-size: 11px; font-family: 'Syne', sans-serif; font-weight: 600; }
-    .status-open { color: var(--accent-cyan); }
-    .status-locked { color: var(--text-muted); }
-
-    /* What you'll learn */
-    .learn-section { padding: 0 60px 60px; }
-    .learn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
-    .learn-col-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .learn-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .learn-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--text-secondary); }
-    .learn-list li::before { content: '→'; color: var(--accent-cyan); flex-shrink: 0; font-family: 'Syne', sans-serif; }
-
-    /* Viz preview cards */
-    .viz-section { padding: 0 60px 60px; }
-    .viz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 16px; }
-    .viz-preview {
-      background: var(--bg-surface); border: 1px solid var(--border-dim);
-      border-radius: var(--radius-md); padding: 20px; text-align: center;
-      cursor: pointer; transition: var(--transition);
-    }
-    .viz-preview:hover { border-color: var(--border-soft); transform: translateY(-2px); }
-    .viz-thumb { font-size: 36px; margin-bottom: 10px; display: block; }
-    .viz-name { font-size: 12px; font-family: 'Syne', sans-serif; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-    .viz-topic { font-size: 10px; color: var(--text-muted); }
-
-    /* Section dividers */
-    .section-sep { padding: 0 60px; margin-bottom: 36px; }
-    .section-sep-inner { display: flex; align-items: center; gap: 16px; }
-    .sep-line { flex: 1; height: 1px; background: var(--border-dim); }
-    .sep-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
-
-    /* Placeholder sections */
-    .placeholder-section { display: flex; align-items: center; justify-content: center; min-height: 60vh; flex-direction: column; gap: 20px; text-align: center; padding: 40px; }
-    .placeholder-icon { font-size: 64px; margin-bottom: 8px; }
-    .placeholder-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 28px; letter-spacing: -0.5px; color: var(--text-primary); }
-    .placeholder-sub { color: var(--text-muted); font-size: 14px; max-width: 400px; line-height: 1.7; }
-    .coming-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(246,173,85,0.1); border: 1px solid rgba(246,173,85,0.3); border-radius: 20px; padding: 6px 16px; font-size: 11px; color: var(--accent-amber); letter-spacing: 1px; }
-
-    @media (max-width: 900px) {
-      .feature-strip, .topics-section, .learn-section, .viz-section, .section-sep { padding-left: 24px; padding-right: 24px; }
-      .learn-grid { grid-template-columns: 1fr; }
-    }
+    .home-page{min-height:100vh}
+    .hero-grid-lines{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(94,184,245,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(94,184,245,0.04) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 75%)}
+    .hero-deco{position:absolute;pointer-events:none;font-family:var(--font-mono);font-size:14px;color:rgba(94,184,245,0.1);user-select:none}
+    .cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:40px}
+    .btn-primary{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-violet));color:var(--bg-void);font-family:var(--font-display);font-weight:700;font-size:14px;padding:13px 28px;border-radius:30px;border:none;cursor:none;transition:var(--transition-spring);letter-spacing:.3px;box-shadow:0 4px 20px rgba(94,184,245,.3)}
+    .btn-primary:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 8px 40px rgba(94,184,245,.4)}
+    .btn-ghost{display:inline-flex;align-items:center;gap:10px;background:transparent;color:var(--text-secondary);font-family:var(--font-display);font-weight:600;font-size:14px;padding:12px 24px;border-radius:30px;border:1px solid var(--border-soft);cursor:none;transition:var(--transition)}
+    .btn-ghost:hover{color:var(--text-primary);border-color:var(--accent-cyan);background:rgba(94,184,245,.05)}
+    .topics-section{padding:60px}
+    .topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:32px}
+    .topic-card{--col:var(--accent-cyan);background:var(--bg-glass);border:var(--glass-border);border-radius:var(--radius-xl);padding:28px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);cursor:none;transition:var(--transition-spring);position:relative;overflow:hidden;box-shadow:var(--glass-shadow)}
+    .topic-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(94,184,245,.08),transparent 60%);opacity:0;transition:opacity .4s}
+    .topic-card:hover::before{opacity:1}
+    .topic-card:hover{transform:translateY(-6px) scale(1.01);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px var(--col) inset}
+    .topic-card.is-locked{opacity:.45;cursor:not-allowed}
+    .topic-card.is-locked:hover{transform:none;box-shadow:var(--glass-shadow)}
+    .topic-num{position:absolute;top:20px;right:24px;font-family:var(--font-display);font-weight:900;font-size:64px;color:rgba(255,255,255,.03);line-height:1;user-select:none;letter-spacing:-4px}
+    .topic-icon{font-size:32px;margin-bottom:16px;display:block}
+    .topic-name{font-family:var(--font-display);font-weight:800;font-size:18px;letter-spacing:-.5px;color:var(--text-primary);margin-bottom:8px}
+    .topic-desc{font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px}
+    .topic-tags{display:flex;gap:6px;flex-wrap:wrap}
+    .topic-tag{font-family:var(--font-mono);font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.04);color:var(--text-muted);border:1px solid var(--border-dim)}
+    .topic-status{font-family:var(--font-mono);font-size:10px;padding:4px 10px;border-radius:12px;letter-spacing:.5px;background:rgba(94,184,245,.1);color:var(--accent-cyan);border:1px solid rgba(94,184,245,.2)}
+    .topic-status.done{background:rgba(52,211,153,.1);color:var(--accent-emerald);border-color:rgba(52,211,153,.2)}
+    .topic-status.locked{background:rgba(255,255,255,.03);color:var(--text-muted);border-color:var(--border-dim)}
+    .topic-progress-bar{margin-top:16px;height:3px;border-radius:3px;background:rgba(255,255,255,.05);overflow:hidden}
+    .topic-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--col),transparent);transition:width 1s cubic-bezier(.4,0,.2,1)}
+    .features-section{padding:0 60px 60px}
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-top:28px}
+    .feature-card{background:var(--bg-glass);border:var(--glass-border);border-radius:var(--radius-lg);padding:22px 18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:var(--transition-spring)}
+    .feature-card:hover{transform:translateY(-4px);border-color:var(--border-soft)}
+    .feature-icon{font-size:26px;margin-bottom:12px}
+    .feature-title{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:6px}
+    .feature-desc{font-size:11px;color:var(--text-muted);line-height:1.6}
+    .roadmap-wrap{padding:0 60px 80px}
+    .roadmap-canvas-box{background:var(--bg-glass);border:var(--glass-border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--glass-shadow)}
+    #sound-toggle{background:none;border:1px solid var(--border-dim);border-radius:8px;padding:5px 10px;font-size:14px;color:var(--text-secondary);cursor:none;transition:var(--transition)}
+    #sound-toggle:hover{border-color:var(--border-soft);color:var(--text-primary)}
+    @media(max-width:900px){.topics-section,.features-section,.roadmap-wrap{padding-left:24px;padding-right:24px}.topics-grid{grid-template-columns:1fr}.hero{padding:40px 24px}}
   </style>
 </head>
 <body>
 
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="particle-canvas"></canvas>
+
 <div class="app-shell">
 
-  <!-- ═══ HEADER ═══════════════════════════════ -->
   <header class="header">
     <div class="header-brand">
-      <button class="hamburger" id="hamburger-btn" aria-label="Toggle menu" onclick="App.toggleSidebar()">
+      <button class="hamburger" id="hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
-      <div class="brand-icon">∑</div>
-      <div class="brand-text">
-        <span class="brand-name">DS Math</span>
-        <span class="brand-sub">Learning Universe</span>
+      <div class="brand-icon">M</div>
+      <div>
+        <div class="brand-name">DS Math</div>
+        <div class="brand-sub">Deep Space Observatory</div>
       </div>
     </div>
-
     <div class="header-center">
-      <span class="progress-label">Progress</span>
-      <div class="progress-bar-mini">
-        <div class="progress-bar-fill"></div>
+      <div class="progress-ring-container" title="Overall progress">
+        <svg class="progress-ring-svg" width="40" height="40" viewBox="0 0 40 40">
+          <circle class="progress-ring-bg" cx="20" cy="20" r="16"/>
+          <circle class="progress-ring-fill" id="progress-ring" cx="20" cy="20" r="16"/>
+        </svg>
+        <div class="progress-ring-pct" id="progress-pct">0%</div>
       </div>
-      <span class="progress-pct">0%</span>
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Progress</div>
+        <div style="font-size:11px;color:var(--text-secondary)" id="progress-label">Getting started</div>
+      </div>
+      <div class="streak-badge">🔥 <span id="streak-count">1</span>d</div>
     </div>
-
     <div class="header-right">
-      <span class="header-greeting">Welcome back, <span>Mohit</span> 👋</span>
-      <div class="header-avatar" title="Mohit">M</div>
+      <div class="xp-display">⚡ <span id="xp-display">0</span> XP</div>
+      <button id="sound-toggle" title="Toggle sound">🔇</button>
+      <div class="header-avatar">M</div>
     </div>
   </header>
 
-  <div class="sidebar-overlay" id="sidebar-overlay" onclick="App.toggleSidebar()"></div>
-  <!-- ═══ SIDEBAR ══════════════════════════════ -->
-  <aside class="sidebar">
+  <nav class="sidebar" id="sidebar">
     <div class="sidebar-section-label">Navigation</div>
-
-    <a class="nav-item active" data-nav="home">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-label">Home & Roadmap</span>
-    </a>
-
+    <a class="nav-item active" href="#" data-section="home"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></a>
     <div class="sidebar-divider"></div>
-    <div class="sidebar-section-label">Topics</div>
-
-    <a class="nav-item" data-nav="statistics">
-      <span class="nav-icon">📊</span>
-      <span class="nav-label">Statistics & Probability</span>
-      <span class="nav-badge now">START</span>
-    </a>
-
-    <a class="nav-item locked" data-nav="linear-algebra">
-      <span class="nav-icon">🔢</span>
-      <span class="nav-label">Linear Algebra</span>
-      <span class="nav-badge">🔒</span>
-    </a>
-
-    <a class="nav-item locked" data-nav="calculus">
-      <span class="nav-icon">∂</span>
-      <span class="nav-label">Calculus</span>
-      <span class="nav-badge">🔒</span>
-    </a>
-
-    <a class="nav-item locked" data-nav="optimization">
-      <span class="nav-icon">⚡</span>
-      <span class="nav-label">Optimization</span>
-      <span class="nav-badge">🔒</span>
-    </a>
-
-    <a class="nav-item locked" data-nav="info-theory">
-      <span class="nav-icon">🌀</span>
-      <span class="nav-label">Information Theory</span>
-      <span class="nav-badge">🔒</span>
-    </a>
-
+    <div class="sidebar-section-label">Curriculum</div>
+    <a class="nav-item" href="#" data-section="statistics" id="nav-statistics"><span class="nav-icon">📊</span><span class="nav-label">Statistics &amp; Probability</span><span class="nav-badge" id="badge-statistics">01</span></a>
+    <a class="nav-item locked" href="#" data-section="linear-algebra" id="nav-linear-algebra"><span class="nav-icon">🔢</span><span class="nav-label">Linear Algebra</span><span class="nav-badge" id="badge-linear-algebra">02</span></a>
+    <a class="nav-item locked" href="#" data-section="calculus" id="nav-calculus"><span class="nav-icon">∫</span><span class="nav-label">Calculus</span><span class="nav-badge" id="badge-calculus">03</span></a>
+    <a class="nav-item locked" href="#" data-section="optimization" id="nav-optimization"><span class="nav-icon">⚙️</span><span class="nav-label">Optimization</span><span class="nav-badge" id="badge-optimization">04</span></a>
+    <a class="nav-item locked" href="#" data-section="info-theory" id="nav-info-theory"><span class="nav-icon">ℹ️</span><span class="nav-label">Information Theory</span><span class="nav-badge" id="badge-info-theory">05</span></a>
     <div class="sidebar-divider"></div>
-    <div class="sidebar-section-label">Quick Links</div>
+    <div class="sidebar-section-label">Tools</div>
+    <a class="nav-item" href="#" onclick="return false"><span class="nav-icon">🏆</span><span class="nav-label">Achievements</span></a>
+    <a class="nav-item" href="#" onclick="return false"><span class="nav-icon">📝</span><span class="nav-label">My Notes</span></a>
+    <div class="sidebar-footer"><div class="sidebar-version">v2.0 · Deep Space Edition</div></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-    <a class="nav-item" data-nav="home" onclick="document.getElementById('viz-section').scrollIntoView({behavior:'smooth'}); return false;">
-      <span class="nav-icon">🎨</span>
-      <span class="nav-label">Visualizations</span>
-    </a>
-
-    <div class="sidebar-footer">
-      <div class="xp-label">Experience Points</div>
-      <div class="xp-row">
-        <span class="xp-value">0 XP</span>
-        <span style="font-size:11px;color:var(--text-muted)">Lvl 1</span>
-      </div>
-      <div class="xp-bar"><div class="xp-bar-fill"></div></div>
-    </div>
-  </aside>
-
-  <!-- ═══ MAIN CONTENT ══════════════════════════ -->
   <main class="main-content">
 
-    <!-- ─── HOME SECTION ─────────────────────── -->
     <section id="section-home" class="page-section active">
+      <div class="home-page">
 
-      <!-- Hero -->
-      <div class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-grid-overlay"></div>
-
-        <div class="hero-eyebrow">Your Personal DS Math Journey</div>
-
-        <h1 class="hero-title">
-          Master the <span class="highlight">Mathematics</span><br>
-          behind <span class="serif">Data Science</span>
-        </h1>
-
-        <p class="hero-subtitle">
-          A structured, visual, interactive path from absolute beginner to professional-level
-          mathematical fluency. Built for you, Mohit — not for a generic audience.
-        </p>
-
-        <div class="hero-cta-row">
-          <button class="btn-primary" onclick="App.showSection('statistics')">
-            ▶&nbsp; Begin Learning
-          </button>
-          <button class="btn-ghost" onclick="document.getElementById('roadmap-area').scrollIntoView({behavior:'smooth'})">
-            View Roadmap ↓
-          </button>
-        </div>
-
-        <div class="hero-stats">
-          <div class="stat-item">
-            <span class="stat-number" data-target="5" data-suffix="">0</span>
-            <span class="stat-label">Core Topics</span>
+        <div class="hero">
+          <div class="hero-bg-orbs">
+            <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
           </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-number" data-target="14" data-suffix="">0</span>
-            <span class="stat-label">Interactive Visualizations</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-number" data-target="3" data-suffix=" levels">0</span>
-            <span class="stat-label">Depth Per Topic</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-number" data-target="100" data-suffix="%">0</span>
-            <span class="stat-label">Free & Interactive</span>
-          </div>
-        </div>
-      </div>
+          <div class="hero-grid-lines"></div>
+          <div class="hero-deco" style="top:15%;left:5%">∑ᵢ xᵢ</div>
+          <div class="hero-deco" style="top:65%;left:2%">∂f/∂x</div>
+          <div class="hero-deco" style="top:20%;right:8%">λv = Av</div>
+          <div class="hero-deco" style="top:70%;right:5%">H(X) = −∑p log p</div>
+          <div class="hero-deco" style="bottom:12%;left:38%">∇L = 0</div>
 
-      <!-- Feature strip -->
-      <div class="feature-strip">
-        <div class="feature-card">
-          <span class="feature-icon">🎯</span>
-          <div class="feature-title">Three Depth Levels</div>
-          <div class="feature-desc">Every topic unfolds from beginner intuition through intermediate theory to professional-level rigor.</div>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">🎛️</span>
-          <div class="feature-title">Interactive Sliders</div>
-          <div class="feature-desc">Drag parameters and watch mathematics come alive. Learning rate, variance, learning dimensions — all adjustable.</div>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">🧮</span>
-          <div class="feature-title">Show the Math</div>
-          <div class="feature-desc">Toggle detailed equations rendered in KaTeX. See the symbols, not just the intuition.</div>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">🎓</span>
-          <div class="feature-title">DS Context</div>
-          <div class="feature-desc">"Why does a data scientist need this?" — answered for every single concept, with real-world ML examples.</div>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">⚡</span>
-          <div class="feature-title">Mini Quizzes</div>
-          <div class="feature-desc">Test your understanding at the end of each section. Earn XP and unlock the next topic.</div>
-        </div>
-      </div>
-
-      <!-- Roadmap -->
-      <div id="roadmap-area" class="roadmap-section">
-        <div class="section-sep" style="padding:0;margin-bottom:32px;">
-          <div class="section-sep-inner">
-            <div class="sep-line"></div>
-            <div class="sep-label">Learning Roadmap</div>
-            <div class="sep-line"></div>
-          </div>
-        </div>
-
-        <div class="section-header" style="padding:0;margin-bottom:24px;">
-          <div class="section-title">Your Path to DS Math Mastery</div>
-          <div class="section-subtitle">Click any unlocked node to jump directly into that topic</div>
-        </div>
-
-        <div class="roadmap-viz-container">
-          <svg id="roadmap-svg" width="100%" height="380"></svg>
-        </div>
-      </div>
-
-      <!-- Topic Cards -->
-      <div class="topics-section">
-        <div class="section-sep" style="padding:0;margin-bottom:32px;">
-          <div class="section-sep-inner">
-            <div class="sep-line"></div>
-            <div class="sep-label">All Topics</div>
-            <div class="sep-line"></div>
-          </div>
-        </div>
-        <div class="topics-grid">
-
-          <div class="topic-card topic-card-1" onclick="App.showSection('statistics')">
-            <span class="topic-icon">📊</span>
-            <div class="topic-num">Topic 01</div>
-            <div class="topic-title">Statistics & Probability</div>
-            <div class="topic-desc">The language of uncertainty. Normal distributions, Bayes' theorem, hypothesis testing, and the statistical backbone of every ML model.</div>
-            <div class="topic-footer">
-              <div class="topic-pills">
-                <span class="pill">Distributions</span>
-                <span class="pill">Bayes</span>
-                <span class="pill">CLT</span>
-              </div>
-              <span class="topic-status status-open">▶ Open</span>
+          <div style="position:relative;z-index:2">
+            <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Data Science Mathematics · MSc Level</div>
+            <h1 class="hero-title">
+              <div class="line"><span>Math that</span></div>
+              <div class="line"><span class="grad">makes sense.</span></div>
+              <div class="line"><span>Visually.</span></div>
+            </h1>
+            <p class="hero-desc">From probability to information theory — every concept visualised, every formula explained, every idea made intuitive. Built for data scientists who want to actually understand the maths.</p>
+            <div class="hero-stats reveal">
+              <div class="stat-card tilt-card"><div class="stat-number"><span class="stat-accent" data-target="5">0</span></div><div class="stat-label">Core Topics</div></div>
+              <div class="stat-card tilt-card"><div class="stat-number"><span class="stat-accent" data-target="20">0</span></div><div class="stat-label">Concepts</div></div>
+              <div class="stat-card tilt-card"><div class="stat-number"><span class="stat-accent" data-target="15">0</span></div><div class="stat-label">Visualisers</div></div>
+              <div class="stat-card tilt-card"><div class="stat-number"><span class="stat-accent" data-target="870">0</span> <span style="font-size:18px;color:var(--accent-amber)">⚡</span></div><div class="stat-label">Max XP</div></div>
+            </div>
+            <div class="cta-row reveal reveal-delay-1">
+              <button class="btn-primary" onclick="App.showSection('statistics')">🚀 Start Learning</button>
+              <button class="btn-ghost" onclick="document.querySelector('.roadmap-wrap').scrollIntoView({behavior:'smooth'})">View Roadmap ↓</button>
             </div>
           </div>
-
-          <div class="topic-card topic-card-2 is-locked">
-            <span class="topic-icon">🔢</span>
-            <div class="topic-num">Topic 02</div>
-            <div class="topic-title">Linear Algebra</div>
-            <div class="topic-desc">The geometry of data. Vectors, matrices, eigenvalues, PCA, and the mathematical engine behind neural networks and transformers.</div>
-            <div class="topic-footer">
-              <div class="topic-pills">
-                <span class="pill">Matrices</span>
-                <span class="pill">PCA</span>
-                <span class="pill">SVD</span>
-              </div>
-              <span class="topic-status status-locked">🔒 Locked</span>
-            </div>
-          </div>
-
-          <div class="topic-card topic-card-3 is-locked">
-            <span class="topic-icon">∂</span>
-            <div class="topic-num">Topic 03</div>
-            <div class="topic-title">Calculus & Derivatives</div>
-            <div class="topic-desc">The mathematics of change. Derivatives, gradients, chain rule, and the calculus that makes backpropagation possible.</div>
-            <div class="topic-footer">
-              <div class="topic-pills">
-                <span class="pill">Gradients</span>
-                <span class="pill">Chain Rule</span>
-                <span class="pill">Integrals</span>
-              </div>
-              <span class="topic-status status-locked">🔒 Locked</span>
-            </div>
-          </div>
-
-          <div class="topic-card topic-card-4 is-locked">
-            <span class="topic-icon">⚡</span>
-            <div class="topic-num">Topic 04</div>
-            <div class="topic-title">Optimization</div>
-            <div class="topic-desc">Finding the minimum. Gradient descent, learning rates, convexity, saddle points, and how models actually learn.</div>
-            <div class="topic-footer">
-              <div class="topic-pills">
-                <span class="pill">Gradient Descent</span>
-                <span class="pill">Adam</span>
-                <span class="pill">Convex</span>
-              </div>
-              <span class="topic-status status-locked">🔒 Locked</span>
-            </div>
-          </div>
-
-          <div class="topic-card topic-card-5 is-locked">
-            <span class="topic-icon">🌀</span>
-            <div class="topic-num">Topic 05</div>
-            <div class="topic-title">Information Theory</div>
-            <div class="topic-desc">The mathematics of surprise. Entropy, KL divergence, cross-entropy loss, and the information-theoretic foundation of ML.</div>
-            <div class="topic-footer">
-              <div class="topic-pills">
-                <span class="pill">Entropy</span>
-                <span class="pill">KL Div</span>
-                <span class="pill">Mutual Info</span>
-              </div>
-              <span class="topic-status status-locked">🔒 Locked</span>
-            </div>
-          </div>
-
         </div>
+
+        <div class="topics-section">
+          <div class="section-header">
+            <div><div class="section-title">Your Learning Path</div><div class="section-sub">Complete topics in order to unlock the full curriculum</div></div>
+            <div class="section-tag">5 Modules</div>
+          </div>
+          <div class="topics-grid">
+            <div class="topic-card tilt-card reveal" style="--col:var(--accent-cyan)" onclick="App.showSection('statistics')" id="tc-statistics">
+              <div class="topic-num">01</div><span class="topic-icon">📊</span>
+              <div class="topic-name">Statistics &amp; Probability</div>
+              <div class="topic-desc">Foundations of data reasoning — distributions, Bayes, expectation, and the language all DS builds on.</div>
+              <div class="topic-tags"><span class="topic-tag">Probability</span><span class="topic-tag">Bayes</span><span class="topic-tag">Distributions</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+                <span class="topic-status" id="ts-statistics">Start →</span>
+                <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">+150 XP</span>
+              </div>
+              <div class="topic-progress-bar"><div class="topic-progress-fill" id="tp-statistics" style="width:0%"></div></div>
+            </div>
+            <div class="topic-card tilt-card reveal reveal-delay-1 is-locked" style="--col:var(--accent-violet)" id="tc-linear-algebra" onclick="App.showSection('linear-algebra')">
+              <div class="topic-num">02</div><span class="topic-icon">🔢</span>
+              <div class="topic-name">Linear Algebra</div>
+              <div class="topic-desc">Vectors, matrices as transformations, eigenvalues, and the geometry behind machine learning.</div>
+              <div class="topic-tags"><span class="topic-tag">Vectors</span><span class="topic-tag">Matrices</span><span class="topic-tag">PCA</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+                <span class="topic-status locked" id="ts-linear-algebra">🔒 Locked</span>
+                <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">+180 XP</span>
+              </div>
+              <div class="topic-progress-bar"><div class="topic-progress-fill" id="tp-linear-algebra" style="width:0%"></div></div>
+            </div>
+            <div class="topic-card tilt-card reveal reveal-delay-2 is-locked" style="--col:var(--accent-amber)" id="tc-calculus" onclick="App.showSection('calculus')">
+              <div class="topic-num">03</div><span class="topic-icon">∫</span>
+              <div class="topic-name">Calculus &amp; Derivatives</div>
+              <div class="topic-desc">Limits, chain rule, partial derivatives — the mathematical engine behind gradient descent.</div>
+              <div class="topic-tags"><span class="topic-tag">Limits</span><span class="topic-tag">Derivatives</span><span class="topic-tag">Gradient</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+                <span class="topic-status locked" id="ts-calculus">🔒 Locked</span>
+                <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">+180 XP</span>
+              </div>
+              <div class="topic-progress-bar"><div class="topic-progress-fill" id="tp-calculus" style="width:0%"></div></div>
+            </div>
+            <div class="topic-card tilt-card reveal reveal-delay-1 is-locked" style="--col:var(--accent-rose)" id="tc-optimization" onclick="App.showSection('optimization')">
+              <div class="topic-num">04</div><span class="topic-icon">⚙️</span>
+              <div class="topic-name">Optimization</div>
+              <div class="topic-desc">Convexity, gradient descent variants, Lagrangians and regularisation — how models actually learn.</div>
+              <div class="topic-tags"><span class="topic-tag">Convex</span><span class="topic-tag">SGD</span><span class="topic-tag">Regularisation</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+                <span class="topic-status locked" id="ts-optimization">🔒 Locked</span>
+                <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">+180 XP</span>
+              </div>
+              <div class="topic-progress-bar"><div class="topic-progress-fill" id="tp-optimization" style="width:0%"></div></div>
+            </div>
+            <div class="topic-card tilt-card reveal reveal-delay-2 is-locked" style="--col:var(--accent-plasma)" id="tc-info-theory" onclick="App.showSection('info-theory')">
+              <div class="topic-num">05</div><span class="topic-icon">ℹ️</span>
+              <div class="topic-name">Information Theory</div>
+              <div class="topic-desc">Entropy, cross-entropy, KL divergence and mutual information — the theory inside every loss function.</div>
+              <div class="topic-tags"><span class="topic-tag">Entropy</span><span class="topic-tag">KL Div</span><span class="topic-tag">Mutual Info</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+                <span class="topic-status locked" id="ts-info-theory">🔒 Locked</span>
+                <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">+180 XP</span>
+              </div>
+              <div class="topic-progress-bar"><div class="topic-progress-fill" id="tp-info-theory" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="features-section">
+          <div class="section-header">
+            <div><div class="section-title">What's Inside</div><div class="section-sub">Every section packed with tools to make maths click</div></div>
+          </div>
+          <div class="features-grid">
+            <div class="feature-card reveal tilt-card"><div class="feature-icon">🔬</div><div class="feature-title">Live Visualisers</div><div class="feature-desc">Interactive D3 charts you control in real time</div></div>
+            <div class="feature-card reveal reveal-delay-1 tilt-card"><div class="feature-icon">🧩</div><div class="feature-title">Proof Walkers</div><div class="feature-desc">Step-by-step derivations with explanations</div></div>
+            <div class="feature-card reveal reveal-delay-2 tilt-card"><div class="feature-icon">📐</div><div class="feature-title">KaTeX Formulae</div><div class="feature-desc">Beautifully typeset formula reference cards</div></div>
+            <div class="feature-card reveal tilt-card"><div class="feature-icon">🎯</div><div class="feature-title">Quizzes &amp; XP</div><div class="feature-desc">Earn XP and unlock the next topic</div></div>
+            <div class="feature-card reveal reveal-delay-1 tilt-card"><div class="feature-icon">📝</div><div class="feature-title">Personal Notes</div><div class="feature-desc">Write and save notes per section</div></div>
+            <div class="feature-card reveal reveal-delay-2 tilt-card"><div class="feature-icon">💾</div><div class="feature-title">Progress Saved</div><div class="feature-desc">Everything persists across sessions</div></div>
+          </div>
+        </div>
+
+        <div class="roadmap-wrap">
+          <div class="section-header">
+            <div><div class="section-title">Learning Roadmap</div><div class="section-sub">Click any unlocked node to jump in</div></div>
+            <div class="section-tag">Visual Map</div>
+          </div>
+          <div class="roadmap-canvas-box">
+            <svg id="roadmap-svg" viewBox="0 0 900 260" style="min-height:200px"></svg>
+          </div>
+        </div>
+
       </div>
-
-      <!-- What you'll learn -->
-      <div class="learn-section">
-        <div class="section-sep" style="padding:0;margin-bottom:32px;">
-          <div class="section-sep-inner">
-            <div class="sep-line"></div>
-            <div class="sep-label">Curriculum Highlights</div>
-            <div class="sep-line"></div>
-          </div>
-        </div>
-        <div class="learn-grid">
-          <div>
-            <div class="learn-col-title">📐 Mathematical Concepts</div>
-            <ul class="learn-list">
-              <li>Normal, Binomial & Poisson distributions with interactive visualizers</li>
-              <li>Bayes' Theorem and posterior probability with visual demos</li>
-              <li>Matrix multiplication as geometric transformation</li>
-              <li>Eigenvalues and eigenvectors — what they actually mean</li>
-              <li>Partial derivatives and the gradient vector field</li>
-              <li>Gradient descent on a 3D loss surface with live animation</li>
-              <li>Shannon entropy and information gain for decision trees</li>
-              <li>KL divergence and why it powers VAEs and GANs</li>
-            </ul>
-          </div>
-          <div>
-            <div class="learn-col-title">🤖 Data Science Applications</div>
-            <ul class="learn-list">
-              <li>Why Gaussian distributions underpin so many ML assumptions</li>
-              <li>How Naive Bayes classifiers work from first principles</li>
-              <li>PCA as variance-maximising projection (linear algebra)</li>
-              <li>Why backpropagation is just the chain rule, repeatedly</li>
-              <li>How Adam optimizer adapts learning rates automatically</li>
-              <li>Cross-entropy loss as negative log-likelihood explained</li>
-              <li>Attention mechanisms and the dot-product similarity</li>
-              <li>Regularisation as an optimisation constraint</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Visualizations preview -->
-      <div class="viz-section" id="viz-section">
-        <div class="section-sep" style="padding:0;margin-bottom:32px;">
-          <div class="section-sep-inner">
-            <div class="sep-line"></div>
-            <div class="sep-label">Interactive Visualizations</div>
-            <div class="sep-line"></div>
-          </div>
-        </div>
-        <div class="section-header" style="padding:0;margin-bottom:24px;">
-          <div class="section-title">9 Live Visualizations Await</div>
-          <div class="section-subtitle">Every viz has adjustable parameters — drag sliders and watch math in motion</div>
-        </div>
-        <div class="viz-grid">
-          <div class="viz-preview" onclick="App.showSection('statistics')">
-            <span class="viz-thumb">📈</span>
-            <div class="viz-name">Normal Distribution</div>
-            <div class="viz-topic">Statistics → Topic 01</div>
-          </div>
-          <div class="viz-preview" onclick="App.showSection('statistics')">
-            <span class="viz-thumb">🎲</span>
-            <div class="viz-name">Bayes' Theorem</div>
-            <div class="viz-topic">Statistics → Topic 01</div>
-          </div>
-          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Linear Algebra first!')">
-            <span class="viz-thumb">🔄</span>
-            <div class="viz-name">Matrix Multiplication</div>
-            <div class="viz-topic">Linear Algebra → Topic 02</div>
-          </div>
-          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Linear Algebra first!')">
-            <span class="viz-thumb">🌐</span>
-            <div class="viz-name">PCA Visualizer (2D→1D)</div>
-            <div class="viz-topic">Linear Algebra → Topic 02</div>
-          </div>
-          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Linear Algebra first!')">
-            <span class="viz-thumb">↗️</span>
-            <div class="viz-name">Eigenvector Transform</div>
-            <div class="viz-topic">Linear Algebra → Topic 02</div>
-          </div>
-          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Optimization first!')">
-            <span class="viz-thumb">⛰️</span>
-            <div class="viz-name">Gradient Descent (3D)</div>
-            <div class="viz-topic">Optimization → Topic 04</div>
-          </div>
-          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Optimization first!')">
-            <span class="viz-thumb">🎯</span>
-            <div class="viz-name">3D Loss Surface</div>
-            <div class="viz-topic">Optimization → Topic 04</div>
-          </div>
-          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Information Theory first!')">
-            <span class="viz-thumb">🌡️</span>
-            <div class="viz-name">Entropy Demo</div>
-            <div class="viz-topic">Information Theory → Topic 05</div>
-          </div>
-          <div class="viz-preview" onclick="App.showToast('🔒 Unlock Information Theory first!')">
-            <span class="viz-thumb">🔥</span>
-            <div class="viz-name">Correlation Heatmap</div>
-            <div class="viz-topic">Information Theory → Topic 05</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer space -->
-      <div style="height: 80px;"></div>
-
-    </section><!-- /home -->
-
-    <!-- ─── STATISTICS & PROBABILITY ────────────── -->
-    <section id="section-statistics" class="page-section">
-      <div id="statistics-content-mount"></div>
     </section>
 
-    <!-- ─── LINEAR ALGEBRA ──────────────────────── -->
-    <section id="section-linear-algebra" class="page-section">
-      <div id="linear-algebra-content-mount"></div>
-    </section>
+    <section id="section-statistics" class="page-section"><div id="statistics-content-mount"></div></section>
+    <section id="section-linear-algebra" class="page-section"><div id="linear-algebra-content-mount"></div></section>
+    <section id="section-calculus" class="page-section"><div id="calculus-content-mount"></div></section>
+    <section id="section-optimization" class="page-section"><div id="optimization-content-mount"></div></section>
+    <section id="section-info-theory" class="page-section"><div id="info-theory-content-mount"></div></section>
 
-    <!-- ─── CALCULUS ────────────────────────────── -->
-    <section id="section-calculus" class="page-section">
-      <div id="calculus-content-mount"></div>
-    </section>
-
-    <!-- ─── OPTIMIZATION ────────────────────────── -->
-    <section id="section-optimization" class="page-section">
-      <div id="optimization-content-mount"></div>
-    </section>
-
-    <!-- ─── INFORMATION THEORY ──────────────────── -->
-    <section id="section-info-theory" class="page-section">
-      <div id="info-theory-content-mount"></div>
-    </section>
-
-  </main><!-- /main-content -->
-</div><!-- /app-shell -->
-
-<!-- Toast notification -->
-<div id="toast" class="toast">
-  <span class="toast-msg"></span>
+  </main>
 </div>
 
-<script src="js/progress.js"></script>
-<script src="js/main.js"></script>
+<div id="toast" class="toast"><span class="toast-icon">✨</span><span class="toast-msg"></span></div>
 
+<script src="js/progress.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

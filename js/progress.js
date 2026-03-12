@@ -149,3 +149,11 @@ document.addEventListener('DOMContentLoaded', () => {
     Persistence.saveXP(App.xp);
   };
 });
+
+// ── Compatibility shims for new main.js ──────────────────────
+Persistence.loadXP = function() { return parseInt(localStorage.getItem(this.KEYS.xp)||'0',10); };
+Persistence.loadProgress = function() { return parseInt(localStorage.getItem(this.KEYS.progress)||'0',10); };
+Persistence.loadCompleted = function() { return this.getCompleted(); };
+Persistence.loadQuizScores = function() {
+  try { return JSON.parse(localStorage.getItem(this.KEYS.quizzes)||'{}'); } catch(_) { return {}; }
+};
