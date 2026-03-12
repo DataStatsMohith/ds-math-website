@@ -1214,7 +1214,7 @@ const ITQuiz = {
         }
         setTimeout(()=>{
           App.showToast('🎓 Curriculum complete! You did it, Mohit!');
-          App.progress=100;App.initProgress();
+          App.setProgress(100); App.unlockSection("info-theory");
         },1000);
       }
     }
@@ -1236,4 +1236,11 @@ const ITQuiz = {
     if(ta) ta.value=(typeof Persistence!=='undefined')?Persistence.loadNote('info-theory'):(localStorage.getItem('it-notes')||'');
   },300);
 })();
+
+// Re-init visual effects after dynamic load
+setTimeout(() => {
+  if (typeof Tilt !== 'undefined') Tilt.init();
+  if (typeof ScrollReveal !== 'undefined') ScrollReveal.refresh();
+  if (typeof Cursor !== 'undefined') Cursor.init();
+}, 200);
 </script>

@@ -1269,7 +1269,7 @@ const CalcQuiz = {
           App.showToast('🎉 Calculus complete! Optimization unlocked!');
           const optNav=document.querySelector('[data-nav="optimization"]');
           if(optNav){optNav.classList.remove('locked');const b=optNav.querySelector('.nav-badge');if(b){b.textContent='NEW';}}
-          App.progress=60;App.initProgress();
+          App.setProgress(60); App.unlockSection("calculus");
           if(typeof Persistence!=='undefined') Persistence.saveProgress(60);
         },1000);
       }
@@ -1293,4 +1293,11 @@ const CalcQuiz = {
   };
   setTimeout(tryInit,300);
 })();
+
+// Re-init visual effects after dynamic load
+setTimeout(() => {
+  if (typeof Tilt !== 'undefined') Tilt.init();
+  if (typeof ScrollReveal !== 'undefined') ScrollReveal.refresh();
+  if (typeof Cursor !== 'undefined') Cursor.init();
+}, 200);
 </script>

@@ -1359,7 +1359,7 @@ const OptQuiz = {
           App.showToast('🎉 Optimization complete! Information Theory unlocked!');
           const itNav=document.querySelector('[data-nav="info-theory"]');
           if(itNav){itNav.classList.remove('locked');const b=itNav.querySelector('.nav-badge');if(b)b.textContent='NEW';}
-          App.progress=80;App.initProgress();
+          App.setProgress(80); App.unlockSection("optimization");
           if(typeof Persistence!=='undefined') Persistence.saveProgress(80);
         },1000);
       }
@@ -1382,4 +1382,11 @@ const OptQuiz = {
     if(ta) ta.value=(typeof Persistence!=='undefined')?Persistence.loadNote('optimization'):(localStorage.getItem('opt-notes')||'');
   },300);
 })();
+
+// Re-init visual effects after dynamic load
+setTimeout(() => {
+  if (typeof Tilt !== 'undefined') Tilt.init();
+  if (typeof ScrollReveal !== 'undefined') ScrollReveal.refresh();
+  if (typeof Cursor !== 'undefined') Cursor.init();
+}, 200);
 </script>

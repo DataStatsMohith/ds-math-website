@@ -1388,7 +1388,7 @@ const LAQuiz = {
           App.showToast('🎉 Linear Algebra complete! Calculus unlocked!');
           const calcNav=document.querySelector('[data-nav="calculus"]');
           if(calcNav){calcNav.classList.remove('locked');const b=calcNav.querySelector('.nav-badge');if(b){b.textContent='NEW';b.classList.add('now');}}
-          App.progress=40; App.initProgress();
+          App.setProgress(40); App.unlockSection("linear-algebra");
           if(typeof Persistence!=='undefined') Persistence.saveProgress(40);
         },1000);
       }
@@ -1413,4 +1413,11 @@ const LAQuiz = {
   };
   setTimeout(tryInit,300);
 })();
+
+// Re-init visual effects after dynamic load
+setTimeout(() => {
+  if (typeof Tilt !== 'undefined') Tilt.init();
+  if (typeof ScrollReveal !== 'undefined') ScrollReveal.refresh();
+  if (typeof Cursor !== 'undefined') Cursor.init();
+}, 200);
 </script>
