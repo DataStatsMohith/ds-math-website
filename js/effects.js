@@ -6,18 +6,24 @@
 
 // ── Custom Cursor ─────────────────────────────────────────────
 const Cursor = {
-  el: null, ring: null, mx: 0, my: 0, rx: 0, ry: 0,
+  el: null, ring: null, mx: 0, my: 0, rx: 0, ry: 0, _ready: false,
 
   init() {
     this.el   = document.getElementById('cursor');
     this.ring = document.getElementById('cursor-ring');
     if (!this.el) return;
+    if (this._ready) return; // guard: only bind document listeners once
+    this._ready = true;
     document.addEventListener('mousemove', e => { this.mx = e.clientX; this.my = e.clientY; });
     document.addEventListener('mousedown', () => document.body.classList.add('cursor-click'));
     document.addEventListener('mouseup',   () => document.body.classList.remove('cursor-click'));
-    document.querySelectorAll('button,a,[onclick],[role=button],input,textarea,.nav-item,.opt-opt,.it-opt,.opt-opt,.la-opt,.calc-opt,.stats-opt,.tilt-card,.stat-card').forEach(el => {
-      el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-      el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+    // Use event delegation so dynamically loaded section elements are covered
+    const HOVER_SEL = 'button,a,[onclick],[role=button],input,textarea,select,.nav-item,.tilt-card,.quiz-opt,.proof-btn,.la-level-btn,.calc-lvl-btn,.opt-lvl-btn,.it-lvl-btn';
+    document.addEventListener('mouseover', e => {
+      if (e.target.closest(HOVER_SEL)) document.body.classList.add('cursor-hover');
+    });
+    document.addEventListener('mouseout', e => {
+      if (e.target.closest(HOVER_SEL)) document.body.classList.remove('cursor-hover');
     });
     this.animate();
   },
@@ -111,6 +117,8 @@ const Particles = {
 const Tilt = {
   init() {
     document.querySelectorAll('.tilt-card').forEach(card => {
+      if (card.dataset.tiltBound) return; // guard: skip already-bound cards
+      card.dataset.tiltBound = '1';
       card.addEventListener('mousemove', e => this.onMove(e, card));
       card.addEventListener('mouseleave', () => this.onLeave(card));
     });
@@ -313,4 +321,5 @@ document.addEventListener('DOMContentLoaded', () => {
   Counter.initAll();
   Streak.render();
   SoundFX.init();
+  KineticTitle.animate(document.querySelector('.hero-title'));
 });

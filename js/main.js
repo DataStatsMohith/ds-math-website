@@ -66,6 +66,17 @@ const App = {
   },
 
   showSection(id) {
+    // Enforce lock — prevent skipping ahead (topic card onclicks bypass nav lock check)
+    if (id !== 'home') {
+      const order = ['statistics','linear-algebra','calculus','optimization','info-theory'];
+      const i = order.indexOf(id);
+      const locked = i > 0 && !this.completed.includes(order[i - 1]);
+      if (locked) {
+        this.showToast('🔒 Complete the previous topic first!', 'warning');
+        return;
+      }
+    }
+
     // Hide all
     document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -110,8 +121,18 @@ const App = {
     fetch(cfg.file)
       .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
       .then(html => {
+        // innerHTML drops <script> tags silently - extract and re-execute them
         mount.innerHTML = html;
         this.loaded.add(id);
+
+        // Re-execute all inline script blocks (innerHTML ignores them)
+        mount.querySelectorAll('script:not([src])').forEach(oldScript => {
+          const newScript = document.createElement('script');
+          newScript.textContent = oldScript.textContent;
+          document.body.appendChild(newScript);
+          oldScript.remove(); // avoid double-run if ever re-inserted
+        });
+
         // Re-init visual effects on new DOM
         setTimeout(() => {
           if (typeof ScrollReveal !== 'undefined') ScrollReveal.refresh();
